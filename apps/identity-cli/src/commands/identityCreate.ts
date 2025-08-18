@@ -154,7 +154,7 @@ export async function actionCommandIdentityCreate(
 	if (opts.connector === IdentityConnectorTypes.Iota) {
 		const didUrn = Urn.fromValidString(document.id);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 		CLIDisplay.value(
 			I18n.formatMessage("commands.common.labels.explore"),
 			`${StringHelper.trimTrailingSlashes(explorerEndpoint)}/object/${objectId}?network=${network}`

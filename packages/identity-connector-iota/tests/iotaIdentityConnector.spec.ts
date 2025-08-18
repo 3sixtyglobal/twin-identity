@@ -125,7 +125,7 @@ describe("IotaIdentityConnector", () => {
 
 		const didUrn = Urn.fromValidString(testDocument.id);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 
 		console.debug(
 			"DID Document",
@@ -141,7 +141,7 @@ describe("IotaIdentityConnector", () => {
 
 		const didUrn = Urn.fromValidString(testDocument.id);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 
 		console.debug(
 			"DID Document (Deleted)",
