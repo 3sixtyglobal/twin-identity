@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.2-next.2](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.1...identity-cli-v0.0.2-next.2) (2025-08-20)
+
+
+### Features
+
+* update framework core ([c824497](https://github.com/twinfoundation/identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.1 to 0.0.2-next.2
+    * @twin.org/identity-connector-iota bumped from 0.0.2-next.1 to 0.0.2-next.2
+
 ## [0.0.2-next.1](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.0...identity-cli-v0.0.2-next.1) (2025-08-18)
 
 

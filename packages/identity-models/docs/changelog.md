@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.2-next.2](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.1...identity-models-v0.0.2-next.2) (2025-08-20)
+
+
+### Features
+
+* update framework core ([c824497](https://github.com/twinfoundation/identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+
 ## [0.0.2-next.1](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.0...identity-models-v0.0.2-next.1) (2025-08-18)
 
 
