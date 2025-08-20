@@ -74,7 +74,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		await expect(service.get("foo")).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "entityStorageIdentityProfileConnector.getFailed",
-			inner: { name: "Error", message: "Test Error" }
+			cause: { name: "Error", message: "Test Error" }
 		});
 
 		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.getFailed")).toEqual(true);
@@ -210,7 +210,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		await expect(service.update(TEST_IDENTITY_ID, [])).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "entityStorageIdentityProfileConnector.updateFailed",
-			inner: { name: "Error", message: "Test Error" }
+			cause: { name: "Error", message: "Test Error" }
 		});
 
 		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.updateFailed")).toEqual(
@@ -290,7 +290,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		await expect(service.list()).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "entityStorageIdentityProfileConnector.listFailed",
-			inner: { name: "Error", message: "Test Error" }
+			cause: { name: "Error", message: "Test Error" }
 		});
 
 		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.listFailed")).toEqual(true);

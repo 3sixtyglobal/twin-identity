@@ -528,7 +528,7 @@ describe("IotaIdentityConnector", () => {
 				name: "GeneralError",
 				message: "iotaIdentityConnector.removeServiceFailed",
 				source: "IotaIdentityConnector",
-				inner: expect.objectContaining({
+				cause: expect.objectContaining({
 					message: "iotaIdentityConnector.serviceNotFound",
 					name: "NotFoundError"
 				})
