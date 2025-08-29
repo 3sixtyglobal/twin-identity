@@ -11,7 +11,7 @@ import {
 	TEST_NETWORK,
 	TEST_GAS_STATION_URL,
 	TEST_GAS_STATION_AUTH_TOKEN,
-	GAS_BUDGET
+	TEST_GAS_BUDGET
 } from "./setupTestEnv";
 import { IotaIdentityConnector } from "../src/iotaIdentityConnector";
 import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig";
@@ -27,7 +27,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			clientOptions: TEST_CLIENT_OPTIONS,
 			vaultMnemonicId: TEST_MNEMONIC_NAME,
 			network: TEST_NETWORK,
-			gasBudget: GAS_BUDGET,
+			gasBudget: TEST_GAS_BUDGET,
 			gasStation: {
 				gasStationUrl: TEST_GAS_STATION_URL,
 				gasStationAuthToken: TEST_GAS_STATION_AUTH_TOKEN
@@ -65,7 +65,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 				clientOptions: TEST_CLIENT_OPTIONS,
 				vaultMnemonicId: TEST_MNEMONIC_NAME,
 				network: TEST_NETWORK,
-				gasBudget: GAS_BUDGET,
+				gasBudget: TEST_GAS_BUDGET,
 				standardGasPrice: 2000, // Custom gas price (2x default)
 				gasStation: {
 					gasStationUrl: TEST_GAS_STATION_URL,

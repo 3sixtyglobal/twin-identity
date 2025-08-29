@@ -169,6 +169,7 @@ export class IdentityProfileClient<
 			{
 				query: {
 					publicFilters: HttpParameterHelper.arrayToString(
+						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
 						publicFilters?.map(f => `${f.propertyName}:${f.propertyValue}`)
 					),
 					publicPropertyNames: HttpParameterHelper.arrayToString(publicPropertyNames),

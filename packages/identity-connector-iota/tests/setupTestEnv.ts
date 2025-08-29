@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import path from "node:path";
-import { Guards, Is } from "@twin.org/core";
+import { Coerce, Guards, Is } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -79,7 +79,7 @@ export const TEST_COIN_TYPE = Number.parseInt(process.env.TEST_COIN_TYPE, 10);
 // Gas station environment variables for testing
 export const TEST_GAS_STATION_URL = process.env.TEST_GAS_STATION_URL;
 export const TEST_GAS_STATION_AUTH_TOKEN = process.env.TEST_GAS_STATION_AUTH_TOKEN;
-export const TEST_GAS_BUDGET = process.env.TEST_GAS_BUDGET;
+export const TEST_GAS_BUDGET = Coerce.number(process.env.TEST_GAS_BUDGET);
 
 export const TEST_FAUCET_CONNECTOR = new IotaFaucetConnector({
 	config: {
