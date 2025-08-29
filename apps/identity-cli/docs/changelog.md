@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.2-next.3](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.2...identity-cli-v0.0.2-next.3) (2025-08-29)
+
+
+### Features
+
+* eslint migration to flat config ([fd6246d](https://github.com/twinfoundation/identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.2 to 0.0.2-next.3
+    * @twin.org/identity-connector-iota bumped from 0.0.2-next.2 to 0.0.2-next.3
+
 ## [0.0.2-next.2](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.1...identity-cli-v0.0.2-next.2) (2025-08-20)
 
 
