@@ -65,7 +65,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 	test("Can fail to get an identity when connector fails", async () => {
 		identityProfileEntityStorage.get = vi.fn().mockImplementation(() => {
-			// eslint-disable-next-line no-restricted-syntax
 			throw new Error("Test Error");
 		});
 
@@ -201,7 +200,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 	test("Can fail to update an identity when connector fails", async () => {
 		identityProfileEntityStorage.get = vi.fn().mockImplementation(() => {
-			// eslint-disable-next-line no-restricted-syntax
 			throw new Error("Test Error");
 		});
 
@@ -281,7 +279,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 	test("Can fail get a list of identities when connector fails", async () => {
 		identityProfileEntityStorage.query = vi.fn().mockImplementation(() => {
-			// eslint-disable-next-line no-restricted-syntax
 			throw new Error("Test Error");
 		});
 
