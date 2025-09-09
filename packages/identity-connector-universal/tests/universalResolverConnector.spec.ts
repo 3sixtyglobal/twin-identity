@@ -10,10 +10,10 @@ describe("UniversalResolverConnector", () => {
 
 		// We will need to create an identity to check for once the iota connector is ready
 		const document = await resolver.resolveDocument(
-			"did:iota:testnet:0x119adb64d01d3b0fa0d308c67db90ab1c6e0df6aebe5b7e0250783f57cd10c21"
+			"did:iota:testnet:0xd5bca38bae48da76a364b1f17e0c5ccafdb3be33f94860fff2883fe56b3eb583"
 		);
 		expect(document.id).toEqual(
-			"did:iota:testnet:0x119adb64d01d3b0fa0d308c67db90ab1c6e0df6aebe5b7e0250783f57cd10c21"
+			"did:iota:testnet:0xd5bca38bae48da76a364b1f17e0c5ccafdb3be33f94860fff2883fe56b3eb583"
 		);
 	});
 });
