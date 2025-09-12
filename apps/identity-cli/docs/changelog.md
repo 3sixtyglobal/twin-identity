@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.2-next.4](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.3...identity-cli-v0.0.2-next.4) (2025-09-12)
+
+
+### Features
+
+* add expiration date option to vc creation ([73e05e1](https://github.com/twinfoundation/identity/commit/73e05e1ae61112c7e056889969751f4ff82d9f29))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.3 to 0.0.2-next.4
+    * @twin.org/identity-connector-iota bumped from 0.0.2-next.3 to 0.0.2-next.4
+
 ## [0.0.2-next.3](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.2...identity-cli-v0.0.2-next.3) (2025-08-29)
 
 

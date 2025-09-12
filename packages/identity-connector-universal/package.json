@@ -1,6 +1,6 @@
 {
 	"name": "@twin.org/identity-connector-universal",
-	"version": "0.0.2-next.3",
+	"version": "0.0.2-next.4",
 	"description": "Identity connector implementation using universal resolver",
 	"repository": {
 		"type": "git",
@@ -32,7 +32,7 @@
 	},
 	"dependencies": {
 		"@twin.org/core": "next",
-		"@twin.org/identity-models": "0.0.2-next.3",
+		"@twin.org/identity-models": "0.0.2-next.4",
 		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/web": "next"
