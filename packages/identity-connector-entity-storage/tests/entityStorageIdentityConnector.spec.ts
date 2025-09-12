@@ -374,7 +374,7 @@ describe("EntityStorageIdentityConnector", () => {
 				undefined as unknown as string,
 				undefined as unknown as string,
 				undefined as unknown as IJsonLdNodeObject,
-				undefined as unknown as number
+				undefined as unknown as {}
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -394,7 +394,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"foo",
 				"UniversityDegreeCredential",
 				undefined as unknown as IJsonLdNodeObject,
-				undefined as unknown as number
+				undefined as unknown as {}
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -432,11 +432,11 @@ describe("EntityStorageIdentityConnector", () => {
 				id: holderDocument.id,
 				name: "Jane Doe"
 			},
-			5
+			{ revocationIndex: 5 }
 		);
 
 		expect(result.verifiableCredential["@context"]).toEqual([
-			DidContexts.ContextVCv2,
+			DidContexts.ContextVCv1,
 			"https://schema.org"
 		]);
 		expect(result.verifiableCredential.id).toEqual("https://example.com/credentials/3732");
@@ -493,7 +493,7 @@ describe("EntityStorageIdentityConnector", () => {
 
 		expect(result.revoked).toBeFalsy();
 		expect(result.verifiableCredential?.["@context"]).toEqual([
-			DidContexts.ContextVCv2,
+			DidContexts.ContextVCv1,
 			"https://schema.org"
 		]);
 		expect(result.verifiableCredential?.id).toEqual("https://example.com/credentials/3732");
@@ -744,7 +744,7 @@ describe("EntityStorageIdentityConnector", () => {
 		);
 
 		expect(result.verifiablePresentation["@context"]).toEqual([
-			DidContexts.ContextVCv2,
+			DidContexts.ContextVCv1,
 			"https://schema.org"
 		]);
 		expect(result.verifiablePresentation.type).toEqual([DidTypes.VerifiablePresentation, "Person"]);
@@ -779,7 +779,7 @@ describe("EntityStorageIdentityConnector", () => {
 
 		expect(result.revoked).toBeFalsy();
 		expect(result.verifiablePresentation?.["@context"]).toEqual([
-			DidContexts.ContextVCv2,
+			DidContexts.ContextVCv1,
 			"https://schema.org"
 		]);
 		expect(result.verifiablePresentation?.type).toEqual([
@@ -840,8 +840,8 @@ describe("EntityStorageIdentityConnector", () => {
 
 		const unsecuredDocument: IDidVerifiableCredential & IJsonLdNodeObject = {
 			"@context": [
-				"https://www.w3.org/ns/credentials/v2",
-				"https://www.w3.org/ns/credentials/examples/v2"
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1"
 			],
 			id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 			type: ["VerifiableCredential", "AlumniCredential"],
@@ -864,8 +864,9 @@ describe("EntityStorageIdentityConnector", () => {
 
 		expect(proof).toEqual({
 			"@context": [
-				"https://www.w3.org/ns/credentials/v2",
-				"https://www.w3.org/ns/credentials/examples/v2"
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1",
+				"https://www.w3.org/ns/credentials/v2"
 			],
 			type: "DataIntegrityProof",
 			cryptosuite: "eddsa-jcs-2022",
@@ -874,7 +875,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#my-verification-id",
 			proofPurpose: "assertionMethod",
 			proofValue:
-				"z2zGoejwpX6HH2T11BZaniEVZrqRKDpwbQSvPcL7eL9M7hV5P9zQQZxs85n6qyDzkkXCL8aFUWfwQD5bxVGqDK1fa"
+				"zPTz1nTVvHSyfuPV9GdUJYSD6M9KWMvNBc5GFzx7EfhFbrNRRsWdnrGpw1FW4MziE2ZHuau4EzeuGF8yApLjq5Yk"
 		});
 	});
 

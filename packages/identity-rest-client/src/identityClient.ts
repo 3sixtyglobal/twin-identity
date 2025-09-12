@@ -227,7 +227,9 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 	 * @param verificationMethodId The verification method id to use.
 	 * @param id The id of the credential.
 	 * @param subject The credential subject to store in the verifiable credential.
-	 * @param revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options Additional options for creating the verifiable credential.
+	 * @param options.revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options.expirationDate The date the verifiable credential is valid until.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -235,15 +237,18 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		verificationMethodId: string,
 		id: string | undefined,
 		subject: IJsonLdNodeObject,
-		revocationIndex?: number
+		options?: {
+			revocationIndex?: number;
+			expirationDate?: Date;
+		}
 	): Promise<{
 		verifiableCredential: IDidVerifiableCredential;
 		jwt: string;
 	}> {
 		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
 		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(subject), subject);
-		if (!Is.undefined(revocationIndex)) {
-			Guards.number(this.CLASS_NAME, nameof(revocationIndex), revocationIndex);
+		if (!Is.undefined(options?.revocationIndex)) {
+			Guards.number(this.CLASS_NAME, nameof(options?.revocationIndex), options?.revocationIndex);
 		}
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -259,7 +264,8 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 			body: {
 				credentialId: id,
 				subject,
-				revocationIndex
+				revocationIndex: options?.revocationIndex,
+				expirationDate: options?.expirationDate?.toISOString()
 			}
 		});
 

@@ -39,5 +39,10 @@ export interface IIdentityVerifiableCredentialCreateRequest {
 		 * The bitmap revocation index of the credential, if undefined will not have revocation status.
 		 */
 		revocationIndex?: number;
+
+		/**
+		 * The date the verifiable credential is valid until.
+		 */
+		expirationDate?: string;
 	};
 }

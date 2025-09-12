@@ -185,7 +185,9 @@ export async function actionCommandVerifiableCredentialCreate(
 		id,
 		credentialId,
 		jsonData,
-		revocationIndex
+		{
+			revocationIndex
+		}
 	);
 
 	CLIDisplay.spinnerStop();

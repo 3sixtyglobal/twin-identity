@@ -61,13 +61,13 @@ import { DocumentHelper, type IIdentityConnector } from "@twin.org/identity-mode
 import { nameof } from "@twin.org/nameof";
 import {
 	DidVerificationMethodType,
+	type IDidVerifiableCredentialV1,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
 	type IDidDocumentVerificationMethod,
 	type IDidService,
-	type IDidVerifiableCredential,
-	type IDidVerifiablePresentation,
+	type IDidVerifiablePresentationV1,
 	type IProof
 } from "@twin.org/standards-w3c-did";
 import { VaultConnectorFactory, VaultKeyType, type IVaultConnector } from "@twin.org/vault-models";
@@ -530,7 +530,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param verificationMethodId The verification method id to use.
 	 * @param id The id of the credential.
 	 * @param subject The credential subject to store in the verifiable credential.
-	 * @param revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options Additional options for creating the verifiable credential.
+	 * @param options.revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options.expirationDate The date the verifiable credential is valid until.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -539,16 +541,19 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		verificationMethodId: string,
 		id: string | undefined,
 		subject: IJsonLdNodeObject,
-		revocationIndex?: number
+		options?: {
+			revocationIndex?: number;
+			expirationDate?: Date;
+		}
 	): Promise<{
-		verifiableCredential: IDidVerifiableCredential;
+		verifiableCredential: IDidVerifiableCredentialV1;
 		jwt: string;
 	}> {
 		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
 		Guards.objectValue(this.CLASS_NAME, nameof(subject), subject);
-		if (!Is.undefined(revocationIndex)) {
-			Guards.number(this.CLASS_NAME, nameof(revocationIndex), revocationIndex);
+		if (!Is.undefined(options?.revocationIndex)) {
+			Guards.number(this.CLASS_NAME, nameof(options.revocationIndex), options.revocationIndex);
 		}
 
 		try {
@@ -622,15 +627,18 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				credentialSubject: subjectClone,
 				type: finalTypes,
 				id,
-				context: credContext as ICredential["context"]
+				context: credContext as ICredential["context"],
+				expirationDate: Is.date(options?.expirationDate)
+					? Timestamp.parse(options.expirationDate?.toISOString())
+					: undefined
 			});
 
-			if (!Is.undefined(revocationIndex)) {
+			if (!Is.undefined(options?.revocationIndex)) {
 				Object.assign(unsignedVc, {
 					credentialStatus: {
 						id: `${issuerDocument.id().toString()}#revocation`,
 						type: RevocationBitmap.type(),
-						revocationBitmapIndex: revocationIndex.toString()
+						revocationBitmapIndex: options.revocationIndex.toString()
 					}
 				});
 			}
@@ -651,7 +659,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			);
 
 			return {
-				verifiableCredential: decoded.credential().toJSON() as IDidVerifiableCredential,
+				verifiableCredential: decoded.credential().toJSON() as IDidVerifiableCredentialV1,
 				jwt: credentialJwt.toString()
 			};
 		} catch (error) {
@@ -668,7 +676,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	public async checkVerifiableCredential(credentialJwt: string): Promise<{
 		revoked: boolean;
-		verifiableCredential?: IDidVerifiableCredential;
+		verifiableCredential?: IDidVerifiableCredentialV1;
 	}> {
 		Guards.stringValue(this.CLASS_NAME, nameof(credentialJwt), credentialJwt);
 
@@ -696,7 +704,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			return {
 				revoked: false,
-				verifiableCredential: credential.toJSON() as IDidVerifiableCredential
+				verifiableCredential: credential.toJSON() as IDidVerifiableCredentialV1
 			};
 		} catch (error) {
 			if (error instanceof Error && error.message.toLowerCase().includes("revoked")) {
@@ -837,10 +845,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		presentationId: string | undefined,
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
-		verifiableCredentials: (string | IDidVerifiableCredential)[],
+		verifiableCredentials: (string | IDidVerifiableCredentialV1)[],
 		expiresInMinutes?: number
 	): Promise<{
-		verifiablePresentation: IDidVerifiablePresentation;
+		verifiablePresentation: IDidVerifiablePresentationV1;
 		jwt: string;
 	}> {
 		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
@@ -960,7 +968,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			);
 
 			return {
-				verifiablePresentation: decoded.presentation().toJSON() as IDidVerifiablePresentation,
+				verifiablePresentation: decoded.presentation().toJSON() as IDidVerifiablePresentationV1,
 				jwt: presentationJwt.toString()
 			};
 		} catch (error) {
@@ -980,7 +988,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	public async checkVerifiablePresentation(presentationJwt: string): Promise<{
 		revoked: boolean;
-		verifiablePresentation?: IDidVerifiablePresentation;
+		verifiablePresentation?: IDidVerifiablePresentationV1;
 		issuers?: IDidDocument[];
 	}> {
 		Guards.stringValue(this.CLASS_NAME, nameof(presentationJwt), presentationJwt);
@@ -1052,7 +1060,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			return {
 				revoked: false,
-				verifiablePresentation: presentation.toJSON() as IDidVerifiablePresentation,
+				verifiablePresentation: presentation.toJSON() as IDidVerifiablePresentationV1,
 				issuers: jsonIssuers as IDidDocument[]
 			};
 		} catch (error) {

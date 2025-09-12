@@ -9,7 +9,6 @@ import type {
 import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import {
 	DocumentHelper,
-	type IIdentityRemoveRequest,
 	type IIdentityComponent,
 	type IIdentityCreateRequest,
 	type IIdentityCreateResponse,
@@ -17,6 +16,7 @@ import {
 	type IIdentityProofCreateResponse,
 	type IIdentityProofVerifyRequest,
 	type IIdentityProofVerifyResponse,
+	type IIdentityRemoveRequest,
 	type IIdentityServiceCreateRequest,
 	type IIdentityServiceCreateResponse,
 	type IIdentityServiceRemoveRequest,
@@ -364,7 +364,7 @@ export function generateRestRoutesIdentity(
 						response: {
 							body: {
 								verifiableCredential: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "https://example.com/credentials/3732",
 									type: ["VerifiableCredential", "Person"],
 									credentialSubject: {
@@ -423,7 +423,7 @@ export function generateRestRoutesIdentity(
 							body: {
 								revoked: false,
 								verifiableCredential: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "https://example.com/credentials/3732",
 									type: ["VerifiableCredential", "Person"],
 									credentialSubject: {
@@ -569,7 +569,7 @@ export function generateRestRoutesIdentity(
 						response: {
 							body: {
 								verifiablePresentation: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "presentationId",
 									type: ["VerifiablePresentation", "Person"],
 									verifiableCredential: ["eyJraWQiOi...D1Z3AQ"],
@@ -619,7 +619,7 @@ export function generateRestRoutesIdentity(
 							body: {
 								revoked: false,
 								verifiablePresentation: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "presentationId",
 									type: ["VerifiablePresentation", "Person"],
 									verifiableCredential: ["eyJraWQiOi...D1Z3AQ"],
@@ -661,8 +661,8 @@ export function generateRestRoutesIdentity(
 							proofType: "DataIntegrityProof",
 							document: {
 								"@context": [
-									"https://www.w3.org/ns/credentials/v2",
-									"https://www.w3.org/ns/credentials/examples/v2"
+									"https://www.w3.org/2018/credentials/v1",
+									"https://www.w3.org/2018/credentials/examples/v1"
 								],
 								id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 								type: ["VerifiableCredential", "AlumniCredential"],
@@ -728,8 +728,8 @@ export function generateRestRoutesIdentity(
 						body: {
 							document: {
 								"@context": [
-									"https://www.w3.org/ns/credentials/v2",
-									"https://www.w3.org/ns/credentials/examples/v2"
+									"https://www.w3.org/2018/credentials/v1",
+									"https://www.w3.org/2018/credentials/examples/v1"
 								],
 								id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 								type: ["VerifiableCredential", "AlumniCredential"],
@@ -1081,7 +1081,10 @@ export async function identityVerifiableCredentialCreate(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
 		request.body.credentialId,
 		request.body.subject,
-		request.body.revocationIndex,
+		{
+			revocationIndex: request.body.revocationIndex,
+			expirationDate: Coerce.date(request.body.expirationDate)
+		},
 		httpRequestContext.userIdentity
 	);
 

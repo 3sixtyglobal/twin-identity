@@ -211,13 +211,13 @@ describe("IdentityService", () => {
 				"@type": "Person",
 				name: "Jane Doe"
 			},
-			5,
+			{ revocationIndex: 5 },
 			TEST_CONTROLLER
 		);
 
 		expect(vc).toEqual({
 			verifiableCredential: {
-				"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+				"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 				id: "https://example.com/credentials/3732",
 				type: ["VerifiableCredential", "Person"],
 				credentialSubject: {
@@ -232,7 +232,7 @@ describe("IdentityService", () => {
 					revocationBitmapIndex: "5"
 				}
 			},
-			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI2hHSEdzMER4TEFXY2d6eDBRalRiekpjM1BPLU5NcVNGQVBjZGd6eF9xUW8iLCJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3NjaGVtYS5vcmciXSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlBlcnNvbiJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjoiSmFuZSBEb2UifSwiY3JlZGVudGlhbFN0YXR1cyI6eyJpZCI6ImRpZDplbnRpdHktc3RvcmFnZToweDAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEjcmV2b2NhdGlvbiIsInR5cGUiOiJCaXRzdHJpbmdTdGF0dXNMaXN0IiwicmV2b2NhdGlvbkJpdG1hcEluZGV4IjoiNSJ9fX0.k09un1ysCcvOqgG-hqhZskQxsUapS6azaIlue-9a7OqfPobG5K29UlI3_LvHN21G4k5qKGMQZi11TwU1QHDYCw"
+			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI2hHSEdzMER4TEFXY2d6eDBRalRiekpjM1BPLU5NcVNGQVBjZGd6eF9xUW8iLCJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vc2NoZW1hLm9yZyJdLCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiUGVyc29uIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOiJKYW5lIERvZSJ9LCJjcmVkZW50aWFsU3RhdHVzIjp7ImlkIjoiZGlkOmVudGl0eS1zdG9yYWdlOjB4MDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMSNyZXZvY2F0aW9uIiwidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3QiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiI1In19fQ.qIBfIKqPiNaOiood39A7q1OY83eBABhd_N-WtCPZthjqVaR-lmmUMrjtaAxkMwbDcRfgdW4IIM38cqMuTjiVCw"
 		});
 	});
 });

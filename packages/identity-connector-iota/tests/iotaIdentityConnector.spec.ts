@@ -598,7 +598,10 @@ describe("IotaIdentityConnector", () => {
 				id: did,
 				name: "Jane Doe"
 			},
-			123
+			{
+				revocationIndex: 123,
+				expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+			}
 		);
 
 		expect(result).toBeDefined();
@@ -615,8 +618,13 @@ describe("IotaIdentityConnector", () => {
 			expect(credentialSubject.name).toEqual("Jane Doe");
 		}
 
+		console.log(result);
+
 		expect(result.verifiableCredential.issuer).toEqual(did);
 		expect(result.verifiableCredential.issuanceDate).toBeDefined();
+		expect(new Date(result.verifiableCredential.expirationDate ?? "").getFullYear()).toEqual(
+			new Date().getFullYear() + 1
+		);
 
 		// Check credential status
 		if (result.verifiableCredential.credentialStatus) {
@@ -741,7 +749,9 @@ describe("IotaIdentityConnector", () => {
 				id: didId,
 				name: "Unrevocation Test"
 			},
-			revocationIndex
+			{
+				revocationIndex
+			}
 		);
 
 		expect(result).toBeDefined();
@@ -1041,8 +1051,8 @@ describe("IotaIdentityConnector", () => {
 
 		const unsecuredDocument: IDidVerifiableCredential & IJsonLdNodeObject = {
 			"@context": [
-				"https://www.w3.org/ns/credentials/v2",
-				"https://www.w3.org/ns/credentials/examples/v2"
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1"
 			],
 			id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 			type: ["VerifiableCredential", "AlumniCredential"],
@@ -1070,8 +1080,8 @@ describe("IotaIdentityConnector", () => {
 	it("should fail to verify a tampered document", async () => {
 		const unsecuredDocument: IDidVerifiableCredential & IJsonLdNodeObject = {
 			"@context": [
-				"https://www.w3.org/ns/credentials/v2",
-				"https://www.w3.org/ns/credentials/examples/v2"
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1"
 			],
 			id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 			type: ["VerifiableCredential", "AlumniCredential"],
@@ -1102,8 +1112,8 @@ describe("IotaIdentityConnector", () => {
 	it("should fail to verify a tampered proof", async () => {
 		const unsecuredDocument: IDidVerifiableCredential & IJsonLdNodeObject = {
 			"@context": [
-				"https://www.w3.org/ns/credentials/v2",
-				"https://www.w3.org/ns/credentials/examples/v2"
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1"
 			],
 			id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 			type: ["VerifiableCredential", "AlumniCredential"],
