@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-iota - Changelog
 
+## [0.0.2-next.5](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.2-next.4...identity-connector-iota-v0.0.2-next.5) (2025-09-15)
+
+
+### Features
+
+* add addressIndex option to all commands ([a644674](https://github.com/twinfoundation/identity/commit/a644674017d1a8fe5d8685950316bec922a9b195))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.4 to 0.0.2-next.5
+
 ## [0.0.2-next.4](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.2-next.3...identity-connector-iota-v0.0.2-next.4) (2025-09-12)
 
 
