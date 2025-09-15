@@ -618,8 +618,6 @@ describe("IotaIdentityConnector", () => {
 			expect(credentialSubject.name).toEqual("Jane Doe");
 		}
 
-		console.log(result);
-
 		expect(result.verifiableCredential.issuer).toEqual(did);
 		expect(result.verifiableCredential.issuanceDate).toBeDefined();
 		expect(new Date(result.verifiableCredential.expirationDate ?? "").getFullYear()).toEqual(

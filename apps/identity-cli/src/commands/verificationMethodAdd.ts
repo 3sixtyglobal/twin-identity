@@ -47,8 +47,12 @@ export function buildCommandVerificationMethodAdd(): Command {
 		.option(
 			I18n.formatMessage("commands.verification-method-add.options.id.param"),
 			I18n.formatMessage("commands.verification-method-add.options.id.description")
+		)
+		.option(
+			I18n.formatMessage("commands.verification-method-add.options.addressIndex.param"),
+			I18n.formatMessage("commands.verification-method-add.options.addressIndex.description"),
+			"0"
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -96,6 +100,8 @@ export function buildCommandVerificationMethodAdd(): Command {
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  * @param opts.explorer The explorer URL.
+ * @param opts.network The network to use for connector.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  */
 export async function actionCommandVerificationMethodAdd(
 	opts: {
@@ -103,6 +109,7 @@ export async function actionCommandVerificationMethodAdd(
 		did: string;
 		type: DidVerificationMethodType;
 		id?: string;
+		addressIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
@@ -115,6 +122,7 @@ export async function actionCommandVerificationMethodAdd(
 		"type",
 		opts.type
 	) as DidVerificationMethodType;
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -133,6 +141,10 @@ export async function actionCommandVerificationMethodAdd(
 			opts?.id
 		);
 	}
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verification-method-add.labels.addressIndex"),
+		addressIndex
+	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -155,7 +167,7 @@ export async function actionCommandVerificationMethodAdd(
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 

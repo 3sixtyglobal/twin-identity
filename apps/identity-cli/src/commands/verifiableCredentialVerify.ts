@@ -28,7 +28,6 @@ export function buildCommandVerifiableCredentialVerify(): Command {
 			I18n.formatMessage("commands.verifiable-credential-verify.options.jwt.param"),
 			I18n.formatMessage("commands.verifiable-credential-verify.options.jwt.description")
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,

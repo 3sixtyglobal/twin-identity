@@ -27,8 +27,12 @@ export function buildCommandServiceRemove(): Command {
 		.requiredOption(
 			I18n.formatMessage("commands.service-remove.options.id.param"),
 			I18n.formatMessage("commands.service-remove.options.id.description")
+		)
+		.option(
+			I18n.formatMessage("commands.service-remove.options.addressIndex.param"),
+			I18n.formatMessage("commands.service-remove.options.addressIndex.description"),
+			"0"
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -75,10 +79,12 @@ export function buildCommandServiceRemove(): Command {
  * @param opts.node The node URL.
  * @param opts.network The network to use for connector.
  * @param opts.explorer The explorer URL.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  */
 export async function actionCommandServiceRemove(opts: {
 	seed: string;
 	id: string;
+	addressIndex?: string;
 	connector?: IdentityConnectorTypes;
 	node: string;
 	network?: string;
@@ -86,6 +92,7 @@ export async function actionCommandServiceRemove(opts: {
 }): Promise<void> {
 	const seed: Uint8Array = CLIParam.hexBase64("seed", opts.seed);
 	const id: string = CLIParam.stringValue("id", opts.id);
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -94,6 +101,7 @@ export async function actionCommandServiceRemove(opts: {
 	const explorerEndpoint: string = CLIParam.url("explorer", opts.explorer);
 
 	CLIDisplay.value(I18n.formatMessage("commands.service-remove.labels.serviceId"), id);
+	CLIDisplay.value(I18n.formatMessage("commands.service-remove.labels.addressIndex"), addressIndex);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -116,7 +124,7 @@ export async function actionCommandServiceRemove(opts: {
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 

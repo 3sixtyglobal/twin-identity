@@ -35,7 +35,6 @@ export function buildCommandProofVerify(): Command {
 			I18n.formatMessage("commands.proof-verify.options.proof-filename.param"),
 			I18n.formatMessage("commands.proof-verify.options.proof-filename.description")
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,

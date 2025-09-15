@@ -67,6 +67,10 @@
 				"id": {
 					"param": "--id '<'id'>'",
 					"description": "The optional id of verification method to add, if not provided one will be generated."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -79,7 +83,8 @@
 				"publicKeyBase64": "Public Key Base64",
 				"privateKeyHex": "Private Key Hex",
 				"publicKeyHex": "Public Key Hex",
-				"kid": "Key Id"
+				"kid": "Key Id",
+				"addressIndex": "Address Index"
 			}
 		},
 		"verification-method-remove": {
@@ -97,13 +102,18 @@
 				"id": {
 					"param": "--id '<'id'>'",
 					"description": "The id of verification method to remove."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"removingVerificationMethod": "Removing Verification Method"
 			},
 			"labels": {
-				"verificationMethodId": "Verification Method Id"
+				"verificationMethodId": "Verification Method Id",
+				"addressIndex": "Address Index"
 			}
 		},
 		"service-add": {
@@ -129,6 +139,10 @@
 				"endpoint": {
 					"param": "--endpoint '<'endpoint'>'",
 					"description": "The service endpoint to add."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -137,7 +151,8 @@
 			"labels": {
 				"serviceId": "Service Id",
 				"serviceType": "Service Type",
-				"serviceEndpoint": "Service Endpoint"
+				"serviceEndpoint": "Service Endpoint",
+				"addressIndex": "Address Index"
 			}
 		},
 		"service-remove": {
@@ -151,13 +166,18 @@
 				"id": {
 					"param": "--id '<'id'>'",
 					"description": "The id of service to remove."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"removingService": "Removing Service"
 			},
 			"labels": {
-				"serviceId": "Service Id"
+				"serviceId": "Service Id",
+				"addressIndex": "Address Index"
 			}
 		},
 		"verifiable-credential-create": {
@@ -183,6 +203,10 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index in the issuing document to use if revoking the credential."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -194,7 +218,8 @@
 				"credentialId": "Credential Id",
 				"subjectJson": "Subject JSON",
 				"revocationIndex": "Revocation Index",
-				"verifiableCredential": "Verifiable Credential"
+				"verifiableCredential": "Verifiable Credential",
+				"addressIndex": "Address Index"
 			}
 		},
 		"verifiable-credential-verify": {
@@ -230,13 +255,18 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index of the credential revoke."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"revokingCredential": "Revoking Credential Index"
 			},
 			"labels": {
-				"revocationIndex": "Revocation Index"
+				"revocationIndex": "Revocation Index",
+				"addressIndex": "Address Index"
 			}
 		},
 		"verifiable-credential-unrevoke": {
@@ -254,13 +284,18 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index of the credential unrevoke."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"unrevokingCredential": "Unrevoking Credential Index"
 			},
 			"labels": {
-				"revocationIndex": "Revocation Index"
+				"revocationIndex": "Revocation Index",
+				"addressIndex": "Address Index"
 			}
 		},
 		"proof-create": {
@@ -278,6 +313,10 @@
 				"document-filename": {
 					"param": "--document-filename '<'document-filename'>'",
 					"description": "The filename of a JSON-LD document to create the proof for."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -285,7 +324,8 @@
 			},
 			"labels": {
 				"documentFilename": "Document Filename",
-				"verificationMethodId": "Verification Method Id"
+				"verificationMethodId": "Verification Method Id",
+				"addressIndex": "Address Index"
 			}
 		},
 		"proof-verify": {

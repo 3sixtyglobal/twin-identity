@@ -44,8 +44,12 @@ export function buildCommandServiceAdd(): Command {
 		.requiredOption(
 			I18n.formatMessage("commands.service-add.options.endpoint.param"),
 			I18n.formatMessage("commands.service-add.options.endpoint.description")
+		)
+		.option(
+			I18n.formatMessage("commands.service-add.options.addressIndex.param"),
+			I18n.formatMessage("commands.service-add.options.addressIndex.description"),
+			"0"
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -91,6 +95,7 @@ export function buildCommandServiceAdd(): Command {
  * @param opts.id The id of the service to add.
  * @param opts.type The type of the service to add.
  * @param opts.endpoint The service endpoint.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  * @param opts.explorer The explorer URL.
@@ -102,6 +107,7 @@ export async function actionCommandServiceAdd(
 		id: string;
 		type: string;
 		endpoint: string;
+		addressIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
@@ -113,6 +119,7 @@ export async function actionCommandServiceAdd(
 	const id: string = CLIParam.stringValue("id", opts.id);
 	const type: string = CLIParam.stringValue("type", opts.type);
 	const endpoint: string = CLIParam.url("endpoint", opts.endpoint);
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -124,6 +131,7 @@ export async function actionCommandServiceAdd(
 	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.serviceId"), id);
 	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.serviceType"), type);
 	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.serviceEndpoint"), endpoint);
+	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.addressIndex"), addressIndex);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -146,7 +154,7 @@ export async function actionCommandServiceAdd(
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 

@@ -32,8 +32,12 @@ export function buildCommandVerifiableCredentialRevoke(): Command {
 			I18n.formatMessage(
 				"commands.verifiable-credential-revoke.options.revocation-index.description"
 			)
+		)
+		.option(
+			I18n.formatMessage("commands.verifiable-credential-revoke.options.addressIndex.param"),
+			I18n.formatMessage("commands.verifiable-credential-revoke.options.addressIndex.description"),
+			"0"
 		);
-
 	command
 		.addOption(
 			new Option(
@@ -67,11 +71,13 @@ export function buildCommandVerifiableCredentialRevoke(): Command {
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  * @param opts.network The network to use for connector.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  */
 export async function actionCommandVerifiableCredentialRevoke(opts: {
 	seed: string;
 	did: string;
 	revocationIndex: string;
+	addressIndex?: string;
 	connector?: IdentityConnectorTypes;
 	node: string;
 	network?: string;
@@ -79,6 +85,7 @@ export async function actionCommandVerifiableCredentialRevoke(opts: {
 	const seed: Uint8Array = CLIParam.hexBase64("seed", opts.seed);
 	const did: string = CLIParam.stringValue("did", opts.did);
 	const revocationIndex: number = CLIParam.integer("revocation-index", opts.revocationIndex);
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -89,6 +96,10 @@ export async function actionCommandVerifiableCredentialRevoke(opts: {
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-revoke.labels.revocationIndex"),
 		revocationIndex
+	);
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verifiable-credential-revoke.labels.addressIndex"),
+		addressIndex
 	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
@@ -111,7 +122,7 @@ export async function actionCommandVerifiableCredentialRevoke(opts: {
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 
