@@ -1,0 +1,8 @@
+{
+	"baseUrl": "https://schema.twindev.org/identity-authentication/",
+	"types": ["./src/models/IIdentityAuthenticationActionRequest.ts"],
+	"externalReferences": {
+		"IJsonLd(.*)": "https://schema.twindev.org/json-ld/JsonLd$1",
+		"IProof": "https://schema.twindev.org/w3c-did/Proof"
+	}
+}

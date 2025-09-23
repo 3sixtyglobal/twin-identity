@@ -50,6 +50,13 @@
 				"src/index.ts"
 			]
 		},
+		"packages/identity-authentication": {
+			"package-name": "identity-authentication",
+			"changelog-path": "docs/changelog.md",
+			"extra-files": [
+				"src/index.ts"
+			]
+		},
 		"apps/identity-cli": {
 			"package-name": "identity-cli",
 			"changelog-path": "docs/changelog.md",
@@ -72,6 +79,7 @@
 				"identity-rest-client",
 				"identity-connector-iota",
 				"identity-connector-universal",
+				"identity-authentication",
 				"identity-cli"
 			]
 		}
