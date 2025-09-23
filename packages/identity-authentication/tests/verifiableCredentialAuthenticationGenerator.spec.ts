@@ -76,8 +76,11 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 		const authenticationRequest: IIdentityAuthenticationActionRequest = {
 			"@context": IdentityAuthenticationContexts.ContextRoot,
 			type: IdentityAuthenticationTypes.ActionRequest,
-			nodeIdentity: testIdentity,
-			action: "urn:action:action-1"
+			requester: testIdentity,
+			action: "urn:action:action-1",
+			data: {
+				foo: "bar"
+			}
 		};
 
 		const generator = new VerifiableCredentialAuthenticationGenerator({
@@ -129,7 +132,10 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 			],
 			credentialSubject: {
 				action: "urn:action:action-1",
-				nodeIdentity: testIdentity
+				requester: testIdentity,
+				data: {
+					foo: "bar"
+				}
 			},
 			issuanceDate: "2024-08-22T11:56:56.000Z",
 			issuer: testIdentity,
@@ -138,7 +144,10 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 		expect(processorState.verifiableCredentialIssuer).toEqual(testIdentity);
 		expect(processorState.verifiableCredentialSubject).toEqual({
 			action: "urn:action:action-1",
-			nodeIdentity: testIdentity
+			requester: testIdentity,
+			data: {
+				foo: "bar"
+			}
 		});
 	});
 });

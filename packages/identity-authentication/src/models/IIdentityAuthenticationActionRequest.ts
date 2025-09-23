@@ -18,12 +18,17 @@ export interface IIdentityAuthenticationActionRequest {
 	type: typeof IdentityAuthenticationTypes.ActionRequest;
 
 	/**
-	 * The node identity.
+	 * The identity of the entity making the request.
 	 */
-	nodeIdentity: string;
+	requester: string;
 
 	/**
-	 * The action.
+	 * The action which can be checked to make sure it matches the specific operation.
 	 */
-	action: string;
+	action?: string;
+
+	/**
+	 * Additional data for the action request, can be customised per request.
+	 */
+	data?: unknown;
 }

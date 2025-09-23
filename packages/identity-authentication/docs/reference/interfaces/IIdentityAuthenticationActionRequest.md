@@ -20,16 +20,24 @@ The type of the request.
 
 ***
 
-### nodeIdentity
+### requester
 
-> **nodeIdentity**: `string`
+> **requester**: `string`
 
-The node identity.
+The identity of the entity making the request.
 
 ***
 
-### action
+### action?
 
-> **action**: `string`
+> `optional` **action**: `string`
 
-The action.
+The action which can be checked to make sure it matches the specific operation.
+
+***
+
+### data?
+
+> `optional` **data**: `unknown`
+
+Additional data for the action request, can be customised per request.
