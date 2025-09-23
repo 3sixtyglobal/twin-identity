@@ -42,9 +42,14 @@
 		"@twin.org/web": "next"
 	},
 	"devDependencies": {
+		"@twin.org/entity-storage-connector-memory": "next",
+		"@twin.org/entity-storage-models": "next",
+		"@twin.org/identity-connector-entity-storage": "0.0.2-next.6",
 		"@twin.org/nameof-transformer": "next",
 		"@twin.org/nameof-vitest-plugin": "next",
 		"@twin.org/ts-to-schema": "next",
+		"@twin.org/vault-connector-entity-storage": "next",
+		"@twin.org/vault-models": "next",
 		"@vitest/coverage-v8": "3.2.4",
 		"copyfiles": "2.4.1",
 		"nodemon": "3.1.10",
