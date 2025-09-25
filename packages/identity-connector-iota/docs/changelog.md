@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-iota - Changelog
 
+## [0.0.2-next.8](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.2-next.7...identity-connector-iota-v0.0.2-next.8) (2025-09-25)
+
+
+### Features
+
+* add idHelper class ([57c8bdb](https://github.com/twinfoundation/identity/commit/57c8bdb81efaa163b5e83f8a7f16f3764d12fd75))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.7 to 0.0.2-next.8
+
 ## [0.0.2-next.7](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.2-next.6...identity-connector-iota-v0.0.2-next.7) (2025-09-23)
 
 

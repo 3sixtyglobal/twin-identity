@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.2-next.8](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.7...identity-models-v0.0.2-next.8) (2025-09-25)
+
+
+### Features
+
+* add idHelper class ([57c8bdb](https://github.com/twinfoundation/identity/commit/57c8bdb81efaa163b5e83f8a7f16f3764d12fd75))
+
 ## [0.0.2-next.7](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.6...identity-models-v0.0.2-next.7) (2025-09-23)
 
 

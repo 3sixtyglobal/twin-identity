@@ -1,5 +1,21 @@
 # @twin.org/identity-service - Changelog
 
+## [0.0.2-next.8](https://github.com/twinfoundation/identity/compare/identity-service-v0.0.2-next.7...identity-service-v0.0.2-next.8) (2025-09-25)
+
+
+### Miscellaneous Chores
+
+* **identity-service:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.7 to 0.0.2-next.8
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.2-next.7 to 0.0.2-next.8
+
 ## [0.0.2-next.7](https://github.com/twinfoundation/identity/compare/identity-service-v0.0.2-next.6...identity-service-v0.0.2-next.7) (2025-09-23)
 
 
