@@ -43,4 +43,5 @@ export * from "./models/IIdentityProfileConnector";
 export * from "./models/IIdentityResolverComponent";
 export * from "./models/IIdentityResolverConnector";
 export * from "./utils/documentHelper";
+export * from "./utils/idHelper";
 export * from "./utils/verificationHelper";

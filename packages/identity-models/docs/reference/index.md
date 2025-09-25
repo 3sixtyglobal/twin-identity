@@ -3,6 +3,7 @@
 ## Classes
 
 - [DocumentHelper](classes/DocumentHelper.md)
+- [IdHelper](classes/IdHelper.md)
 - [VerificationHelper](classes/VerificationHelper.md)
 
 ## Interfaces

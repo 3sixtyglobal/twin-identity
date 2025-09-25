@@ -57,7 +57,7 @@ import {
 } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { Iota } from "@twin.org/dlt-iota";
-import { DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
+import { DocumentHelper, IdHelper, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
 	DidVerificationMethodType,
@@ -264,7 +264,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(documentId));
+			const identity = await identityClient.getIdentity(IdHelper.parseId(documentId).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", identityOnChain);
@@ -385,7 +385,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.removeMethod(method.id());
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(idParts.id));
+			const identity = await identityClient.getIdentity(IdHelper.parseId(idParts.id).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", verificationMethodId);
@@ -437,7 +437,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(documentId));
+			const identity = await identityClient.getIdentity(IdHelper.parseId(documentId).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", identityOnChain);
@@ -502,7 +502,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.removeService(service.id());
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(idParts.id));
+			const identity = await identityClient.getIdentity(IdHelper.parseId(idParts.id).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", idParts.id);
@@ -753,7 +753,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.revokeCredentials("revocation", credentialIndices);
 
-			const aliasId = this.extractAliasId(issuerDocumentId);
+			const aliasId = IdHelper.parseId(issuerDocumentId).id;
 			const identity = await identityClient.getIdentity(aliasId);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
@@ -806,7 +806,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.unrevokeCredentials("revocation", credentialIndices);
 
-			const aliasId = this.extractAliasId(issuerDocumentId);
+			const aliasId = IdHelper.parseId(issuerDocumentId).id;
 			const identity = await identityClient.getIdentity(aliasId);
 			const identityOnChain = identity.toFullFledged();
 
@@ -1371,18 +1371,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		}
 
 		return IotaDID.parse(`did:iota:${networkHrp}:${objectId}`);
-	}
-
-	/**
-	 * Extract alias id from document id.
-	 * @param documentId The id of the document.
-	 * @returns The alias id.
-	 * @internal
-	 */
-	private extractAliasId(documentId: string): string {
-		const didUrn = Urn.fromValidString(documentId);
-		const didParts = didUrn.parts();
-		return didParts[didParts.length - 1];
 	}
 
 	/**
