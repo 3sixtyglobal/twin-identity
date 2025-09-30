@@ -88,5 +88,16 @@
 	],
 	"bin": {
 		"twin-identity": "bin/index.js"
-	}
+	},
+	"keywords": [
+		"twin",
+		"trade",
+		"iota",
+		"framework",
+		"blockchain",
+		"identity",
+		"did",
+		"credentials",
+		"authentication"
+	]
 }

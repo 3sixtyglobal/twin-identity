@@ -81,5 +81,19 @@
 		"dist/types",
 		"locales",
 		"docs"
+	],
+	"keywords": [
+		"twin",
+		"trade",
+		"iota",
+		"framework",
+		"blockchain",
+		"identity",
+		"did",
+		"credentials",
+		"authentication",
+		"connector",
+		"adapter",
+		"integration"
 	]
 }

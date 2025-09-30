@@ -77,5 +77,23 @@
 		"dist/types",
 		"locales",
 		"docs"
+	],
+	"keywords": [
+		"twin",
+		"trade",
+		"iota",
+		"framework",
+		"blockchain",
+		"identity",
+		"did",
+		"credentials",
+		"authentication",
+		"entity",
+		"storage",
+		"persistence",
+		"database",
+		"connector",
+		"adapter",
+		"integration"
 	]
 }
