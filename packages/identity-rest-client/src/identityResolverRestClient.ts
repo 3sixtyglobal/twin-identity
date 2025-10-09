@@ -24,7 +24,7 @@ export class IdentityResolverRestClient
 	public static readonly CLASS_NAME: string = nameof<IdentityResolverRestClient>();
 
 	/**
-	 * Create a new instance of IdentityResolverRestClient
+	 * Create a new instance of IdentityResolverRestClient.
 	 * @param config The configuration for the client.
 	 */
 	constructor(config: IBaseRestClientConfig) {
