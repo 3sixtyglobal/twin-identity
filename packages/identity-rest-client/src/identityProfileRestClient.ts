@@ -33,7 +33,7 @@ export class IdentityProfileRestClient<
 	public static readonly CLASS_NAME: string = nameof<IdentityProfileRestClient>();
 
 	/**
-	 * Create a new instance of IdentityClient.
+	 * Create a new instance of IdentityProfileRestClient
 	 * @param config The configuration for the client.
 	 */
 	constructor(config: IBaseRestClientConfig) {

@@ -53,7 +53,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	public static readonly CLASS_NAME: string = nameof<IdentityRestClient>();
 
 	/**
-	 * Create a new instance of IdentityClient.
+	 * Create a new instance of IdentityRestClient
 	 * @param config The configuration for the client.
 	 */
 	constructor(config: IBaseRestClientConfig) {
