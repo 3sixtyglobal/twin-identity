@@ -40,24 +40,42 @@ runs:
         echo "Waiting for Redis and Gas Station to start..."
 
         # Wait for Redis
+        REDIS_READY=false
         for i in {1..30}; do
           if docker exec twin-gas-station-test redis-cli ping 2>/dev/null | grep -q PONG; then
             echo "✅ Redis is ready!"
+            REDIS_READY=true
             break
           fi
           echo "Attempt $i: Redis not ready yet, waiting..."
           sleep 2
         done
+        
+        # Verify Redis is actually ready
+        if [ "$REDIS_READY" = false ]; then
+          echo "❌ Redis failed to start after 30 attempts (60 seconds)"
+          docker logs twin-gas-station-test --tail 20
+          exit 1
+        fi
 
         # Wait for Gas Station
+        GAS_STATION_READY=false
         for i in {1..45}; do
           if curl -f http://localhost:9527/ 2>/dev/null; then
             echo "✅ Gas station is ready!"
+            GAS_STATION_READY=true
             break
           fi
           echo "Attempt $i: Gas station not ready yet, waiting..."
           sleep 5
         done
+        
+        # Verify Gas Station is actually ready
+        if [ "$GAS_STATION_READY" = false ]; then
+          echo "❌ Gas Station failed to start after 45 attempts (225 seconds)"
+          docker logs twin-gas-station-test --tail 20
+          exit 1
+        fi
 
         echo "✅ All services are ready!"
 
