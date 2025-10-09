@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.2-next.9](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.8...identity-cli-v0.0.2-next.9) (2025-10-09)
+
+
+### Features
+
+* add validate-locales ([04d74b4](https://github.com/twinfoundation/identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.8 to 0.0.2-next.9
+    * @twin.org/identity-connector-iota bumped from 0.0.2-next.8 to 0.0.2-next.9
+
 ## [0.0.2-next.8](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.2-next.7...identity-cli-v0.0.2-next.8) (2025-09-25)
 
 

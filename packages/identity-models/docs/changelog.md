@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.2-next.9](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.8...identity-models-v0.0.2-next.9) (2025-10-09)
+
+
+### Features
+
+* add validate-locales ([04d74b4](https://github.com/twinfoundation/identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+
 ## [0.0.2-next.8](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.7...identity-models-v0.0.2-next.8) (2025-09-25)
 
 
