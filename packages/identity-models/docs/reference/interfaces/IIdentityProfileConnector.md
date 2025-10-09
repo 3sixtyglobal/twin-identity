@@ -16,6 +16,14 @@ Interface describing a contract which provides profile operations.
 
 `U` *extends* `IJsonLdDocument` = `IJsonLdDocument`
 
+## Indexable
+
+\[`key`: `string`\]: `any`
+
+All methods are optional, so we introduce an index signature to allow
+any additional properties or methods, which removes the TypeScript error where
+the class has no properties in common with the type.
+
 ## Methods
 
 ### create()
@@ -144,7 +152,7 @@ Nothing.
 
 ### list()
 
-> **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested identities.
 
@@ -180,7 +188,7 @@ The private properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

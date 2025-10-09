@@ -65,7 +65,7 @@ export interface IIdentityProfileComponent<
 	 * @param publicFilters The filters to apply to the identities public profiles.
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	list(
@@ -75,7 +75,7 @@ export interface IIdentityProfileComponent<
 		}[],
 		publicPropertyNames?: (keyof T)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identities.

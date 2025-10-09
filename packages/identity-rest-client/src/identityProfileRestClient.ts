@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { BaseRestClient } from "@twin.org/api-core";
 import { HttpParameterHelper, type IBaseRestClientConfig } from "@twin.org/api-models";
-import { Guards } from "@twin.org/core";
+import { Coerce, Guards } from "@twin.org/core";
 import type { IJsonLdDocument } from "@twin.org/data-json-ld";
 import type {
 	IIdentityProfileComponent,
@@ -20,7 +20,7 @@ import { nameof } from "@twin.org/nameof";
 /**
  * Client for performing identity through to REST endpoints.
  */
-export class IdentityProfileClient<
+export class IdentityProfileRestClient<
 		T extends IJsonLdDocument = IJsonLdDocument,
 		U extends IJsonLdDocument = IJsonLdDocument
 	>
@@ -30,14 +30,14 @@ export class IdentityProfileClient<
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityProfileClient>();
+	public static readonly CLASS_NAME: string = nameof<IdentityProfileRestClient>();
 
 	/**
 	 * Create a new instance of IdentityClient.
 	 * @param config The configuration for the client.
 	 */
 	constructor(config: IBaseRestClientConfig) {
-		super(nameof<IdentityProfileClient>(), config, "identity/profile");
+		super(nameof<IdentityProfileRestClient>(), config, "identity/profile");
 	}
 
 	/**
@@ -94,7 +94,7 @@ export class IdentityProfileClient<
 	 * @returns The items properties.
 	 */
 	public async getPublic(identity: string, propertyNames?: (keyof T)[]): Promise<Partial<T>> {
-		Guards.string(this.CLASS_NAME, nameof(identity), identity);
+		Guards.string(IdentityProfileRestClient.CLASS_NAME, nameof(identity), identity);
 
 		const response = await this.fetch<
 			IIdentityProfileGetPublicRequest,
@@ -139,7 +139,7 @@ export class IdentityProfileClient<
 	 * @param publicFilters The filters to apply to the identities public profiles.
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	public async list(
@@ -149,7 +149,7 @@ export class IdentityProfileClient<
 		}[],
 		publicPropertyNames?: (keyof T)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identities.
@@ -174,7 +174,7 @@ export class IdentityProfileClient<
 					),
 					publicPropertyNames: HttpParameterHelper.arrayToString(publicPropertyNames),
 					cursor,
-					pageSize
+					limit: Coerce.string(limit)
 				}
 			}
 		);

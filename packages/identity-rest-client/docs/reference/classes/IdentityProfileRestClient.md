@@ -1,4 +1,4 @@
-# Class: IdentityProfileClient\<T, U\>
+# Class: IdentityProfileRestClient\<T, U\>
 
 Client for performing identity through to REST endpoints.
 
@@ -24,7 +24,7 @@ Client for performing identity through to REST endpoints.
 
 ### Constructor
 
-> **new IdentityProfileClient**\<`T`, `U`\>(`config`): `IdentityProfileClient`\<`T`, `U`\>
+> **new IdentityProfileRestClient**\<`T`, `U`\>(`config`): `IdentityProfileRestClient`\<`T`, `U`\>
 
 Create a new instance of IdentityClient.
 
@@ -38,7 +38,7 @@ The configuration for the client.
 
 #### Returns
 
-`IdentityProfileClient`\<`T`, `U`\>
+`IdentityProfileRestClient`\<`T`, `U`\>
 
 #### Overrides
 
@@ -48,13 +48,9 @@ The configuration for the client.
 
 ### CLASS\_NAME
 
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
-
-#### Implementation of
-
-`IIdentityProfileComponent.CLASS_NAME`
 
 ## Methods
 
@@ -206,7 +202,7 @@ Nothing.
 
 ### list()
 
-> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested identities.
 
@@ -230,7 +226,7 @@ The public properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

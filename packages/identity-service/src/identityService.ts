@@ -29,7 +29,7 @@ export class IdentityService implements IIdentityComponent {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityService>();
+	public static readonly CLASS_NAME: string = nameof<IdentityService>();
 
 	/**
 	 * The default namespace for the connector to use.
@@ -44,7 +44,7 @@ export class IdentityService implements IIdentityComponent {
 	constructor(options?: IIdentityServiceConstructorOptions) {
 		const names = IdentityConnectorFactory.names();
 		if (names.length === 0) {
-			throw new GeneralError(this.CLASS_NAME, "noConnectors");
+			throw new GeneralError(IdentityService.CLASS_NAME, "noConnectors");
 		}
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
@@ -57,13 +57,13 @@ export class IdentityService implements IIdentityComponent {
 	 * @returns The created identity document.
 	 */
 	public async identityCreate(namespace?: string, controller?: string): Promise<IDidDocument> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 
 		try {
 			const identityConnector = this.getConnectorByNamespace(namespace);
 			return identityConnector.createDocument(controller);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "identityCreateFailed", undefined, error);
+			throw new GeneralError(IdentityService.CLASS_NAME, "identityCreateFailed", undefined, error);
 		}
 	}
 
@@ -74,14 +74,19 @@ export class IdentityService implements IIdentityComponent {
 	 * @returns Nothing.
 	 */
 	public async identityRemove(identity: string, controller?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 
 		try {
 			const identityConnector = this.getConnectorByUri(identity);
 			return identityConnector.removeDocument(controller, identity);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "identityRemoveFailed", { identity }, error);
+			throw new GeneralError(
+				IdentityService.CLASS_NAME,
+				"identityRemoveFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -101,11 +106,11 @@ export class IdentityService implements IIdentityComponent {
 		verificationMethodId?: string,
 		controller?: string
 	): Promise<IDidDocumentVerificationMethod> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Urn.guard(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Urn.guard(IdentityService.CLASS_NAME, nameof(identity), identity);
 
 		Guards.arrayOneOf(
-			this.CLASS_NAME,
+			IdentityService.CLASS_NAME,
 			nameof(verificationMethodType),
 			verificationMethodType,
 			Object.values(DidVerificationMethodType)
@@ -124,7 +129,7 @@ export class IdentityService implements IIdentityComponent {
 			return verificationMethod;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verificationMethodCreateFailed",
 				{ identity },
 				error
@@ -144,8 +149,8 @@ export class IdentityService implements IIdentityComponent {
 		verificationMethodId: string,
 		controller?: string
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Urn.guard(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Urn.guard(IdentityService.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -155,7 +160,7 @@ export class IdentityService implements IIdentityComponent {
 			await identityConnector.removeVerificationMethod(controller, verificationMethodId);
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verificationMethodRemoveFailed",
 				{ verificationMethodId },
 				error
@@ -180,18 +185,22 @@ export class IdentityService implements IIdentityComponent {
 		serviceEndpoint: string | string[],
 		controller?: string
 	): Promise<IDidService> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Urn.guard(this.CLASS_NAME, nameof(identity), identity);
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceId), serviceId);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Urn.guard(IdentityService.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(serviceId), serviceId);
 		if (Is.array(serviceType)) {
-			Guards.arrayValue<string>(this.CLASS_NAME, nameof(serviceType), serviceType);
+			Guards.arrayValue<string>(IdentityService.CLASS_NAME, nameof(serviceType), serviceType);
 		} else {
-			Guards.stringValue(this.CLASS_NAME, nameof(serviceType), serviceType);
+			Guards.stringValue(IdentityService.CLASS_NAME, nameof(serviceType), serviceType);
 		}
 		if (Is.array(serviceEndpoint)) {
-			Guards.arrayValue<string>(this.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
+			Guards.arrayValue<string>(
+				IdentityService.CLASS_NAME,
+				nameof(serviceEndpoint),
+				serviceEndpoint
+			);
 		} else {
-			Guards.stringValue(this.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
+			Guards.stringValue(IdentityService.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
 		}
 
 		try {
@@ -208,7 +217,7 @@ export class IdentityService implements IIdentityComponent {
 			return service;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"serviceCreateFailed",
 				{ identity, serviceId },
 				error
@@ -224,8 +233,8 @@ export class IdentityService implements IIdentityComponent {
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async serviceRemove(serviceId: string, controller?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Urn.guard(this.CLASS_NAME, nameof(serviceId), serviceId);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Urn.guard(IdentityService.CLASS_NAME, nameof(serviceId), serviceId);
 
 		try {
 			const idParts = DocumentHelper.parseId(serviceId);
@@ -234,7 +243,12 @@ export class IdentityService implements IIdentityComponent {
 
 			await identityConnector.removeService(controller, serviceId);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "serviceRemoveFailed", { serviceId }, error);
+			throw new GeneralError(
+				IdentityService.CLASS_NAME,
+				"serviceRemoveFailed",
+				{ serviceId },
+				error
+			);
 		}
 	}
 
@@ -263,9 +277,9 @@ export class IdentityService implements IIdentityComponent {
 		verifiableCredential: IDidVerifiableCredential;
 		jwt: string;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Urn.guard(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
-		Guards.objectValue(this.CLASS_NAME, nameof(subject), subject);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Urn.guard(IdentityService.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.objectValue(IdentityService.CLASS_NAME, nameof(subject), subject);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -283,7 +297,7 @@ export class IdentityService implements IIdentityComponent {
 			return service;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verifiableCredentialCreateFailed",
 				{ verificationMethodId },
 				error
@@ -300,7 +314,7 @@ export class IdentityService implements IIdentityComponent {
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(credentialJwt), credentialJwt);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(credentialJwt), credentialJwt);
 
 		const jwtDecoded = await Jwt.decode(credentialJwt);
 
@@ -314,7 +328,7 @@ export class IdentityService implements IIdentityComponent {
 			Is.undefined(jwtPayload.iss) ||
 			Is.undefined(jwtSignature)
 		) {
-			throw new GeneralError(this.CLASS_NAME, "jwtDecodeFailed");
+			throw new GeneralError(IdentityService.CLASS_NAME, "jwtDecodeFailed");
 		}
 
 		try {
@@ -324,7 +338,12 @@ export class IdentityService implements IIdentityComponent {
 
 			return service;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "verifiableCredentialVerifyFailed", undefined, error);
+			throw new GeneralError(
+				IdentityService.CLASS_NAME,
+				"verifiableCredentialVerifyFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -340,9 +359,9 @@ export class IdentityService implements IIdentityComponent {
 		credentialIndex: number,
 		controller?: string
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(issuerIdentity), issuerIdentity);
-		Guards.number(this.CLASS_NAME, nameof(credentialIndex), credentialIndex);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(issuerIdentity), issuerIdentity);
+		Guards.number(IdentityService.CLASS_NAME, nameof(credentialIndex), credentialIndex);
 
 		try {
 			const idParts = DocumentHelper.parseId(issuerIdentity);
@@ -354,7 +373,7 @@ export class IdentityService implements IIdentityComponent {
 			]);
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verifiableCredentialRevokeFailed",
 				{ issuerIdentity, credentialIndex },
 				error
@@ -374,9 +393,9 @@ export class IdentityService implements IIdentityComponent {
 		credentialIndex: number,
 		controller?: string
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(issuerIdentity), issuerIdentity);
-		Guards.number(this.CLASS_NAME, nameof(credentialIndex), credentialIndex);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(issuerIdentity), issuerIdentity);
+		Guards.number(IdentityService.CLASS_NAME, nameof(credentialIndex), credentialIndex);
 
 		try {
 			const idParts = DocumentHelper.parseId(issuerIdentity);
@@ -388,7 +407,7 @@ export class IdentityService implements IIdentityComponent {
 			]);
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verifiableCredentialUnrevokeFailed",
 				{ issuerIdentity, credentialIndex },
 				error
@@ -420,8 +439,12 @@ export class IdentityService implements IIdentityComponent {
 		verifiablePresentation: IDidVerifiablePresentation;
 		jwt: string;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IdentityService.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -439,7 +462,7 @@ export class IdentityService implements IIdentityComponent {
 			);
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verifiablePresentationCreateFailed",
 				{ verificationMethodId },
 				error
@@ -457,7 +480,7 @@ export class IdentityService implements IIdentityComponent {
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(presentationJwt), presentationJwt);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(presentationJwt), presentationJwt);
 
 		const jwtDecoded = await Jwt.decode(presentationJwt);
 
@@ -471,7 +494,7 @@ export class IdentityService implements IIdentityComponent {
 			Is.undefined(jwtPayload.iss) ||
 			Is.undefined(jwtSignature)
 		) {
-			throw new GeneralError(this.CLASS_NAME, "jwtDecodeFailed");
+			throw new GeneralError(IdentityService.CLASS_NAME, "jwtDecodeFailed");
 		}
 
 		try {
@@ -482,7 +505,7 @@ export class IdentityService implements IIdentityComponent {
 			return service;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityService.CLASS_NAME,
 				"verifiablePresentationVerifyFailed",
 				undefined,
 				error
@@ -504,15 +527,23 @@ export class IdentityService implements IIdentityComponent {
 		unsecureDocument: IJsonLdNodeObject,
 		controller?: string
 	): Promise<IProof> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IdentityService.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 		Guards.arrayOneOf<ProofTypes>(
-			this.CLASS_NAME,
+			IdentityService.CLASS_NAME,
 			nameof(proofType),
 			proofType,
 			Object.values(ProofTypes)
 		);
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(unsecureDocument), unsecureDocument);
+		Guards.object<IJsonLdNodeObject>(
+			IdentityService.CLASS_NAME,
+			nameof(unsecureDocument),
+			unsecureDocument
+		);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -526,7 +557,12 @@ export class IdentityService implements IIdentityComponent {
 				unsecureDocument
 			);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "proofCreateFailed", { verificationMethodId }, error);
+			throw new GeneralError(
+				IdentityService.CLASS_NAME,
+				"proofCreateFailed",
+				{ verificationMethodId },
+				error
+			);
 		}
 	}
 
@@ -537,9 +573,13 @@ export class IdentityService implements IIdentityComponent {
 	 * @returns True if the proof is verified.
 	 */
 	public async proofVerify(document: IJsonLdNodeObject, proof: IProof): Promise<boolean> {
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(document), document);
-		Guards.object<IProof>(this.CLASS_NAME, nameof(proof), proof);
-		Guards.stringValue(this.CLASS_NAME, nameof(proof.verificationMethod), proof.verificationMethod);
+		Guards.object<IJsonLdNodeObject>(IdentityService.CLASS_NAME, nameof(document), document);
+		Guards.object<IProof>(IdentityService.CLASS_NAME, nameof(proof), proof);
+		Guards.stringValue(
+			IdentityService.CLASS_NAME,
+			nameof(proof.verificationMethod),
+			proof.verificationMethod
+		);
 
 		try {
 			const idParts = DocumentHelper.parseId(proof.verificationMethod);
@@ -548,7 +588,7 @@ export class IdentityService implements IIdentityComponent {
 
 			return identityConnector.verifyProof(document, proof);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "proofVerifyFailed", undefined, error);
+			throw new GeneralError(IdentityService.CLASS_NAME, "proofVerifyFailed", undefined, error);
 		}
 	}
 
@@ -564,7 +604,9 @@ export class IdentityService implements IIdentityComponent {
 		const connector = IdentityConnectorFactory.getIfExists<IIdentityConnector>(namespaceMethod);
 
 		if (Is.empty(connector)) {
-			throw new GeneralError(this.CLASS_NAME, "connectorNotFound", { namespace: namespaceMethod });
+			throw new GeneralError(IdentityService.CLASS_NAME, "connectorNotFound", {
+				namespace: namespaceMethod
+			});
 		}
 
 		return connector;
@@ -580,7 +622,7 @@ export class IdentityService implements IIdentityComponent {
 		const idUri = Urn.fromValidString(id);
 
 		if (idUri.namespaceIdentifier() !== "did") {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
+			throw new GeneralError(IdentityService.CLASS_NAME, "namespaceMismatch", {
 				namespace: "did",
 				id
 			});

@@ -1,4 +1,4 @@
-# Class: IdentityClient
+# Class: IdentityRestClient
 
 Client for performing identity through to REST endpoints.
 
@@ -14,7 +14,7 @@ Client for performing identity through to REST endpoints.
 
 ### Constructor
 
-> **new IdentityClient**(`config`): `IdentityClient`
+> **new IdentityRestClient**(`config`): `IdentityRestClient`
 
 Create a new instance of IdentityClient.
 
@@ -28,7 +28,7 @@ The configuration for the client.
 
 #### Returns
 
-`IdentityClient`
+`IdentityRestClient`
 
 #### Overrides
 
@@ -38,13 +38,9 @@ The configuration for the client.
 
 ### CLASS\_NAME
 
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
-
-#### Implementation of
-
-`IIdentityComponent.CLASS_NAME`
 
 ## Methods
 

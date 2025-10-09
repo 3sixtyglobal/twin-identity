@@ -38,13 +38,9 @@ The namespace supported by the identity connector.
 
 ### CLASS\_NAME
 
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
-
-#### Implementation of
-
-`IIdentityConnector.CLASS_NAME`
 
 ## Methods
 

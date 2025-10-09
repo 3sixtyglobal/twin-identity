@@ -58,7 +58,7 @@ export interface IIdentityProfileConnector<
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param privatePropertyNames The private properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	list(
@@ -73,7 +73,7 @@ export interface IIdentityProfileConnector<
 		publicPropertyNames?: (keyof T)[],
 		privatePropertyNames?: (keyof U)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identity profiles.

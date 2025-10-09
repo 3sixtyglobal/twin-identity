@@ -509,7 +509,7 @@ export async function identitiesList(
 				request?.query?.publicPropertyNames
 			),
 			request?.query?.cursor,
-			Coerce.integer(request.query?.pageSize)
+			Coerce.integer(request.query?.limit)
 		)
 	};
 }

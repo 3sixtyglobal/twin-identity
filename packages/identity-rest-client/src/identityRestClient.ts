@@ -46,18 +46,18 @@ import {
 /**
  * Client for performing identity through to REST endpoints.
  */
-export class IdentityClient extends BaseRestClient implements IIdentityComponent {
+export class IdentityRestClient extends BaseRestClient implements IIdentityComponent {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityClient>();
+	public static readonly CLASS_NAME: string = nameof<IdentityRestClient>();
 
 	/**
 	 * Create a new instance of IdentityClient.
 	 * @param config The configuration for the client.
 	 */
 	constructor(config: IBaseRestClientConfig) {
-		super(nameof<IdentityClient>(), config, "identity");
+		super(nameof<IdentityRestClient>(), config, "identity");
 	}
 
 	/**
@@ -85,7 +85,7 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 	 * @returns Nothing.
 	 */
 	public async identityRemove(identity: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
 		await this.fetch<IIdentityRemoveRequest, INoContentResponse>("/:identity", "DELETE", {
 			pathParams: {
 				identity
@@ -107,9 +107,9 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		verificationMethodType: DidVerificationMethodType,
 		verificationMethodId?: string
 	): Promise<IDidDocumentVerificationMethod> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
 		Guards.arrayOneOf<DidVerificationMethodType>(
-			this.CLASS_NAME,
+			IdentityRestClient.CLASS_NAME,
 			nameof(verificationMethodType),
 			verificationMethodType,
 			Object.values(DidVerificationMethodType)
@@ -138,7 +138,11 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
 	public async verificationMethodRemove(verificationMethodId: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(
+			IdentityRestClient.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);
 
@@ -169,17 +173,21 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		serviceType: string | string[],
 		serviceEndpoint: string | string[]
 	): Promise<IDidService> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceId), serviceId);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(serviceId), serviceId);
 		if (Is.array(serviceType)) {
-			Guards.arrayValue<string>(this.CLASS_NAME, nameof(serviceType), serviceType);
+			Guards.arrayValue<string>(IdentityRestClient.CLASS_NAME, nameof(serviceType), serviceType);
 		} else {
-			Guards.stringValue(this.CLASS_NAME, nameof(serviceType), serviceType);
+			Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(serviceType), serviceType);
 		}
 		if (Is.array(serviceEndpoint)) {
-			Guards.arrayValue<string>(this.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
+			Guards.arrayValue<string>(
+				IdentityRestClient.CLASS_NAME,
+				nameof(serviceEndpoint),
+				serviceEndpoint
+			);
 		} else {
-			Guards.stringValue(this.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
+			Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
 		}
 
 		const response = await this.fetch<
@@ -206,7 +214,7 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async serviceRemove(serviceId: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceId), serviceId);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(serviceId), serviceId);
 
 		const idParts = DocumentHelper.parseId(serviceId);
 
@@ -245,10 +253,18 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		verifiableCredential: IDidVerifiableCredential;
 		jwt: string;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(subject), subject);
+		Guards.stringValue(
+			IdentityRestClient.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
+		Guards.object<IJsonLdNodeObject>(IdentityRestClient.CLASS_NAME, nameof(subject), subject);
 		if (!Is.undefined(options?.revocationIndex)) {
-			Guards.number(this.CLASS_NAME, nameof(options?.revocationIndex), options?.revocationIndex);
+			Guards.number(
+				IdentityRestClient.CLASS_NAME,
+				nameof(options?.revocationIndex),
+				options?.revocationIndex
+			);
 		}
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -281,7 +297,7 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(credentialJwt), credentialJwt);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(credentialJwt), credentialJwt);
 
 		const response = await this.fetch<
 			IIdentityVerifiableCredentialVerifyRequest,
@@ -305,8 +321,8 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		issuerId: string,
 		credentialIndex: number
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(issuerId), issuerId);
-		Guards.integer(this.CLASS_NAME, nameof(credentialIndex), credentialIndex);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(issuerId), issuerId);
+		Guards.integer(IdentityRestClient.CLASS_NAME, nameof(credentialIndex), credentialIndex);
 
 		await this.fetch<IIdentityVerifiableCredentialRevokeRequest, INoContentResponse>(
 			"/:identity/verifiable-credential/revoke/:revocationIndex",
@@ -330,8 +346,8 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		issuerId: string,
 		credentialIndex: number
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(issuerId), issuerId);
-		Guards.integer(this.CLASS_NAME, nameof(credentialIndex), credentialIndex);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(issuerId), issuerId);
+		Guards.integer(IdentityRestClient.CLASS_NAME, nameof(credentialIndex), credentialIndex);
 
 		await this.fetch<IIdentityVerifiableCredentialUnrevokeRequest, INoContentResponse>(
 			"/:identity/verifiable-credential/unrevoke/:revocationIndex",
@@ -367,15 +383,23 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		verifiablePresentation: IDidVerifiablePresentation;
 		jwt: string;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(
+			IdentityRestClient.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 		if (Is.array(types)) {
-			Guards.arrayValue(this.CLASS_NAME, nameof(types), types);
+			Guards.arrayValue(IdentityRestClient.CLASS_NAME, nameof(types), types);
 		} else if (Is.string(types)) {
-			Guards.stringValue(this.CLASS_NAME, nameof(types), types);
+			Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(types), types);
 		}
-		Guards.arrayValue(this.CLASS_NAME, nameof(verifiableCredentials), verifiableCredentials);
+		Guards.arrayValue(
+			IdentityRestClient.CLASS_NAME,
+			nameof(verifiableCredentials),
+			verifiableCredentials
+		);
 		if (!Is.undefined(expiresInMinutes)) {
-			Guards.integer(this.CLASS_NAME, nameof(expiresInMinutes), expiresInMinutes);
+			Guards.integer(IdentityRestClient.CLASS_NAME, nameof(expiresInMinutes), expiresInMinutes);
 		}
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -410,7 +434,7 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(presentationJwt), presentationJwt);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(presentationJwt), presentationJwt);
 
 		const response = await this.fetch<
 			IIdentityVerifiablePresentationVerifyRequest,
@@ -436,14 +460,22 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 		proofType: ProofTypes,
 		unsecureDocument: IJsonLdNodeObject
 	): Promise<IProof> {
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(
+			IdentityRestClient.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 		Guards.arrayOneOf<ProofTypes>(
-			this.CLASS_NAME,
+			IdentityRestClient.CLASS_NAME,
 			nameof(proofType),
 			proofType,
 			Object.values(ProofTypes)
 		);
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(unsecureDocument), unsecureDocument);
+		Guards.object<IJsonLdNodeObject>(
+			IdentityRestClient.CLASS_NAME,
+			nameof(unsecureDocument),
+			unsecureDocument
+		);
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);
 
@@ -472,9 +504,13 @@ export class IdentityClient extends BaseRestClient implements IIdentityComponent
 	 * @returns True if the proof is verified.
 	 */
 	public async proofVerify(document: IJsonLdNodeObject, proof: IProof): Promise<boolean> {
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(document), document);
-		Guards.object<IProof>(this.CLASS_NAME, nameof(proof), proof);
-		Guards.stringValue(this.CLASS_NAME, nameof(proof.verificationMethod), proof.verificationMethod);
+		Guards.object<IJsonLdNodeObject>(IdentityRestClient.CLASS_NAME, nameof(document), document);
+		Guards.object<IProof>(IdentityRestClient.CLASS_NAME, nameof(proof), proof);
+		Guards.stringValue(
+			IdentityRestClient.CLASS_NAME,
+			nameof(proof.verificationMethod),
+			proof.verificationMethod
+		);
 
 		const response = await this.fetch<IIdentityProofVerifyRequest, IIdentityProofVerifyResponse>(
 			"/proof/verify",

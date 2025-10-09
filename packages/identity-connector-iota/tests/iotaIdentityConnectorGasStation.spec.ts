@@ -48,7 +48,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			});
 
 			expect(connector).toBeDefined();
-			expect(connector.CLASS_NAME).toBe("IotaIdentityConnector");
+			expect(IotaIdentityConnector.CLASS_NAME).toBe("IotaIdentityConnector");
 		});
 
 		test("Should create identity connector without gas station configuration", () => {
@@ -57,7 +57,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			});
 
 			expect(connector).toBeDefined();
-			expect(connector.CLASS_NAME).toBe("IotaIdentityConnector");
+			expect(IotaIdentityConnector.CLASS_NAME).toBe("IotaIdentityConnector");
 		});
 
 		test("Should create identity connector with custom standard gas price", () => {
@@ -78,7 +78,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			});
 
 			expect(connector).toBeDefined();
-			expect(connector.CLASS_NAME).toBe("IotaIdentityConnector");
+			expect(IotaIdentityConnector.CLASS_NAME).toBe("IotaIdentityConnector");
 		});
 	});
 

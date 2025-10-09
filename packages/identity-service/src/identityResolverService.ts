@@ -17,7 +17,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityResolverService>();
+	public static readonly CLASS_NAME: string = nameof<IdentityResolverService>();
 
 	/**
 	 * The default namespace for the connector to use.
@@ -38,7 +38,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	constructor(options?: IIdentityResolverServiceConstructorOptions) {
 		const names = IdentityResolverConnectorFactory.names();
 		if (names.length === 0) {
-			throw new GeneralError(this.CLASS_NAME, "noConnectors");
+			throw new GeneralError(IdentityResolverService.CLASS_NAME, "noConnectors");
 		}
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
@@ -51,7 +51,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	 * @returns The resolved document.
 	 */
 	public async identityResolve(identity: string): Promise<IDidDocument> {
-		Urn.guard(this.CLASS_NAME, nameof(identity), identity);
+		Urn.guard(IdentityResolverService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			const identityResolverConnector = this.getConnectorByUri(identity);
@@ -60,7 +60,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 			return document;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityResolverService.CLASS_NAME,
 				"identityResolveFailed",
 				{
 					identity
@@ -88,7 +88,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 				this._fallbackResolverConnectorType
 			);
 			if (Is.empty(connector)) {
-				throw new GeneralError(this.CLASS_NAME, "connectorNotFound", {
+				throw new GeneralError(IdentityResolverService.CLASS_NAME, "connectorNotFound", {
 					namespace: namespaceMethod
 				});
 			}
@@ -107,7 +107,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 		const idUri = Urn.fromValidString(id);
 
 		if (idUri.namespaceIdentifier() !== "did") {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
+			throw new GeneralError(IdentityResolverService.CLASS_NAME, "namespaceMismatch", {
 				namespace: "did",
 				id
 			});

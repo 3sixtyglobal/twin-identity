@@ -21,7 +21,7 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<VerifiableCredentialAuthenticationProcessor>();
+	public static readonly CLASS_NAME: string = nameof<VerifiableCredentialAuthenticationProcessor>();
 
 	/**
 	 * Connector for identity operations.
@@ -84,22 +84,32 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 
 				const verifiableCredential = result.verifiableCredential;
 				if (Is.empty(verifiableCredential)) {
-					throw new GeneralError(this.CLASS_NAME, "tokenNoCredential");
+					throw new GeneralError(
+						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+						"tokenNoCredential"
+					);
 				}
 
 				const issuer: string | undefined = Is.stringValue(verifiableCredential.issuer)
 					? verifiableCredential.issuer
 					: undefined;
 				if (Is.empty(issuer)) {
-					throw new GeneralError(this.CLASS_NAME, "tokenNoIssuer");
+					throw new GeneralError(
+						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+						"tokenNoIssuer"
+					);
 				}
 
 				const issuanceDate = VerifiableCredentialHelper.getValidFrom(verifiableCredential);
 
 				if (Is.empty(issuanceDate)) {
-					throw new GeneralError(this.CLASS_NAME, "tokenMissingIssuanceDate", {
-						issuer
-					});
+					throw new GeneralError(
+						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+						"tokenMissingIssuanceDate",
+						{
+							issuer
+						}
+					);
 				}
 
 				const tokenCreated = new Date(issuanceDate);
@@ -108,16 +118,24 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 
 				// If the token has expired then we should reject it
 				if (tokenCreated.getTime() + tokenTtlInMs < now) {
-					throw new GeneralError(this.CLASS_NAME, "tokenExpired", {
-						issuer
-					});
+					throw new GeneralError(
+						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+						"tokenExpired",
+						{
+							issuer
+						}
+					);
 				}
 
 				const subject = verifiableCredential.credentialSubject;
 				if (Is.empty(subject)) {
-					throw new GeneralError(this.CLASS_NAME, "tokenMissingSubject", {
-						issuer
-					});
+					throw new GeneralError(
+						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+						"tokenMissingSubject",
+						{
+							issuer
+						}
+					);
 				}
 
 				processorState.verifiableCredentialIssuer = issuer;
@@ -125,7 +143,12 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 				processorState.verifiableCredentialSubject = subject;
 			}
 		} catch (err) {
-			throw new GeneralError(this.CLASS_NAME, "tokenFailed", undefined, err);
+			throw new GeneralError(
+				VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+				"tokenFailed",
+				undefined,
+				err
+			);
 		}
 	}
 }

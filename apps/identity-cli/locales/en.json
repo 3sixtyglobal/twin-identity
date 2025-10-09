@@ -5,6 +5,9 @@
 				"subjectJsonFileNotFound": "The subject JSON file was not found."
 			},
 			"proof-create": {
+				"documentJsonFileNotFound": "The document JSON file was not found."
+			},
+			"proof-verify": {
 				"documentJsonFileNotFound": "The document JSON file was not found.",
 				"proofJsonFileNotFound": "The proof JSON file was not found."
 			}
@@ -94,10 +97,6 @@
 				"seed": {
 					"param": "--seed '<'seed'>'",
 					"description": "The seed for the private key for the controller address of the document in hex or base64, or start with ! to read environment variable."
-				},
-				"did": {
-					"param": "--did '<'did'>'",
-					"description": "The identifier to remove the verification method from, or start with ! to read environment variable."
 				},
 				"id": {
 					"param": "--id '<'id'>'",
@@ -363,6 +362,10 @@
 				"network": {
 					"param": "--network '<'network'>'",
 					"description": "The network to use for the identity operation."
+				},
+				"explorer": {
+					"param": "--explorer '<'url'>'",
+					"description": "The url for the explorer endpoint, or an environment variable name containing the url."
 				}
 			},
 			"labels": {
@@ -370,7 +373,6 @@
 				"node": "Node",
 				"explorer": "Explorer",
 				"explore": "Explore",
-				"connector": "Connector",
 				"network": "Network"
 			}
 		}

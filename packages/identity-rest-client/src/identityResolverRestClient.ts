@@ -14,18 +14,21 @@ import type { IDidDocument } from "@twin.org/standards-w3c-did";
 /**
  * Client for performing identity through to REST endpoints.
  */
-export class IdentityResolverClient extends BaseRestClient implements IIdentityResolverComponent {
+export class IdentityResolverRestClient
+	extends BaseRestClient
+	implements IIdentityResolverComponent
+{
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityResolverClient>();
+	public static readonly CLASS_NAME: string = nameof<IdentityResolverRestClient>();
 
 	/**
 	 * Create a new instance of IdentityClient.
 	 * @param config The configuration for the client.
 	 */
 	constructor(config: IBaseRestClientConfig) {
-		super(nameof<IdentityResolverClient>(), config, "identity");
+		super(nameof<IdentityResolverRestClient>(), config, "identity");
 	}
 
 	/**
@@ -34,7 +37,7 @@ export class IdentityResolverClient extends BaseRestClient implements IIdentityR
 	 * @returns The resolved document.
 	 */
 	public async identityResolve(documentId: string): Promise<IDidDocument> {
-		Urn.guard(this.CLASS_NAME, nameof(documentId), documentId);
+		Urn.guard(IdentityResolverRestClient.CLASS_NAME, nameof(documentId), documentId);
 
 		const response = await this.fetch<IIdentityResolveRequest, IIdentityResolveResponse>(
 			"/:identity",

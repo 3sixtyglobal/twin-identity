@@ -2,7 +2,6 @@
 	"error": {
 		"verificationHelper": {
 			"jwtDecodeFailed": "Decoding the JWT failed",
-			"proofTypeNotSupported": "The proof type \"{proofType}\" is not supported",
 			"proofMissingVerificationMethod": "The proof is missing the verification method"
 		},
 		"documentHelper": {
@@ -12,11 +11,5 @@
 		"idHelper": {
 			"invalidDocumentId": "The document id \"{id}\" is invalid"
 		}
-	},
-	"verifiableCredentialStates": {
-		"pendingVerification": "Pending Verification",
-		"rejected": "Rejected",
-		"issued": "Issued",
-		"revoked": "Revoked"
 	}
 }

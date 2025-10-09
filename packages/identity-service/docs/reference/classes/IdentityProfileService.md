@@ -40,13 +40,9 @@ The dependencies for the identity profile service.
 
 ### CLASS\_NAME
 
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
-
-#### Implementation of
-
-`IIdentityProfileComponent.CLASS_NAME`
 
 ## Methods
 
@@ -224,7 +220,7 @@ Nothing.
 
 ### list()
 
-> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested types.
 
@@ -248,7 +244,7 @@ The public properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

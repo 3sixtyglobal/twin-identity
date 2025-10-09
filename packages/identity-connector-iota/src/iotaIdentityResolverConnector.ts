@@ -27,7 +27,7 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IotaIdentityResolverConnector>();
+	public static readonly CLASS_NAME: string = nameof<IotaIdentityResolverConnector>();
 
 	/**
 	 * The configuration to use for IOTA operations.
@@ -40,14 +40,14 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	 * @param options The options for the identity connector.
 	 */
 	constructor(options: IIotaIdentityResolverConnectorConstructorOptions) {
-		Guards.object(this.CLASS_NAME, nameof(options), options);
+		Guards.object(IotaIdentityResolverConnector.CLASS_NAME, nameof(options), options);
 		Guards.object<IIotaIdentityResolverConnectorConfig>(
-			this.CLASS_NAME,
+			IotaIdentityResolverConnector.CLASS_NAME,
 			nameof(options.config),
 			options.config
 		);
 		Guards.object<IIotaIdentityConnectorConfig["clientOptions"]>(
-			this.CLASS_NAME,
+			IotaIdentityResolverConnector.CLASS_NAME,
 			nameof(options.config.clientOptions),
 			options.config.clientOptions
 		);
@@ -62,7 +62,7 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async resolveDocument(documentId: string): Promise<IDidDocument> {
-		Guards.stringValue(this.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityResolverConnector.CLASS_NAME, nameof(documentId), documentId);
 
 		try {
 			const identityClientReadOnly = await IdentityClientReadOnly.create(
@@ -74,7 +74,11 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 			const resolvedDocument = await resolver.resolve(documentId);
 
 			if (Is.undefined(resolvedDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
+				throw new NotFoundError(
+					IotaIdentityResolverConnector.CLASS_NAME,
+					"documentNotFound",
+					documentId
+				);
 			}
 
 			const doc = resolvedDocument.toJSON() as { doc: IDidDocument };
@@ -82,7 +86,7 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 			return doc.doc;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityResolverConnector.CLASS_NAME,
 				"resolveDocumentFailed",
 				{ documentId },
 				Iota.extractPayloadError(error)

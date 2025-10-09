@@ -27,8 +27,6 @@
 			"identityResolveFailed": "Resolving the identity failed \"{identity}\""
 		},
 		"identityProfileService": {
-			"noConnectors": "There are no connectors registered with the identity profile factory",
-			"alreadyExists": "The identity profile already exists for the identity \"{existingId}\"",
 			"createFailed": "Creating the identity profile failed \"{identity}\"",
 			"getFailed": "Getting the identity profile failed",
 			"getPublicFailed": "Getting the public identity profile failed",

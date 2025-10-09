@@ -27,6 +27,6 @@ export interface IIdentityProfileListRequest {
 		/**
 		 * Number of items to return.
 		 */
-		pageSize?: number | string;
+		limit?: string;
 	};
 }

@@ -84,7 +84,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 		await expect(service.get("foo")).rejects.toMatchObject({
 			name: "NotFoundError",
-			message: "entityStorageIdentityProfileConnector.getFailed",
+			message: "entityStorageIdentityProfileConnector.identityNotFound",
 			properties: { notFoundId: "foo" }
 		});
 

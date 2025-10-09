@@ -36,7 +36,7 @@ export class EntityStorageIdentityProfileConnector<
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<EntityStorageIdentityProfileConnector>();
+	public static readonly CLASS_NAME: string = nameof<EntityStorageIdentityProfileConnector>();
 
 	/**
 	 * The storage connector for the profiles.
@@ -62,13 +62,21 @@ export class EntityStorageIdentityProfileConnector<
 	 * @returns Nothing.
 	 */
 	public async create(identity: string, publicProfile?: T, privateProfile?: U): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(
+			EntityStorageIdentityProfileConnector.CLASS_NAME,
+			nameof(identity),
+			identity
+		);
 
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 
 			if (!Is.empty(profile)) {
-				throw new AlreadyExistsError(this.CLASS_NAME, "alreadyExists", identity);
+				throw new AlreadyExistsError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"alreadyExists",
+					identity
+				);
 			}
 
 			await this._profileEntityStorage.set({
@@ -77,10 +85,15 @@ export class EntityStorageIdentityProfileConnector<
 				privateProfile
 			});
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "createFailed", { identity }, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"createFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -102,15 +115,24 @@ export class EntityStorageIdentityProfileConnector<
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 			if (!profile) {
-				throw new NotFoundError(this.CLASS_NAME, "getFailed", identity);
+				throw new NotFoundError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"identityNotFound",
+					identity
+				);
 			}
 
 			return this.pickProperties(profile, publicPropertyNames, privatePropertyNames);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "getFailed", undefined, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"getFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -122,12 +144,20 @@ export class EntityStorageIdentityProfileConnector<
 	 * @returns Nothing.
 	 */
 	public async update(identity: string, publicProfile?: T, privateProfile?: U): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(
+			EntityStorageIdentityProfileConnector.CLASS_NAME,
+			nameof(identity),
+			identity
+		);
 
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 			if (Is.empty(profile)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"notFound",
+					identity
+				);
 			}
 
 			profile.publicProfile = publicProfile ?? profile.publicProfile;
@@ -135,10 +165,15 @@ export class EntityStorageIdentityProfileConnector<
 
 			await this._profileEntityStorage.set(profile);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "updateFailed", { identity }, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"updateFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -148,20 +183,33 @@ export class EntityStorageIdentityProfileConnector<
 	 * @returns Nothing.
 	 */
 	public async remove(identity: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(
+			EntityStorageIdentityProfileConnector.CLASS_NAME,
+			nameof(identity),
+			identity
+		);
 
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 			if (Is.empty(profile)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"notFound",
+					identity
+				);
 			}
 
 			await this._profileEntityStorage.remove(identity);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "removeFailed", { identity }, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"removeFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -172,7 +220,7 @@ export class EntityStorageIdentityProfileConnector<
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param privatePropertyNames The private properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	public async list(
@@ -187,7 +235,7 @@ export class EntityStorageIdentityProfileConnector<
 		publicPropertyNames?: (keyof T)[],
 		privatePropertyNames?: (keyof U)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identities.
@@ -233,7 +281,7 @@ export class EntityStorageIdentityProfileConnector<
 				undefined,
 				undefined,
 				cursor,
-				pageSize
+				limit
 			);
 
 			const items: {
@@ -253,7 +301,12 @@ export class EntityStorageIdentityProfileConnector<
 				cursor: result.cursor
 			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "listFailed", undefined, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"listFailed",
+				undefined,
+				error
+			);
 		}
 	}
 

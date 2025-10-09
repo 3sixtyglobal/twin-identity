@@ -21,7 +21,7 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<UniversalResolverConnector>();
+	public static readonly CLASS_NAME: string = nameof<UniversalResolverConnector>();
 
 	/**
 	 * The url for the resolver.
@@ -34,13 +34,17 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	 * @param options The options for the identity connector.
 	 */
 	constructor(options: IUniversalResolverConnectorConstructorOptions) {
-		Guards.object(this.CLASS_NAME, nameof(options), options);
+		Guards.object(UniversalResolverConnector.CLASS_NAME, nameof(options), options);
 		Guards.object<IUniversalResolverConnectorConfig>(
-			this.CLASS_NAME,
+			UniversalResolverConnector.CLASS_NAME,
 			nameof(options.config),
 			options.config
 		);
-		Guards.stringValue(this.CLASS_NAME, nameof(options.config.endpoint), options.config.endpoint);
+		Guards.stringValue(
+			UniversalResolverConnector.CLASS_NAME,
+			nameof(options.config.endpoint),
+			options.config.endpoint
+		);
 
 		this._resolverEndpoint = options.config.endpoint;
 	}
@@ -54,14 +58,19 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	public async resolveDocument(documentId: string): Promise<IDidDocument> {
 		try {
 			const result = await FetchHelper.fetchJson<never, IUniversalResolverResult>(
-				this.CLASS_NAME,
+				UniversalResolverConnector.CLASS_NAME,
 				`${StringHelper.trimTrailingSlashes(this._resolverEndpoint)}/1.0/identifiers/${encodeURIComponent(documentId)}`,
 				HttpMethod.GET
 			);
 
 			return result.didDocument;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "resolveDocumentFailed", { documentId }, error);
+			throw new GeneralError(
+				UniversalResolverConnector.CLASS_NAME,
+				"resolveDocumentFailed",
+				{ documentId },
+				error
+			);
 		}
 	}
 }

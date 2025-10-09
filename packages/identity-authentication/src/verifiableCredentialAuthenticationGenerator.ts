@@ -20,7 +20,7 @@ export class VerifiableCredentialAuthenticationGenerator implements IAuthenticat
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<VerifiableCredentialAuthenticationGenerator>();
+	public static readonly CLASS_NAME: string = nameof<VerifiableCredentialAuthenticationGenerator>();
 
 	/**
 	 * Connector for identity operations.
@@ -52,17 +52,17 @@ export class VerifiableCredentialAuthenticationGenerator implements IAuthenticat
 	 */
 	constructor(options: IVerifiableCredentialAuthenticationGeneratorConstructorOptions) {
 		Guards.object<IVerifiableCredentialAuthenticationGeneratorConstructorOptions>(
-			this.CLASS_NAME,
+			VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
 			nameof(options),
 			options
 		);
 		Guards.object<IVerifiableCredentialAuthenticationGeneratorConfig>(
-			this.CLASS_NAME,
+			VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
 			nameof(options.config),
 			options.config
 		);
 		Guards.stringValue(
-			this.CLASS_NAME,
+			VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
 			nameof(options.config.verificationMethodId),
 			options.config.verificationMethodId
 		);
@@ -98,10 +98,17 @@ export class VerifiableCredentialAuthenticationGenerator implements IAuthenticat
 		requestHeaders: IHttpHeaders,
 		authData: IJsonLdNodeObject
 	): Promise<void> {
-		Guards.object<IHttpHeaders>(this.CLASS_NAME, nameof(requestHeaders), requestHeaders);
+		Guards.object<IHttpHeaders>(
+			VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
+			nameof(requestHeaders),
+			requestHeaders
+		);
 
 		if (!this._nodeIdentity) {
-			throw new GeneralError(this.CLASS_NAME, "missingNodeIdentity");
+			throw new GeneralError(
+				VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
+				"missingNodeIdentity"
+			);
 		}
 
 		const ttlMs = this._tokenTtlInSeconds * 1000;
