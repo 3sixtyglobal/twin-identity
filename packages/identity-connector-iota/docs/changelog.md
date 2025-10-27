@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-iota - Changelog
 
+## [0.0.2-next.10](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.2-next.9...identity-connector-iota-v0.0.2-next.10) (2025-10-27)
+
+
+### Miscellaneous Chores
+
+* **identity-connector-iota:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.9 to 0.0.2-next.10
+
 ## [0.0.2-next.9](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.2-next.8...identity-connector-iota-v0.0.2-next.9) (2025-10-09)
 
 

@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.2-next.10](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.9...identity-models-v0.0.2-next.10) (2025-10-27)
+
+
+### Miscellaneous Chores
+
+* **identity-models:** Synchronize repo versions
+
 ## [0.0.2-next.9](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.2-next.8...identity-models-v0.0.2-next.9) (2025-10-09)
 
 

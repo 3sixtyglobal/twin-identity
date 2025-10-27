@@ -1,5 +1,21 @@
 # @twin.org/identity-service - Changelog
 
+## [0.0.2-next.10](https://github.com/twinfoundation/identity/compare/identity-service-v0.0.2-next.9...identity-service-v0.0.2-next.10) (2025-10-27)
+
+
+### Bug Fixes
+
+* missing path params ([02acbde](https://github.com/twinfoundation/identity/commit/02acbde3033bf5d5435dca0bd8187cabad8f3028))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.2-next.9 to 0.0.2-next.10
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.2-next.9 to 0.0.2-next.10
+
 ## [0.0.2-next.9](https://github.com/twinfoundation/identity/compare/identity-service-v0.0.2-next.8...identity-service-v0.0.2-next.9) (2025-10-09)
 
 
