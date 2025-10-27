@@ -327,7 +327,7 @@ export function generateRestRoutesIdentity(
 		summary: "Create an identity verifiable credential",
 		tag: tagsIdentity[0].name,
 		method: "POST",
-		path: `${baseRouteName}/:identity/verifiable-credential`,
+		path: `${baseRouteName}/:identity/verifiable-credential/:verificationMethodId`,
 		handler: async (httpRequestContext, request) =>
 			identityVerifiableCredentialCreate(httpRequestContext, componentName, request),
 		requestType: {
@@ -538,7 +538,7 @@ export function generateRestRoutesIdentity(
 		summary: "Create an identity verifiable presentation",
 		tag: tagsIdentity[0].name,
 		method: "POST",
-		path: `${baseRouteName}/:identity/verifiable-presentation`,
+		path: `${baseRouteName}/:identity/verifiable-presentation/:verificationMethodId`,
 		handler: async (httpRequestContext, request) =>
 			identityVerifiablePresentationCreate(httpRequestContext, componentName, request),
 		requestType: {
@@ -643,7 +643,7 @@ export function generateRestRoutesIdentity(
 		summary: "Create an identity proof",
 		tag: tagsIdentity[0].name,
 		method: "POST",
-		path: `${baseRouteName}/:identity/proof`,
+		path: `${baseRouteName}/:identity/proof/:verificationMethodId`,
 		handler: async (httpRequestContext, request) =>
 			identityProofCreate(httpRequestContext, componentName, request),
 		requestType: {
