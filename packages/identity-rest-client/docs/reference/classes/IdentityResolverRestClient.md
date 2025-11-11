@@ -16,7 +16,7 @@ Client for performing identity through to REST endpoints.
 
 > **new IdentityResolverRestClient**(`config`): `IdentityResolverRestClient`
 
-Create a new instance of IdentityClient.
+Create a new instance of IdentityResolverRestClient.
 
 #### Parameters
 
@@ -43,6 +43,24 @@ The configuration for the client.
 Runtime name for the class.
 
 ## Methods
+
+### className()
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityResolverComponent.className`
+
+***
 
 ### identityResolve()
 

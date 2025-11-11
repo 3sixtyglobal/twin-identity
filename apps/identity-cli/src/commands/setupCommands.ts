@@ -15,8 +15,8 @@ import {
 	initSchema
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
-import { IdentityResolverConnectorTypes } from "../models/identityResolverConnectorTypes";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
+import { IdentityResolverConnectorTypes } from "../models/identityResolverConnectorTypes.js";
 
 /**
  * Setup the vault for use in the CLI commands.

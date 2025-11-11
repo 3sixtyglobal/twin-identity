@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { UniversalResolverConnector } from "../src/universalResolverConnector";
+import { UniversalResolverConnector } from "../src/universalResolverConnector.js";
 
 describe("UniversalResolverConnector", () => {
 	test("can construct and resolve an identity", async () => {

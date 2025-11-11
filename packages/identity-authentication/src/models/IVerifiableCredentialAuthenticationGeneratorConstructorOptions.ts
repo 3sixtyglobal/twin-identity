@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IVerifiableCredentialAuthenticationGeneratorConfig } from "./IVerifiableCredentialAuthenticationGeneratorConfig";
+import type { IVerifiableCredentialAuthenticationGeneratorConfig } from "./IVerifiableCredentialAuthenticationGeneratorConfig.js";
 
 /**
  * Options for the verifiable credential authentication generator constructor.

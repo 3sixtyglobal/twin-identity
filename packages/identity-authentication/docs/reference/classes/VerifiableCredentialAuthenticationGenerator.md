@@ -36,35 +36,21 @@ Runtime name for the class.
 
 ## Methods
 
-### start()
+### className()
 
-> **start**(`nodeIdentity`, `nodeLoggingComponentType`): `Promise`\<`void`\>
+> **className**(): `string`
 
-The component needs to be started when the node is initialized.
-
-#### Parameters
-
-##### nodeIdentity
-
-`string`
-
-The identity of the node starting the component.
-
-##### nodeLoggingComponentType
-
-The node logging component type.
-
-`undefined` | `string`
+Returns the class name of the component.
 
 #### Returns
 
-`Promise`\<`void`\>
+`string`
 
-Nothing.
+The class name of the component.
 
 #### Implementation of
 
-`IAuthenticationGenerator.start`
+`IAuthenticationGenerator.className`
 
 ***
 
@@ -84,9 +70,19 @@ The request headers to add authentication information to.
 
 ##### authData
 
+Optional authentication data passed from the request.
+
+###### contextId
+
+`string`
+
+The context ID for the authentication.
+
+###### subject?
+
 `IJsonLdNodeObject`
 
-Optional authentication data passed from the request.
+The subject for the authentication.
 
 #### Returns
 

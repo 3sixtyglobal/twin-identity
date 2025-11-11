@@ -8,7 +8,8 @@ import {
 	type IIdentityProfileConnector
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdentityProfileServiceConstructorOptions";
+import { IdentityService } from "./identityService.js";
+import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdentityProfileServiceConstructorOptions.js";
 
 /**
  * Class which implements the identity profile contract.
@@ -37,6 +38,14 @@ export class IdentityProfileService<
 		this._identityProfileConnector = IdentityProfileConnectorFactory.get<
 			IIdentityProfileConnector<T, U>
 		>(options?.profileEntityConnectorType ?? "identity-profile");
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityService.CLASS_NAME;
 	}
 
 	/**
@@ -217,7 +226,7 @@ export class IdentityProfileService<
 		try {
 			// We don't want to return private profile for this type of query
 			// as it would expose the values to the REST api
-			return this._identityProfileConnector.list(
+			const result = await this._identityProfileConnector.list(
 				publicFilters,
 				undefined,
 				publicPropertyNames,
@@ -225,6 +234,7 @@ export class IdentityProfileService<
 				cursor,
 				limit
 			);
+			return result;
 		} catch (error) {
 			throw new GeneralError(IdentityProfileService.CLASS_NAME, "listFailed", undefined, error);
 		}

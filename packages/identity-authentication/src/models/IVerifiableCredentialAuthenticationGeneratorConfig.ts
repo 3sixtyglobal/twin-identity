@@ -12,6 +12,12 @@ export interface IVerifiableCredentialAuthenticationGeneratorConfig {
 	tokenTtlInSeconds?: number;
 
 	/**
+	 * The context id to use as the base for the verification method e.g. node/organization.
+	 * @default node
+	 */
+	contextId?: string;
+
+	/**
 	 * The id of the identity method to use when creating/verifying tokens.
 	 */
 	verificationMethodId: string;

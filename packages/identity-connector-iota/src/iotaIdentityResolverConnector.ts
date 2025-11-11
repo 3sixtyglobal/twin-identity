@@ -5,15 +5,14 @@ import {
 	type IotaDocument,
 	Resolver
 } from "@iota/identity-wasm/node/index.js";
-import { IotaClient } from "@iota/iota-sdk/client";
 import { GeneralError, Guards, Is, NotFoundError } from "@twin.org/core";
 import { Iota } from "@twin.org/dlt-iota";
 import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
-import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig";
-import type { IIotaIdentityResolverConnectorConfig } from "./models/IIotaIdentityResolverConnectorConfig";
-import type { IIotaIdentityResolverConnectorConstructorOptions } from "./models/IIotaIdentityResolverConnectorConstructorOptions";
+import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig.js";
+import type { IIotaIdentityResolverConnectorConfig } from "./models/IIotaIdentityResolverConnectorConfig.js";
+import type { IIotaIdentityResolverConnectorConstructorOptions } from "./models/IIotaIdentityResolverConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations on IOTA.
@@ -56,6 +55,14 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IotaIdentityResolverConnector.CLASS_NAME;
+	}
+
+	/**
 	 * Resolve a document from its id.
 	 * @param documentId The id of the document to resolve.
 	 * @returns The resolved document.
@@ -65,9 +72,9 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 		Guards.stringValue(IotaIdentityResolverConnector.CLASS_NAME, nameof(documentId), documentId);
 
 		try {
-			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				new IotaClient(this._config.clientOptions)
-			);
+			const client = Iota.createClient(this._config);
+			// @ts-expect-error IotaClient has a mismatch with the library types
+			const identityClientReadOnly = await IdentityClientReadOnly.create(client);
 			const resolver = new Resolver<IotaDocument>({
 				client: identityClientReadOnly
 			});

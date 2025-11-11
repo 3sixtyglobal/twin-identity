@@ -12,8 +12,8 @@ import { VaultConnectorFactory } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the service add command for the CLI.
@@ -175,8 +175,8 @@ export async function actionCommandServiceAdd(
 			opts.env,
 			[
 				`DID_SERVICE_ID="${service.id}"`,
-				`DID_SERVICE_TYPE="${service.type}"`,
-				`DID_SERVICE_ENDPOINT="${service.serviceEndpoint}"`
+				`DID_SERVICE_TYPE="${Is.string(service.type) ? service.type : service.type.join(",")}"`,
+				`DID_SERVICE_ENDPOINT="${Is.string(service.serviceEndpoint) ? service.serviceEndpoint : service.serviceEndpoint.join(",")}"`
 			],
 			opts.mergeEnv
 		);

@@ -3,16 +3,16 @@
 import type {
 	IBaseRoute,
 	IBaseRouteProcessor,
-	IHttpRequestIdentity,
 	IHttpResponse,
 	IHttpServerRequest
 } from "@twin.org/api-models";
+import { ContextIdKeys, type IContextIds } from "@twin.org/context";
 import { GeneralError, Is } from "@twin.org/core";
 import { IdentityConnectorFactory, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import { VerifiableCredentialHelper } from "@twin.org/standards-w3c-did";
 import { HeaderHelper, HeaderTypes } from "@twin.org/web";
-import type { IVerifiableCredentialAuthenticationProcessorConstructorOptions } from "./models/IVerifiableCredentialAuthenticationProcessorConstructorOptions";
+import type { IVerifiableCredentialAuthenticationProcessorConstructorOptions } from "./models/IVerifiableCredentialAuthenticationProcessorConstructorOptions.js";
 
 /**
  * Handle a JWT token in the authorization header and verify the credential.
@@ -47,6 +47,14 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return VerifiableCredentialAuthenticationProcessor.CLASS_NAME;
+	}
+
+	/**
 	 * Features supported by this processor.
 	 * If a route has any of these features listed, this processor will be run for that route.
 	 * If this is not implemented, the processor will run for all routes.
@@ -61,7 +69,7 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 	 * @param request The incoming request.
 	 * @param response The outgoing response.
 	 * @param route The route to process.
-	 * @param requestIdentity The identity context for the request.
+	 * @param contextIds The context IDs of the request.
 	 * @param processorState The state handed through the processors.
 	 * @returns Nothing
 	 */
@@ -69,7 +77,7 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 		request: IHttpServerRequest,
 		response: IHttpResponse,
 		route: IBaseRoute | undefined,
-		requestIdentity: IHttpRequestIdentity,
+		contextIds: IContextIds,
 		processorState: { [id: string]: unknown }
 	): Promise<void> {
 		try {
@@ -138,8 +146,13 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 					);
 				}
 
-				processorState.verifiableCredentialIssuer = issuer;
-				processorState.verifiableCredential = verifiableCredential;
+				let contextId: string = ContextIdKeys.Organization;
+				if (Is.object<{ contextId?: string }>(processorState?.verifiableCredential)) {
+					contextId = processorState.verifiableCredential.contextId ?? contextId;
+				}
+
+				contextIds[contextId] = issuer;
+				processorState.verifiableCredentialJsonLd = verifiableCredential;
 				processorState.verifiableCredentialSubject = subject;
 			}
 		} catch (err) {

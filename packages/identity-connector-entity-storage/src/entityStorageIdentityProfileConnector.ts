@@ -17,8 +17,8 @@ import {
 } from "@twin.org/entity-storage-models";
 import type { IIdentityProfileConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import type { IdentityProfile } from "./entities/identityProfile";
-import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions";
+import type { IdentityProfile } from "./entities/identityProfile.js";
+import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions.js";
 
 /**
  * Class which implements the identity profile connector contract.
@@ -52,6 +52,14 @@ export class EntityStorageIdentityProfileConnector<
 		this._profileEntityStorage = EntityStorageConnectorFactory.get(
 			options?.profileEntityStorageType ?? "identity-profile"
 		);
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return EntityStorageIdentityProfileConnector.CLASS_NAME;
 	}
 
 	/**

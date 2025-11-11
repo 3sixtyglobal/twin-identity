@@ -41,6 +41,14 @@ export class IdentityProfileRestClient<
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityProfileRestClient.CLASS_NAME;
+	}
+
+	/**
 	 * Create the profile properties for an identity.
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.

@@ -10,6 +10,7 @@ import {
 	type IRestRoute,
 	type ITag
 } from "@twin.org/api-models";
+import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import type { IJsonLdDocument } from "@twin.org/data-json-ld";
 import type {
@@ -350,12 +351,15 @@ export async function identityProfileCreate(
 		request.body
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.User);
+
 	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
 
 	await component.create(
 		request.body.publicProfile,
 		request.body.privateProfile,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.User]
 	);
 
 	return {
@@ -377,6 +381,9 @@ export async function identityGet(
 ): Promise<IIdentityProfileGetResponse> {
 	Guards.object<IIdentityProfileGetRequest>(ROUTES_SOURCE, nameof(request), request);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.User);
+
 	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
 
 	const result = await component.get(
@@ -384,7 +391,7 @@ export async function identityGet(
 		HttpParameterHelper.arrayFromString<keyof IJsonLdDocument>(
 			request?.query?.privatePropertyNames
 		),
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.User]
 	);
 
 	return {
@@ -445,12 +452,16 @@ export async function identityProfileUpdate(
 		nameof(request.body),
 		request.body
 	);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.User);
+
 	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
 
 	await component.update(
 		request.body.publicProfile,
 		request.body.privateProfile,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.User]
 	);
 
 	return {
@@ -470,9 +481,12 @@ export async function identityProfileRemove(
 	componentName: string,
 	request: INoContentRequest
 ): Promise<INoContentResponse> {
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.User);
+
 	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
 
-	await component.remove(httpRequestContext.userIdentity);
+	await component.remove(contextIds[ContextIdKeys.User]);
 
 	return {
 		statusCode: HttpStatusCode.noContent

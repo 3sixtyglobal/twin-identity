@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import path from "node:path";
 import { CLIDisplay } from "@twin.org/cli-core";
-import { CLI } from "../src/cli";
+import { CLI } from "../src/cli.js";
 
 let writeBuffer: string[] = [];
 let errorBuffer: string[] = [];

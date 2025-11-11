@@ -22,10 +22,10 @@ import {
 	TEST_IDENTITY_ID,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK
-} from "./setupTestEnv";
-import { IotaIdentityConnector } from "../src/iotaIdentityConnector";
-import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector";
-import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig";
+} from "./setupTestEnv.js";
+import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
+import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector.js";
+import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig.js";
 
 let testVcJwt: string;
 let testDocumentId: string;
@@ -958,10 +958,10 @@ describe("IotaIdentityConnector", () => {
 		// Check for signature based on proof type
 		if (proof.type === ProofTypes.JsonWebSignature2020) {
 			// For JsonWebSignature2020, we expect a jws property
-			expect((proof as IJsonWebSignature2020Proof).jws).toBeDefined();
+			expect(proof.jws).toBeDefined();
 		} else if (proof.type === ProofTypes.DataIntegrityProof) {
 			// For DataIntegrityProof, we expect a proofValue property
-			expect((proof as IDataIntegrityProof).proofValue).toBeDefined();
+			expect(proof.proofValue).toBeDefined();
 		}
 	});
 

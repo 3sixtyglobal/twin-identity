@@ -26,7 +26,7 @@ Client for performing identity through to REST endpoints.
 
 > **new IdentityProfileRestClient**\<`T`, `U`\>(`config`): `IdentityProfileRestClient`\<`T`, `U`\>
 
-Create a new instance of IdentityClient.
+Create a new instance of IdentityProfileRestClient.
 
 #### Parameters
 
@@ -53,6 +53,24 @@ The configuration for the client.
 Runtime name for the class.
 
 ## Methods
+
+### className()
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityProfileComponent.className`
+
+***
 
 ### create()
 

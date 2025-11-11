@@ -46,8 +46,8 @@ import {
 	type IVaultConnector
 } from "@twin.org/vault-models";
 import { Jwk, Jwt, type IJwk, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
-import type { IdentityDocument } from "./entities/identityDocument";
-import type { IEntityStorageIdentityConnectorConstructorOptions } from "./models/IEntityStorageIdentityConnectorConstructorOptions";
+import type { IdentityDocument } from "./entities/identityDocument.js";
+import type { IEntityStorageIdentityConnectorConstructorOptions } from "./models/IEntityStorageIdentityConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations using entity storage.
@@ -126,6 +126,14 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				"signatureVerificationFailed"
 			);
 		}
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return EntityStorageIdentityConnector.CLASS_NAME;
 	}
 
 	/**
@@ -1479,7 +1487,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				});
 			}
 
-			return ProofHelper.verifyProof(document, proof, didMethod.publicKeyJwk);
+			const result = await ProofHelper.verifyProof(document, proof, didMethod.publicKeyJwk);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,

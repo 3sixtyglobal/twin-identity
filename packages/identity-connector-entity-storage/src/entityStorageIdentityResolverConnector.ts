@@ -9,9 +9,9 @@ import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
 import { VaultConnectorFactory, type IVaultConnector } from "@twin.org/vault-models";
-import type { IdentityDocument } from "./entities/identityDocument";
-import { EntityStorageIdentityConnector } from "./entityStorageIdentityConnector";
-import type { IEntityStorageIdentityResolverConnectorConstructorOptions } from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions";
+import type { IdentityDocument } from "./entities/identityDocument.js";
+import { EntityStorageIdentityConnector } from "./entityStorageIdentityConnector.js";
+import type { IEntityStorageIdentityResolverConnectorConstructorOptions } from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations using entity storage.
@@ -48,6 +48,14 @@ export class EntityStorageIdentityResolverConnector implements IIdentityResolver
 			options?.didDocumentEntityStorageType ?? "identity-document"
 		);
 		this._vaultConnector = VaultConnectorFactory.get(options?.vaultConnectorType ?? "vault");
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return EntityStorageIdentityResolverConnector.CLASS_NAME;
 	}
 
 	/**

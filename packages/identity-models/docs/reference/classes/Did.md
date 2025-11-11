@@ -1,4 +1,4 @@
-# Class: IdHelper
+# Class: Did
 
 Helper methods for Ids.
 
@@ -6,11 +6,11 @@ Helper methods for Ids.
 
 ### Constructor
 
-> **new IdHelper**(): `IdHelper`
+> **new Did**(): `Did`
 
 #### Returns
 
-`IdHelper`
+`Did`
 
 ## Properties
 
@@ -22,9 +22,9 @@ Runtime name for the class.
 
 ## Methods
 
-### parseId()
+### parse()
 
-> `static` **parseId**(`id`): `object`
+> `static` **parse**(`id`): `object`
 
 Parse and id in to it's constituent parts.
 
@@ -57,3 +57,39 @@ The parsed id.
 #### Throws
 
 GeneralError if the id is not valid.
+
+***
+
+### guard()
+
+> `static` **guard**(`source`, `property`, `value`): `asserts value is string`
+
+Guard a string as a DID.
+
+#### Parameters
+
+##### source
+
+`string`
+
+The source of the error.
+
+##### property
+
+`string`
+
+The name of the property.
+
+##### value
+
+`unknown`
+
+The urn to parse.
+
+#### Returns
+
+`asserts value is string`
+
+#### Throws
+
+GuardError If the value does not match the assertion.

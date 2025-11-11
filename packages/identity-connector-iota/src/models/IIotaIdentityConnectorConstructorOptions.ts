@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IIotaIdentityConnectorConfig } from "./IIotaIdentityConnectorConfig";
+import type { IIotaIdentityConnectorConfig } from "./IIotaIdentityConnectorConfig.js";
 
 /**
  * Options for the IOTA Identity Connector constructor.

@@ -1,8 +1,5 @@
 {
 	"error": {
-		"verifiableCredentialAuthenticationGenerator": {
-			"missingNodeIdentity": "The authenticator can not generate a token without a node identity"
-		},
 		"verifiableCredentialAuthenticationProcessor": {
 			"tokenFailed": "Failed to verify token",
 			"tokenNoCredential": "The token does not contain a verifiable credential",

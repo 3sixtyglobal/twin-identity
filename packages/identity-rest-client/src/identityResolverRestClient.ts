@@ -32,6 +32,14 @@ export class IdentityResolverRestClient
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityResolverRestClient.CLASS_NAME;
+	}
+
+	/**
 	 * Resolve an identity.
 	 * @param documentId The id of the document to resolve.
 	 * @returns The resolved document.

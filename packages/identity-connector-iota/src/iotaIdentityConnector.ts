@@ -34,16 +34,16 @@ import {
 	Timestamp,
 	VerificationMethod,
 	type ControllerToken,
-	type CreateIdentity,
-	type CreateProposal,
 	type DIDUrl,
 	type ICredential,
 	type IJwkParams,
-	type IPresentation,
-	type UpdateDid
+	type IPresentation
 } from "@iota/identity-wasm/node/index.js";
-import type { TransactionBuilder } from "@iota/iota-interaction-ts/node/transaction_internal.js";
-import { IotaClient } from "@iota/iota-sdk/client";
+import type {
+	Transaction,
+	TransactionBuilder,
+	TransactionOutput
+} from "@iota/iota-interaction-ts/node/transaction_internal.js";
 import {
 	BaseError,
 	Converter,
@@ -57,25 +57,24 @@ import {
 } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { Iota } from "@twin.org/dlt-iota";
-import { DocumentHelper, IdHelper, type IIdentityConnector } from "@twin.org/identity-models";
+import { DocumentHelper, Did, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
 	DidVerificationMethodType,
-	type IDidVerifiableCredentialV1,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
 	type IDidDocumentVerificationMethod,
 	type IDidService,
+	type IDidVerifiableCredentialV1,
 	type IDidVerifiablePresentationV1,
 	type IProof
 } from "@twin.org/standards-w3c-did";
 import { VaultConnectorFactory, VaultKeyType, type IVaultConnector } from "@twin.org/vault-models";
 import { Jwk as JwkHelper } from "@twin.org/web";
-import { NetworkConstants } from "./constants/networkConstants";
-import type { IIdentityTransactionResult } from "./models/IIdentityTransactionResult";
-import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig";
-import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIdentityConnectorConstructorOptions";
+import { NetworkConstants } from "./constants/networkConstants.js";
+import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig.js";
+import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIdentityConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations on IOTA.
@@ -150,6 +149,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IotaIdentityConnector.CLASS_NAME;
+	}
+
+	/**
 	 * Create a new document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created document.
@@ -168,12 +175,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const executionResult = await this.executeIdentityTransaction(
 				controller,
-				identityClient.createIdentity(document).finish()
+				identityClient.createIdentity(document).finish() as unknown as TransactionBuilder<
+					Transaction<unknown>
+				>
 			);
 
-			const did = this.extractDidFromExecutionResult(executionResult, networkHrp);
-
-			// Both regular and gas station transactions now use waitForTransactionConfirmation
+			const did = this.extractDidFromExecutionResult(executionResult, networkHrp); // Both regular and gas station transactions now use waitForTransactionConfirmation
 			// so the DID should be immediately resolvable after transaction confirmation
 			const resolved = await identityClient.resolveDid(did);
 
@@ -217,12 +224,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const deleteBuilder = await onChain
+			const deleteBuilder = onChain
 				.deleteDid(controllerToken)
 				.withGasBudget(BigInt(this._gasBudget));
 
 			if (Is.object(this._config.gasStation)) {
-				await this.executeDocumentUpdateWithGasStation(controller, deleteBuilder);
+				await this.executeGasStationTransaction(controller, deleteBuilder, "update");
 			}
 
 			await deleteBuilder.buildAndExecute(identityClient);
@@ -269,7 +276,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const identity = await identityClient.getIdentity(IdHelper.parseId(documentId).id);
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(
@@ -402,7 +409,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.removeMethod(method.id());
 
-			const identity = await identityClient.getIdentity(IdHelper.parseId(idParts.id).id);
+			const identity = await identityClient.getIdentity(Did.parse(idParts.id).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(
@@ -458,7 +465,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const identity = await identityClient.getIdentity(IdHelper.parseId(documentId).id);
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(
@@ -469,7 +476,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const service = new Service({
-				id: `${document.id()}#${serviceId}`,
+				id: `${document.id().toString()}#${serviceId}`,
 				type: serviceType,
 				serviceEndpoint
 			});
@@ -527,7 +534,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.removeService(service.id());
 
-			const identity = await identityClient.getIdentity(IdHelper.parseId(idParts.id).id);
+			const identity = await identityClient.getIdentity(Did.parse(idParts.id).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "identityNotFound", idParts.id);
@@ -720,9 +727,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(credentialJwt), credentialJwt);
 
 		try {
-			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				new IotaClient(this._config.clientOptions)
-			);
+			const iotaClient = Iota.createClient(this._config);
+			// @ts-expect-error IotaClient has a mismatch with the library types
+			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
 			const resolver = new Resolver({ client: identityClientReadOnly });
 			const jwt = new Jwt(credentialJwt);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
@@ -808,7 +815,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.revokeCredentials("revocation", credentialIndices);
 
-			const aliasId = IdHelper.parseId(issuerDocumentId).id;
+			const aliasId = Did.parse(issuerDocumentId).id;
 			const identity = await identityClient.getIdentity(aliasId);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
@@ -881,7 +888,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.unrevokeCredentials("revocation", credentialIndices);
 
-			const aliasId = IdHelper.parseId(issuerDocumentId).id;
+			const aliasId = Did.parse(issuerDocumentId).id;
 			const identity = await identityClient.getIdentity(aliasId);
 			const identityOnChain = identity.toFullFledged();
 
@@ -1091,9 +1098,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(presentationJwt), presentationJwt);
 
 		try {
-			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				new IotaClient(this._config.clientOptions)
-			);
+			const iotaClient = Iota.createClient(this._config);
+			// @ts-expect-error IotaClient has a mismatch with the library types
+			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
 			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(presentationJwt);
 			const holderId = JwtPresentationValidator.extractHolder(jwt);
@@ -1314,7 +1321,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				});
 			}
 
-			return ProofHelper.verifyProof(document, proof, didMethod.publicKeyJwk);
+			const result = await ProofHelper.verifyProof(document, proof, didMethod.publicKeyJwk);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -1332,9 +1340,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @internal
 	 */
 	private async getIdentityClient(controller?: string): Promise<IdentityClient> {
-		const identityClientReadOnly = await IdentityClientReadOnly.create(
-			new IotaClient(this._config.clientOptions)
-		);
+		const iotaClient = Iota.createClient(this._config);
+		// @ts-expect-error IotaClient has a mismatch with the library types
+		const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
 		if (Is.undefined(controller)) {
 			const jwkMemStore = new JwkMemStore();
 			const keyIdMemStore = new KeyIdMemStore();
@@ -1388,15 +1396,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
-	 * Get the IOTA client for transaction operations.
-	 * @returns The IOTA client.
-	 * @internal
-	 */
-	private getIotaClient(): IotaClient {
-		return Iota.createClient(this._config);
-	}
-
-	/**
 	 * Extract DID from execution result, handling both regular and gas station transaction formats.
 	 * @param executionResult The transaction execution result.
 	 * @param networkHrp The network HRP for DID construction.
@@ -1405,10 +1404,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @internal
 	 */
 	private extractDidFromExecutionResult(
-		executionResult: IIdentityTransactionResult,
+		executionResult: TransactionOutput<Transaction<OnChainIdentity>>,
 		networkHrp: string
 	): IotaDID {
-		if (Is.function(executionResult.output?.didDocument)) {
+		if (Is.function(executionResult.output?.didDocument?.bind(executionResult.output))) {
 			return executionResult.output.didDocument().id();
 		}
 
@@ -1505,10 +1504,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	private async executeIdentityTransaction(
 		controller: string,
-		transactionBuilder: TransactionBuilder<CreateIdentity>
-	): Promise<IIdentityTransactionResult> {
+		transactionBuilder: TransactionBuilder<Transaction<unknown>>
+	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		if (Is.object(this._config.gasStation)) {
-			return this.executeIdentityTransactionWithGasStation(controller, transactionBuilder);
+			return this.executeGasStationTransaction(controller, transactionBuilder, "identity");
 		}
 
 		const identityClient = await this.getIdentityClient(controller);
@@ -1519,7 +1518,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const [txBytes, signatures, createIdentity] = buildResult;
 
 			if (Is.arrayValue(signatures)) {
-				const iotaClient = this.getIotaClient();
+				const iotaClient = Iota.createClient(this._config);
 
 				const txResponse = await iotaClient.executeTransactionBlock({
 					transactionBlock: txBytes,
@@ -1552,7 +1551,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 					networkHrp: identityClient.network()
 				};
 
-				return result as unknown as IIdentityTransactionResult;
+				return result as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 			}
 		}
 
@@ -1570,28 +1569,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
-	 * Execute identity transaction with gas station sponsoring.
-	 * @param controller The controller identity.
-	 * @param transactionBuilder The finished transaction builder.
-	 * @returns The execution result.
-	 * @internal
-	 */
-	private async executeIdentityTransactionWithGasStation(
-		controller: string,
-		transactionBuilder: TransactionBuilder<CreateIdentity>
-	): Promise<IIdentityTransactionResult> {
-		return this.executeGasStationTransaction(controller, transactionBuilder, "identity");
-	}
-
-	/**
-	 * Get user address for the given controller.
+	 * Get address for the given controller.
 	 * @param controller The controller to get the address for.
-	 * @returns The user address.
+	 * @returns The controller address.
 	 * @internal
 	 */
-	private async getUserAddress(controller: string): Promise<string> {
-		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
-
+	private async getControllerAddress(controller: string): Promise<string> {
 		const seed = await Iota.getSeed(this._config, this._vaultConnector, controller);
 		const addresses = Iota.getAddresses(
 			seed,
@@ -1618,7 +1601,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		identityOnChain: OnChainIdentity,
 		document: IotaDocument,
 		controllerToken: ControllerToken
-	): Promise<IIdentityTransactionResult> {
+	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(identityOnChain), identityOnChain);
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(document), document);
@@ -1629,25 +1612,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			.withGasBudget(BigInt(this._gasBudget));
 
 		if (Is.object(this._config.gasStation)) {
-			return this.executeDocumentUpdateWithGasStation(controller, updateBuilder);
+			return this.executeGasStationTransaction(controller, updateBuilder, "update");
 		}
 
 		const identityClient = await this.getIdentityClient(controller);
-		return updateBuilder.buildAndExecute(identityClient) as unknown as IIdentityTransactionResult;
-	}
-
-	/**
-	 * Execute document update transaction with gas station sponsoring.
-	 * @param controller The controller identity.
-	 * @param updateBuilder The document update builder.
-	 * @returns The execution result.
-	 * @internal
-	 */
-	private async executeDocumentUpdateWithGasStation(
-		controller: string,
-		updateBuilder: TransactionBuilder<CreateProposal<UpdateDid>>
-	): Promise<IIdentityTransactionResult> {
-		return this.executeGasStationTransaction(controller, updateBuilder, "update");
+		return updateBuilder.buildAndExecute(identityClient) as unknown as TransactionOutput<
+			Transaction<OnChainIdentity>
+		>;
 	}
 
 	/**
@@ -1660,17 +1631,17 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	private async executeGasStationTransaction(
 		controller: string,
-		builder: TransactionBuilder<CreateIdentity> | TransactionBuilder<CreateProposal<UpdateDid>>,
+		builder: TransactionBuilder<Transaction<unknown>>,
 		operationType: "identity" | "update"
-	): Promise<IIdentityTransactionResult> {
+	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(builder), builder);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 
-			// Get user address for gas station, as the user remains the sender
-			const userAddress = await this.getUserAddress(controller);
+			// Get address for gas station, as the controller remains the sender
+			const controllerAddress = await this.getControllerAddress(controller);
 
 			const gasReservation = await Iota.reserveGas(this._config, this._gasBudget);
 
@@ -1681,7 +1652,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}));
 
 			const gasConfiguredBuilder = builder
-				.withSender(userAddress)
+				.withSender(controllerAddress)
 				.withGasBudget(BigInt(this._gasBudget))
 				.withGasOwner(gasReservation.sponsorAddress)
 				.withGasPayment(gasCoinsWithStringVersions)
@@ -1691,7 +1662,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			if (Is.arrayValue(buildResult) && buildResult.length === 3 && Is.uint8Array(buildResult[0])) {
 				const [txBytes, signatures] = buildResult;
-				const iotaClient = this.getIotaClient();
+				const iotaClient = Iota.createClient(this._config);
 
 				const confirmedResponse = await Iota.executeAndConfirmGasStationTransaction(
 					this._config,
@@ -1715,10 +1686,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 						response: confirmedResponse,
 						networkHrp: identityClient.network()
 					};
-					return result as unknown as IIdentityTransactionResult;
+					return result as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 				}
 
-				return confirmedResponse as unknown as IIdentityTransactionResult;
+				return confirmedResponse as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 			}
 
 			throw new GeneralError(

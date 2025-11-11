@@ -6,6 +6,7 @@ import type {
 	IRestRoute,
 	ITag
 } from "@twin.org/api-models";
+import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import {
 	DocumentHelper,
@@ -807,17 +808,15 @@ export async function identityCreate(
 	request: IIdentityCreateRequest
 ): Promise<IIdentityCreateResponse> {
 	Guards.object<IIdentityCreateRequest>(ROUTES_SOURCE, nameof(request), request);
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.identityCreate(
 		request.body?.namespace,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -843,15 +842,15 @@ export async function identityRemove(
 		nameof(request.pathParams),
 		request.pathParams
 	);
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
-	await component.identityRemove(request.pathParams.identity, httpRequestContext.userIdentity);
+	await component.identityRemove(
+		request.pathParams.identity,
+		contextIds[ContextIdKeys.Organization]
+	);
 
 	return {
 		statusCode: HttpStatusCode.noContent
@@ -870,11 +869,6 @@ export async function identityVerificationMethodCreate(
 	componentName: string,
 	request: IIdentityVerificationMethodCreateRequest
 ): Promise<IIdentityVerificationMethodCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerificationMethodCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityVerificationMethodCreateRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -887,13 +881,16 @@ export async function identityVerificationMethodCreate(
 		request.pathParams.identity
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verificationMethodCreate(
 		request.pathParams.identity,
 		request.body.verificationMethodType,
 		request.body.verificationMethodId,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -913,11 +910,6 @@ export async function identityVerificationMethodRemove(
 	componentName: string,
 	request: IIdentityVerificationMethodRemoveRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerificationMethodRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityVerificationMethodRemoveRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -935,11 +927,14 @@ export async function identityVerificationMethodRemove(
 		request.pathParams.verificationMethodId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.verificationMethodRemove(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -959,11 +954,6 @@ export async function identityServiceCreate(
 	componentName: string,
 	request: IIdentityServiceCreateRequest
 ): Promise<IIdentityServiceCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityServiceCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityServiceCreateRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -976,6 +966,9 @@ export async function identityServiceCreate(
 		request.pathParams.identity
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.serviceCreate(
@@ -983,7 +976,7 @@ export async function identityServiceCreate(
 		request.body.serviceId,
 		request.body.type,
 		request.body.endpoint,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1003,11 +996,6 @@ export async function identityServiceRemove(
 	componentName: string,
 	request: IIdentityServiceRemoveRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityServiceRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityServiceRemoveRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -1025,11 +1013,14 @@ export async function identityServiceRemove(
 		request.pathParams.serviceId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.serviceRemove(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.serviceId),
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1049,11 +1040,6 @@ export async function identityVerifiableCredentialCreate(
 	componentName: string,
 	request: IIdentityVerifiableCredentialCreateRequest
 ): Promise<IIdentityVerifiableCredentialCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiableCredentialCreateRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1075,6 +1061,9 @@ export async function identityVerifiableCredentialCreate(
 		request.pathParams.verificationMethodId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verifiableCredentialCreate(
@@ -1085,7 +1074,7 @@ export async function identityVerifiableCredentialCreate(
 			revocationIndex: request.body.revocationIndex,
 			expirationDate: Coerce.date(request.body.expirationDate)
 		},
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1138,11 +1127,6 @@ export async function identityVerifiableCredentialRevoke(
 	componentName: string,
 	request: IIdentityVerifiableCredentialRevokeRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiableCredentialRevokeRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1162,12 +1146,15 @@ export async function identityVerifiableCredentialRevoke(
 	const revocationIndex = Coerce.number(request.pathParams.revocationIndex);
 	Guards.integer(ROUTES_SOURCE, nameof(request.pathParams.revocationIndex), revocationIndex);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.verifiableCredentialRevoke(
 		request.pathParams.identity,
 		revocationIndex,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1187,11 +1174,6 @@ export async function identityVerifiableCredentialUnrevoke(
 	componentName: string,
 	request: IIdentityVerifiableCredentialUnrevokeRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiableCredentialUnrevokeRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1211,12 +1193,15 @@ export async function identityVerifiableCredentialUnrevoke(
 	const revocationIndex = Coerce.number(request.pathParams.revocationIndex);
 	Guards.integer(ROUTES_SOURCE, nameof(request.pathParams.revocationIndex), revocationIndex);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.verifiableCredentialUnrevoke(
 		request.pathParams.identity,
 		revocationIndex,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1236,11 +1221,6 @@ export async function identityVerifiablePresentationCreate(
 	componentName: string,
 	request: IIdentityVerifiablePresentationCreateRequest
 ): Promise<IIdentityVerifiablePresentationCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiablePresentationCreateRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1262,6 +1242,9 @@ export async function identityVerifiablePresentationCreate(
 		request.pathParams.verificationMethodId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verifiablePresentationCreate(
@@ -1271,7 +1254,7 @@ export async function identityVerifiablePresentationCreate(
 		request.body.types,
 		request.body.verifiableCredentials,
 		request.body.expiresInMinutes,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1324,11 +1307,6 @@ export async function identityProofCreate(
 	componentName: string,
 	request: IIdentityProofCreateRequest
 ): Promise<IIdentityProofCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityProofCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityProofCreateRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -1351,13 +1329,16 @@ export async function identityProofCreate(
 		request.body
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.proofCreate(
 		request.pathParams.identity,
 		request.body.proofType,
 		request.body.document,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {

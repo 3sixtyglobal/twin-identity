@@ -1,5 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import { ContextIdKeys, ContextIdStore, type IContextIds } from "@twin.org/context";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -17,16 +18,16 @@ import {
 	type VaultSecret
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import { type IHttpHeaders, HeaderHelper, HeaderTypes } from "@twin.org/web";
-import { IdentityAuthenticationContexts } from "../src/models/identityAuthenticationContexts";
-import { IdentityAuthenticationTypes } from "../src/models/identityAuthenticationTypes";
-import type { IIdentityAuthenticationActionRequest } from "../src/models/IIdentityAuthenticationActionRequest";
-import { VerifiableCredentialAuthenticationGenerator } from "../src/verifiableCredentialAuthenticationGenerator";
-import { VerifiableCredentialAuthenticationProcessor } from "../src/verifiableCredentialAuthenticationProcessor";
+import { HeaderHelper, HeaderTypes, type IHttpHeaders } from "@twin.org/web";
+import { IdentityAuthenticationContexts } from "../src/models/identityAuthenticationContexts.js";
+import { IdentityAuthenticationTypes } from "../src/models/identityAuthenticationTypes.js";
+import type { IIdentityAuthenticationActionRequest } from "../src/models/IIdentityAuthenticationActionRequest.js";
+import { VerifiableCredentialAuthenticationGenerator } from "../src/verifiableCredentialAuthenticationGenerator.js";
+import { VerifiableCredentialAuthenticationProcessor } from "../src/verifiableCredentialAuthenticationProcessor.js";
 
 const MOCK_TIME = 1724327816272;
 let identityConnector: IIdentityConnector;
-let testIdentity: string;
+let testOrganizationIdentity: string;
 let token: string;
 
 describe("VerifiableCredentialAuthenticationGenerator", () => {
@@ -63,7 +64,7 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 		IdentityConnectorFactory.register("identity", () => identityConnector);
 
 		const doc = await identityConnector.createDocument("test-controller");
-		testIdentity = doc.id;
+		testOrganizationIdentity = doc.id;
 		await identityConnector.addVerificationMethod(
 			"test-controller",
 			doc.id,
@@ -76,7 +77,7 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 		const authenticationRequest: IIdentityAuthenticationActionRequest = {
 			"@context": IdentityAuthenticationContexts.ContextRoot,
 			type: IdentityAuthenticationTypes.ActionRequest,
-			requester: testIdentity,
+			requester: testOrganizationIdentity,
 			action: "urn:action:action-1",
 			data: {
 				foo: "bar"
@@ -89,14 +90,14 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 			}
 		});
 
-		await generator.start(testIdentity, undefined);
-
 		const headers: IHttpHeaders = {};
 
-		await generator.addAuthentication(
-			headers,
-			authenticationRequest as unknown as IJsonLdNodeObject
-		);
+		await ContextIdStore.run({ organization: testOrganizationIdentity }, async () => {
+			await generator.addAuthentication(headers, {
+				contextId: ContextIdKeys.Organization,
+				subject: authenticationRequest as unknown as IJsonLdNodeObject
+			});
+		});
 
 		const header = headers[HeaderTypes.Authorization] as string;
 		expect(header.startsWith("Bearer ")).toBeTruthy();
@@ -112,39 +113,46 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 			[HeaderTypes.Authorization]: HeaderHelper.createBearer(token)
 		};
 
-		const processorState: { [id: string]: unknown } = {};
-		await processor.pre(
-			{ headers },
-			{},
-			{
-				operationId: "op-1",
-				path: "/test",
-				processorFeatures: ["verifiableCredential"]
-			},
-			{},
-			processorState
-		);
+		const processorState: { [id: string]: unknown } = {
+			verifiableCredential: { contextId: ContextIdKeys.User }
+		};
+		const contextIds: IContextIds = {};
 
-		expect(processorState.verifiableCredential).toEqual({
+		await ContextIdStore.run({ organization: testOrganizationIdentity }, async () => {
+			await processor.pre(
+				{ headers },
+				{},
+				{
+					operationId: "op-1",
+					path: "/test",
+					processorFeatures: ["verifiableCredential"]
+				},
+				contextIds,
+				processorState
+			);
+		});
+
+		expect(contextIds[ContextIdKeys.User]).toEqual(testOrganizationIdentity);
+
+		expect(processorState.verifiableCredentialJsonLd).toEqual({
 			"@context": [
 				"https://www.w3.org/2018/credentials/v1",
 				"https://schema.twindev.org/identity-authentication"
 			],
 			credentialSubject: {
 				action: "urn:action:action-1",
-				requester: testIdentity,
+				requester: testOrganizationIdentity,
 				data: {
 					foo: "bar"
 				}
 			},
 			issuanceDate: "2024-08-22T11:56:56.000Z",
-			issuer: testIdentity,
+			issuer: testOrganizationIdentity,
 			type: ["VerifiableCredential", "ActionRequest"]
 		});
-		expect(processorState.verifiableCredentialIssuer).toEqual(testIdentity);
 		expect(processorState.verifiableCredentialSubject).toEqual({
 			action: "urn:action:action-1",
-			requester: testIdentity,
+			requester: testOrganizationIdentity,
 			data: {
 				foo: "bar"
 			}

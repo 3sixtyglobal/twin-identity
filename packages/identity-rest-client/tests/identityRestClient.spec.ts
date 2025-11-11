@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { IdentityRestClient } from "../src/identityRestClient";
+import { IdentityRestClient } from "../src/identityRestClient.js";
 
 describe("IdentityRestClient", () => {
 	test("Can create an instance", async () => {

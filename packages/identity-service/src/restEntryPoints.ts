@@ -1,9 +1,12 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import type { IRestRouteEntryPoint } from "@twin.org/api-models";
-import { generateRestRoutesIdentityProfile, tagsIdentityProfile } from "./identityProfileRoutes";
-import { generateRestRoutesIdentityResolver, tagsIdentityResolver } from "./identityResolverRoutes";
-import { generateRestRoutesIdentity, tagsIdentity } from "./identityRoutes";
+import { generateRestRoutesIdentityProfile, tagsIdentityProfile } from "./identityProfileRoutes.js";
+import {
+	generateRestRoutesIdentityResolver,
+	tagsIdentityResolver
+} from "./identityResolverRoutes.js";
+import { generateRestRoutesIdentity, tagsIdentity } from "./identityRoutes.js";
 
 export const restEntryPoints: IRestRouteEntryPoint[] = [
 	{

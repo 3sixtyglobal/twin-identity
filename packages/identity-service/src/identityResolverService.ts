@@ -8,7 +8,8 @@ import {
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
-import type { IIdentityResolverServiceConstructorOptions } from "./models/IIdentityResolverServiceConstructorOptions";
+import { IdentityService } from "./identityService.js";
+import type { IIdentityResolverServiceConstructorOptions } from "./models/IIdentityResolverServiceConstructorOptions.js";
 
 /**
  * Class which implements the identity resolver contract.
@@ -43,6 +44,14 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
 		this._fallbackResolverConnectorType = options?.fallbackResolverConnectorType ?? "universal";
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityService.CLASS_NAME;
 	}
 
 	/**

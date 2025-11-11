@@ -20,7 +20,7 @@ import {
 	type IDidVerifiablePresentation
 } from "@twin.org/standards-w3c-did";
 import { Jwt } from "@twin.org/web";
-import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServiceConstructorOptions";
+import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServiceConstructorOptions.js";
 
 /**
  * Class which implements the identity contract.
@@ -51,6 +51,14 @@ export class IdentityService implements IIdentityComponent {
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityService.CLASS_NAME;
+	}
+
+	/**
 	 * Create a new identity.
 	 * @param namespace The namespace of the connector to use for the identity, defaults to service configured namespace.
 	 * @param controller The controller of the identity who can make changes.
@@ -61,7 +69,8 @@ export class IdentityService implements IIdentityComponent {
 
 		try {
 			const identityConnector = this.getConnectorByNamespace(namespace);
-			return identityConnector.createDocument(controller);
+			const result = await identityConnector.createDocument(controller);
+			return result;
 		} catch (error) {
 			throw new GeneralError(IdentityService.CLASS_NAME, "identityCreateFailed", undefined, error);
 		}
@@ -79,7 +88,8 @@ export class IdentityService implements IIdentityComponent {
 
 		try {
 			const identityConnector = this.getConnectorByUri(identity);
-			return identityConnector.removeDocument(controller, identity);
+			const result = await identityConnector.removeDocument(controller, identity);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				IdentityService.CLASS_NAME,
@@ -368,9 +378,12 @@ export class IdentityService implements IIdentityComponent {
 
 			const identityConnector = this.getConnectorByUri(idParts.id);
 
-			return identityConnector.revokeVerifiableCredentials(controller, issuerIdentity, [
-				credentialIndex
-			]);
+			const result = await identityConnector.revokeVerifiableCredentials(
+				controller,
+				issuerIdentity,
+				[credentialIndex]
+			);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				IdentityService.CLASS_NAME,
@@ -402,9 +415,12 @@ export class IdentityService implements IIdentityComponent {
 
 			const identityConnector = this.getConnectorByUri(idParts.id);
 
-			return identityConnector.unrevokeVerifiableCredentials(controller, issuerIdentity, [
-				credentialIndex
-			]);
+			const result = await identityConnector.unrevokeVerifiableCredentials(
+				controller,
+				issuerIdentity,
+				[credentialIndex]
+			);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				IdentityService.CLASS_NAME,
@@ -451,7 +467,7 @@ export class IdentityService implements IIdentityComponent {
 
 			const identityConnector = this.getConnectorByUri(idParts.id);
 
-			return identityConnector.createVerifiablePresentation(
+			const result = await identityConnector.createVerifiablePresentation(
 				controller,
 				verificationMethodId,
 				presentationId,
@@ -460,6 +476,7 @@ export class IdentityService implements IIdentityComponent {
 				verifiableCredentials,
 				expiresInMinutes
 			);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				IdentityService.CLASS_NAME,
@@ -550,12 +567,13 @@ export class IdentityService implements IIdentityComponent {
 
 			const identityConnector = this.getConnectorByUri(idParts.id);
 
-			return identityConnector.createProof(
+			const result = await identityConnector.createProof(
 				controller,
 				verificationMethodId,
 				proofType,
 				unsecureDocument
 			);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
 				IdentityService.CLASS_NAME,
@@ -586,7 +604,8 @@ export class IdentityService implements IIdentityComponent {
 
 			const identityConnector = this.getConnectorByUri(idParts.id);
 
-			return identityConnector.verifyProof(document, proof);
+			const result = await identityConnector.verifyProof(document, proof);
+			return result;
 		} catch (error) {
 			throw new GeneralError(IdentityService.CLASS_NAME, "proofVerifyFailed", undefined, error);
 		}

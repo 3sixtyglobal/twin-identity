@@ -6,11 +6,11 @@ import {
 	TEST_IDENTITY_ID,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK
-} from "./setupTestEnv";
-import { IotaIdentityConnector } from "../src/iotaIdentityConnector";
-import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector";
-import type { IIotaIdentityResolverConnectorConfig } from "../src/models/IIotaIdentityResolverConnectorConfig";
-import type { IIotaIdentityResolverConnectorConstructorOptions } from "../src/models/IIotaIdentityResolverConnectorConstructorOptions";
+} from "./setupTestEnv.js";
+import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
+import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector.js";
+import type { IIotaIdentityResolverConnectorConfig } from "../src/models/IIotaIdentityResolverConnectorConfig.js";
+import type { IIotaIdentityResolverConnectorConstructorOptions } from "../src/models/IIotaIdentityResolverConnectorConstructorOptions.js";
 
 describe("IotaIdentityResolverConnector", () => {
 	let testDocumentId: string;

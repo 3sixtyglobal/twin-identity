@@ -8,8 +8,9 @@
 			"verificationMethodNotFound": "The verification method \"{methodName}\" of type \"{methodType}\" could not be found",
 			"verificationMethodJwkNotFound": "The verification method \"{methodName}\" of type \"{methodType}\" is missing the JWK"
 		},
-		"idHelper": {
-			"invalidDocumentId": "The document id \"{id}\" is invalid"
+		"guard": {
+			"didPartsTooFew": "The DID \"{value}\" is invalid: expected at least 3 parts but got fewer",
+			"didInvalidStart": "The DID \"{value}\" is invalid: expected to start with 'did'"
 		}
 	}
 }

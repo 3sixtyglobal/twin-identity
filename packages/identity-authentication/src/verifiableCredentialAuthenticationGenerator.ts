@@ -1,7 +1,8 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import type { IAuthenticationGenerator } from "@twin.org/api-models";
-import { GeneralError, Guards } from "@twin.org/core";
+import { ContextIdHelper, ContextIdStore } from "@twin.org/context";
+import { Guards } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
@@ -10,8 +11,8 @@ import {
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import { HeaderHelper, HeaderTypes, type IHttpHeaders } from "@twin.org/web";
-import type { IVerifiableCredentialAuthenticationGeneratorConfig } from "./models/IVerifiableCredentialAuthenticationGeneratorConfig";
-import type { IVerifiableCredentialAuthenticationGeneratorConstructorOptions } from "./models/IVerifiableCredentialAuthenticationGeneratorConstructorOptions";
+import type { IVerifiableCredentialAuthenticationGeneratorConfig } from "./models/IVerifiableCredentialAuthenticationGeneratorConfig.js";
+import type { IVerifiableCredentialAuthenticationGeneratorConstructorOptions } from "./models/IVerifiableCredentialAuthenticationGeneratorConstructorOptions.js";
 
 /**
  * Class performing verifiable credential authentication generation.
@@ -39,12 +40,6 @@ export class VerifiableCredentialAuthenticationGenerator implements IAuthenticat
 	 * @internal
 	 */
 	private readonly _tokenTtlInSeconds: number;
-
-	/**
-	 * The node identity.
-	 * @internal
-	 */
-	private _nodeIdentity?: string;
 
 	/**
 	 * Create a new instance of VerifiableCredentialAuthenticationGenerator.
@@ -76,27 +71,27 @@ export class VerifiableCredentialAuthenticationGenerator implements IAuthenticat
 	}
 
 	/**
-	 * The component needs to be started when the node is initialized.
-	 * @param nodeIdentity The identity of the node starting the component.
-	 * @param nodeLoggingComponentType The node logging component type.
-	 * @returns Nothing.
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
 	 */
-	public async start(
-		nodeIdentity: string,
-		nodeLoggingComponentType: string | undefined
-	): Promise<void> {
-		this._nodeIdentity = nodeIdentity;
+	public className(): string {
+		return VerifiableCredentialAuthenticationGenerator.CLASS_NAME;
 	}
 
 	/**
 	 * Adds authentication information to the request headers.
 	 * @param requestHeaders The request headers to add authentication information to.
 	 * @param authData Optional authentication data passed from the request.
+	 * @param authData.contextId The context ID for the authentication.
+	 * @param authData.subject The subject for the authentication.
 	 * @returns A promise that resolves when the authentication information has been added.
 	 */
 	public async addAuthentication(
 		requestHeaders: IHttpHeaders,
-		authData: IJsonLdNodeObject
+		authData: {
+			contextId: string;
+			subject?: IJsonLdNodeObject;
+		}
 	): Promise<void> {
 		Guards.object<IHttpHeaders>(
 			VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
@@ -104,20 +99,17 @@ export class VerifiableCredentialAuthenticationGenerator implements IAuthenticat
 			requestHeaders
 		);
 
-		if (!this._nodeIdentity) {
-			throw new GeneralError(
-				VerifiableCredentialAuthenticationGenerator.CLASS_NAME,
-				"missingNodeIdentity"
-			);
-		}
+		const contextIds = await ContextIdStore.getContextIds();
+		ContextIdHelper.guard(contextIds, authData.contextId);
+		const contextId = contextIds[authData.contextId];
 
 		const ttlMs = this._tokenTtlInSeconds * 1000;
 
 		const credential = await this._identityConnector.createVerifiableCredential(
-			this._nodeIdentity,
-			DocumentHelper.joinId(this._nodeIdentity, this._verificationMethodId),
+			contextId,
+			DocumentHelper.joinId(contextId, this._verificationMethodId),
 			undefined,
-			authData,
+			authData.subject ?? {},
 			{
 				expirationDate: new Date(Date.now() + ttlMs)
 			}

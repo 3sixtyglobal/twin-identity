@@ -61,6 +61,14 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityRestClient.CLASS_NAME;
+	}
+
+	/**
 	 * Create a new identity.
 	 * @param namespace The namespace of the connector to use for the identity, defaults to service configured namespace.
 	 * @returns The created identity document.

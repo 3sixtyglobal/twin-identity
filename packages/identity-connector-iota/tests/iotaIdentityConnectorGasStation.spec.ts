@@ -12,9 +12,9 @@ import {
 	TEST_GAS_STATION_URL,
 	TEST_GAS_STATION_AUTH_TOKEN,
 	TEST_GAS_BUDGET
-} from "./setupTestEnv";
-import { IotaIdentityConnector } from "../src/iotaIdentityConnector";
-import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig";
+} from "./setupTestEnv.js";
+import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
+import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig.js";
 
 describe("IotaIdentityConnector with Gas Station", () => {
 	let gasStationConfig: IIotaIdentityConnectorConfig;

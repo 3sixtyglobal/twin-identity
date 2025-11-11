@@ -1,6 +1,5 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { I18n } from "@twin.org/core";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 import { IdentityConnectorFactory } from "@twin.org/identity-models";
@@ -12,11 +11,11 @@ import {
 	type VaultSecret
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import type { IdentityDocument } from "../src/entities/identityDocument";
-import type { IdentityProfile } from "../src/entities/identityProfile";
-import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector";
-import { EntityStorageIdentityProfileConnector } from "../src/entityStorageIdentityProfileConnector";
-import { initSchema } from "../src/schema";
+import type { IdentityDocument } from "../src/entities/identityDocument.js";
+import type { IdentityProfile } from "../src/entities/identityProfile.js";
+import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector.js";
+import { EntityStorageIdentityProfileConnector } from "../src/entityStorageIdentityProfileConnector.js";
+import { initSchema } from "../src/schema.js";
 
 export const TEST_IDENTITY_ID = "test-identity";
 export const TEST_CONTROLLER = "test-controller";
@@ -27,8 +26,6 @@ let identityProfileEntityStorage: MemoryEntityStorageConnector<IdentityProfile>;
 
 describe("EntityStorageIdentityProfileConnector", () => {
 	beforeAll(async () => {
-		I18n.addDictionary("en", await import("../locales/en.json"));
-
 		initSchemaVault();
 		initSchema();
 	});
@@ -75,8 +72,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			message: "entityStorageIdentityProfileConnector.getFailed",
 			cause: { name: "Error", message: "Test Error" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.getFailed")).toEqual(true);
 	});
 
 	test("Can fail to get an identity when it doesn't exist", async () => {
@@ -87,8 +82,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			message: "entityStorageIdentityProfileConnector.identityNotFound",
 			properties: { notFoundId: "foo" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.getFailed")).toEqual(true);
 	});
 
 	test("Can get an identity", async () => {
@@ -210,10 +203,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			message: "entityStorageIdentityProfileConnector.updateFailed",
 			cause: { name: "Error", message: "Test Error" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.updateFailed")).toEqual(
-			true
-		);
 	});
 
 	test("Can fail to update an identity when it doesn't exist", async () => {
@@ -225,10 +214,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			message: "entityStorageIdentityProfileConnector.notFound",
 			properties: { notFoundId: TEST_IDENTITY_ID }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.updateFailed")).toEqual(
-			true
-		);
 	});
 
 	test("Can update an identity", async () => {
@@ -289,8 +274,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			message: "entityStorageIdentityProfileConnector.listFailed",
 			cause: { name: "Error", message: "Test Error" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.listFailed")).toEqual(true);
 	});
 
 	test("Can get a list of identities including private properties", async () => {

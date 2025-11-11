@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IIdentityServiceConfig } from "./IIdentityServiceConfig";
+import type { IIdentityServiceConfig } from "./IIdentityServiceConfig.js";
 
 /**
  * Options for the identity service constructor.

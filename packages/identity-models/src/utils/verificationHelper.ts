@@ -5,8 +5,8 @@ import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { nameof } from "@twin.org/nameof";
 import { ProofHelper, type IDidDocument, type IProof } from "@twin.org/standards-w3c-did";
 import { Jwk, Jwt, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
-import { DocumentHelper } from "./documentHelper";
-import type { IIdentityResolverComponent } from "../models/IIdentityResolverComponent";
+import { DocumentHelper } from "./documentHelper.js";
+import type { IIdentityResolverComponent } from "../models/IIdentityResolverComponent.js";
 
 /**
  * Helper methods for verification.
@@ -113,9 +113,9 @@ export class VerificationHelper {
 				documentCache[proofVerificationMethod.id] = document;
 			}
 
-			const verificationJwk = await DocumentHelper.getJwk(document, proofVerificationMethod.id);
+			const verificationJwk = DocumentHelper.getJwk(document, proofVerificationMethod.id);
 
-			const verified = ProofHelper.verifyProof(secureDocument, proof, verificationJwk);
+			const verified = await ProofHelper.verifyProof(secureDocument, proof, verificationJwk);
 
 			if (!verified) {
 				return false;

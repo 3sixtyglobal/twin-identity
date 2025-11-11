@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IdentityAuthenticationContexts } from "./identityAuthenticationContexts";
-import type { IdentityAuthenticationTypes } from "./identityAuthenticationTypes";
+import type { IdentityAuthenticationContexts } from "./identityAuthenticationContexts.js";
+import type { IdentityAuthenticationTypes } from "./identityAuthenticationTypes.js";
 
 /**
  * The JSON-LD definition for a action request.

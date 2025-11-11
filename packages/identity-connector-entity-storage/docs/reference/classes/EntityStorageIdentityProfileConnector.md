@@ -54,6 +54,24 @@ Runtime name for the class.
 
 ## Methods
 
+### className()
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityProfileConnector.className`
+
+***
+
 ### create()
 
 > **create**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>

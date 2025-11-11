@@ -5,9 +5,9 @@ import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
 import { FetchHelper, HttpMethod } from "@twin.org/web";
-import type { IUniversalResolverResult } from "./models/api/IUniversalResolverResult";
-import type { IUniversalResolverConnectorConfig } from "./models/IUniversalResolverConnectorConfig";
-import type { IUniversalResolverConnectorConstructorOptions } from "./models/IUniversalResolverConnectorConstructorOptions";
+import type { IUniversalResolverResult } from "./models/api/IUniversalResolverResult.js";
+import type { IUniversalResolverConnectorConfig } from "./models/IUniversalResolverConnectorConfig.js";
+import type { IUniversalResolverConnectorConstructorOptions } from "./models/IUniversalResolverConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations on a universal resolver.
@@ -47,6 +47,14 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 		);
 
 		this._resolverEndpoint = options.config.endpoint;
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return UniversalResolverConnector.CLASS_NAME;
 	}
 
 	/**

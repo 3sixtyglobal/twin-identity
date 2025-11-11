@@ -6,18 +6,18 @@ import { CLIBase } from "@twin.org/cli-core";
 import { buildCommandAddress, buildCommandMnemonic } from "@twin.org/crypto-cli";
 import { buildCommandFaucet, buildCommandTransfer } from "@twin.org/wallet-cli";
 import type { Command } from "commander";
-import { buildCommandIdentityCreate } from "./commands/identityCreate";
-import { buildCommandIdentityResolve } from "./commands/identityResolve";
-import { buildCommandProofCreate } from "./commands/proofCreate";
-import { buildCommandProofVerify } from "./commands/proofVerify";
-import { buildCommandServiceAdd } from "./commands/serviceAdd";
-import { buildCommandServiceRemove } from "./commands/serviceRemove";
-import { buildCommandVerifiableCredentialCreate } from "./commands/verifiableCredentialCreate";
-import { buildCommandVerifiableCredentialRevoke } from "./commands/verifiableCredentialRevoke";
-import { buildCommandVerifiableCredentialUnrevoke } from "./commands/verifiableCredentialUnrevoke";
-import { buildCommandVerifiableCredentialVerify } from "./commands/verifiableCredentialVerify";
-import { buildCommandVerificationMethodAdd } from "./commands/verificationMethodAdd";
-import { buildCommandVerificationMethodRemove } from "./commands/verificationMethodRemove";
+import { buildCommandIdentityCreate } from "./commands/identityCreate.js";
+import { buildCommandIdentityResolve } from "./commands/identityResolve.js";
+import { buildCommandProofCreate } from "./commands/proofCreate.js";
+import { buildCommandProofVerify } from "./commands/proofVerify.js";
+import { buildCommandServiceAdd } from "./commands/serviceAdd.js";
+import { buildCommandServiceRemove } from "./commands/serviceRemove.js";
+import { buildCommandVerifiableCredentialCreate } from "./commands/verifiableCredentialCreate.js";
+import { buildCommandVerifiableCredentialRevoke } from "./commands/verifiableCredentialRevoke.js";
+import { buildCommandVerifiableCredentialUnrevoke } from "./commands/verifiableCredentialUnrevoke.js";
+import { buildCommandVerifiableCredentialVerify } from "./commands/verifiableCredentialVerify.js";
+import { buildCommandVerificationMethodAdd } from "./commands/verificationMethodAdd.js";
+import { buildCommandVerificationMethodRemove } from "./commands/verificationMethodRemove.js";
 
 /**
  * The main entry point for the CLI.
@@ -40,7 +40,7 @@ export class CLI extends CLIBase {
 			{
 				title: "TWIN Identity",
 				appName: "twin-identity",
-				version: "0.0.2-next.10", // x-release-please-version
+				version: "0.0.3-next.0", // x-release-please-version
 				icon: "🌍",
 				supportsEnvFiles: true,
 				overrideOutputWidth: options?.overrideOutputWidth,
