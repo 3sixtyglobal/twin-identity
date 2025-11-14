@@ -20,7 +20,7 @@ describe("DidContextIdHandler", () => {
 		test("should return the identifier part of a valid DID", () => {
 			const did = "did:example:0x0123456789abcdef";
 			const result = handler.short(did);
-			expect(result).toBe("ASNFZ4mrze8=");
+			expect(result).toBe("ASNFZ4mrze8");
 		});
 
 		test("should return the identifier part for complex DIDs", () => {
