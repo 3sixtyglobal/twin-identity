@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.3-next.2](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.1...identity-models-v0.0.3-next.2) (2025-11-14)
+
+
+### Bug Fixes
+
+* use base64Url for tenant id short form so it doesn't include slash ([53b9e27](https://github.com/twinfoundation/identity/commit/53b9e27351f20e2689734581c252a23527657926))
+
 ## [0.0.3-next.1](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.0...identity-models-v0.0.3-next.1) (2025-11-11)
 
 
