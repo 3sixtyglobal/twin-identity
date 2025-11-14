@@ -24,7 +24,7 @@ export class DidContextIdHandler implements IContextIdHandler {
 		// If the ID part is hex, convert to base64 for a shorter representation.
 		if (HexHelper.hasPrefix(parts.id) && HexHelper.isHex(parts.id, true)) {
 			const bytes = Converter.hexToBytes(parts.id);
-			return Converter.bytesToBase64(bytes);
+			return Converter.bytesToBase64Url(bytes);
 		}
 		return parts.id;
 	}
