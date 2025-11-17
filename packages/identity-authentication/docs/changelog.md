@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.3-next.4](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.3...identity-authentication-v0.0.3-next.4) (2025-11-17)
+
+
+### Features
+
+* add context id features ([#62](https://github.com/twinfoundation/identity/issues/62)) ([e02ecca](https://github.com/twinfoundation/identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add identity authentication module ([33fb5cc](https://github.com/twinfoundation/identity/commit/33fb5cc409ff11aba273b13c8d83724b0b0daa53))
+* add validate-locales ([04d74b4](https://github.com/twinfoundation/identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* additional fields for IIdentityAuthenticationActionRequest ([5d7d688](https://github.com/twinfoundation/identity/commit/5d7d688f370978cd7287ce0e98dd8da82800b7ea))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.3 to 0.0.3-next.4
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.3 to 0.0.3-next.4
+
 ## [0.0.3-next.3](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.2...identity-authentication-v0.0.3-next.3) (2025-11-17)
 
 
