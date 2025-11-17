@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-iota - Changelog
 
+## [0.0.3-next.3](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.3-next.2...identity-connector-iota-v0.0.3-next.3) (2025-11-17)
+
+
+### Bug Fixes
+
+* seed should not be required when using assertion method keys ([aa712bc](https://github.com/twinfoundation/identity/commit/aa712bc8e718ab54d1c7930cdb81cda5d141b9fd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.2 to 0.0.3-next.3
+
 ## [0.0.3-next.2](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.3-next.1...identity-connector-iota-v0.0.3-next.2) (2025-11-14)
 
 
