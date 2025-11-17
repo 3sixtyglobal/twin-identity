@@ -18,6 +18,6 @@ The identity to unrevoke the verification credential for.
 
 #### revocationIndex
 
-> **revocationIndex**: `number`
+> **revocationIndex**: `string`
 
 The revocation index to unrevoke.

@@ -6,7 +6,6 @@ import { Guards, Is } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
-	type IIdentityRemoveRequest,
 	type IIdentityComponent,
 	type IIdentityCreateRequest,
 	type IIdentityCreateResponse,
@@ -14,6 +13,7 @@ import {
 	type IIdentityProofCreateResponse,
 	type IIdentityProofVerifyRequest,
 	type IIdentityProofVerifyResponse,
+	type IIdentityRemoveRequest,
 	type IIdentityServiceCreateRequest,
 	type IIdentityServiceCreateResponse,
 	type IIdentityServiceRemoveRequest,
@@ -338,7 +338,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			{
 				pathParams: {
 					identity: issuerId,
-					revocationIndex: credentialIndex
+					revocationIndex: credentialIndex.toString()
 				}
 			}
 		);
@@ -363,7 +363,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			{
 				pathParams: {
 					identity: issuerId,
-					revocationIndex: credentialIndex
+					revocationIndex: credentialIndex.toString()
 				}
 			}
 		);

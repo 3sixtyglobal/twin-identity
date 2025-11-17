@@ -469,7 +469,7 @@ export function generateRestRoutesIdentity(
 						pathParams: {
 							identity:
 								"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
-							revocationIndex: 5
+							revocationIndex: "5"
 						}
 					}
 				}
@@ -510,7 +510,7 @@ export function generateRestRoutesIdentity(
 						pathParams: {
 							identity:
 								"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
-							revocationIndex: 5
+							revocationIndex: "5"
 						}
 					}
 				}
