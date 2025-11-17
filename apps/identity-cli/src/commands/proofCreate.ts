@@ -40,11 +40,6 @@ export function buildCommandProofCreate(): Command {
 		.requiredOption(
 			I18n.formatMessage("commands.proof-create.options.document-filename.param"),
 			I18n.formatMessage("commands.proof-create.options.document-filename.description")
-		)
-		.option(
-			I18n.formatMessage("commands.proof-create.options.addressIndex.param"),
-			I18n.formatMessage("commands.proof-create.options.addressIndex.description"),
-			"0"
 		);
 
 	CLIOptions.output(command, {
@@ -85,7 +80,6 @@ export function buildCommandProofCreate(): Command {
  * @param opts.id The id of the verification method to use for the credential.
  * @param opts.privateKey The private key for the verification method.
  * @param opts.documentFilename The filename of the document to create the proof for.
- * @param opts.addressIndex The address index to use for key derivation (if applicable).
  * @param opts.data The data to create the proof for.
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
@@ -96,7 +90,6 @@ export async function actionCommandProofCreate(
 		id: string;
 		privateKey: string;
 		documentFilename: string;
-		addressIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
@@ -104,7 +97,6 @@ export async function actionCommandProofCreate(
 ): Promise<void> {
 	const id: string = CLIParam.stringValue("id", opts.id);
 	const privateKey: Uint8Array = CLIParam.hexBase64("private-key", opts.privateKey);
-	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const documentFilename: string = path.resolve(
 		CLIParam.stringValue("document-filename", opts.documentFilename)
 	);
@@ -119,7 +111,6 @@ export async function actionCommandProofCreate(
 		I18n.formatMessage("commands.proof-create.labels.documentFilename"),
 		documentFilename
 	);
-	CLIDisplay.value(I18n.formatMessage("commands.proof-create.labels.addressIndex"), addressIndex);
 
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
@@ -144,10 +135,7 @@ export async function actionCommandProofCreate(
 	const walletConnector = setupWalletConnector({ nodeEndpoint, network }, opts.connector);
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
-	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, addressIndex },
-		opts.connector
-	);
+	const identityConnector = setupIdentityConnector({ nodeEndpoint, network }, opts.connector);
 
 	CLIDisplay.task(I18n.formatMessage("commands.proof-create.progress.creatingProof"));
 	CLIDisplay.break();

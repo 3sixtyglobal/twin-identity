@@ -202,10 +202,6 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index in the issuing document to use if revoking the credential."
-				},
-				"addressIndex": {
-					"param": "--address-index '<'index'>'",
-					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -217,8 +213,7 @@
 				"credentialId": "Credential Id",
 				"subjectJson": "Subject JSON",
 				"revocationIndex": "Revocation Index",
-				"verifiableCredential": "Verifiable Credential",
-				"addressIndex": "Address Index"
+				"verifiableCredential": "Verifiable Credential"
 			}
 		},
 		"verifiable-credential-verify": {
@@ -312,10 +307,6 @@
 				"document-filename": {
 					"param": "--document-filename '<'document-filename'>'",
 					"description": "The filename of a JSON-LD document to create the proof for."
-				},
-				"addressIndex": {
-					"param": "--address-index '<'index'>'",
-					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -323,8 +314,7 @@
 			},
 			"labels": {
 				"documentFilename": "Document Filename",
-				"verificationMethodId": "Verification Method Id",
-				"addressIndex": "Address Index"
+				"verificationMethodId": "Verification Method Id"
 			}
 		},
 		"proof-verify": {

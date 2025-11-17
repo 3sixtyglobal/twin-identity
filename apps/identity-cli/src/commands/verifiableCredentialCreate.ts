@@ -49,11 +49,6 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 			I18n.formatMessage(
 				"commands.verifiable-credential-create.options.revocation-index.description"
 			)
-		)
-		.option(
-			I18n.formatMessage("commands.verifiable-credential-create.options.addressIndex.param"),
-			I18n.formatMessage("commands.verifiable-credential-create.options.addressIndex.description"),
-			"0"
 		);
 	CLIOptions.output(command, {
 		noConsole: true,
@@ -95,7 +90,6 @@ export function buildCommandVerifiableCredentialCreate(): Command {
  * @param opts.credentialId The id of the credential.
  * @param opts.subjectJson The JSON data for the subject.
  * @param opts.revocationIndex The revocation index for the credential.
- * @param opts.addressIndex The address index to use for key derivation (if applicable).
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  */
@@ -106,7 +100,6 @@ export async function actionCommandVerifiableCredentialCreate(
 		credentialId?: string;
 		subjectJson: string;
 		revocationIndex?: string;
-		addressIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
@@ -117,7 +110,6 @@ export async function actionCommandVerifiableCredentialCreate(
 	const credentialId: string = CLIParam.stringValue("credential-id", opts.credentialId);
 	const subjectJson: string = path.resolve(CLIParam.stringValue("subject-json", opts.subjectJson));
 	const revocationIndex: number | undefined = Coerce.number(opts.revocationIndex);
-	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -139,10 +131,6 @@ export async function actionCommandVerifiableCredentialCreate(
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.revocationIndex"),
 		revocationIndex
-	);
-	CLIDisplay.value(
-		I18n.formatMessage("commands.verifiable-credential-create.labels.addressIndex"),
-		addressIndex
 	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
@@ -167,10 +155,7 @@ export async function actionCommandVerifiableCredentialCreate(
 	const walletConnector = setupWalletConnector({ nodeEndpoint, network }, opts.connector);
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
-	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, addressIndex },
-		opts.connector
-	);
+	const identityConnector = setupIdentityConnector({ nodeEndpoint, network }, opts.connector);
 
 	CLIDisplay.task(
 		I18n.formatMessage("commands.verifiable-credential-create.progress.loadingSubjectData")
