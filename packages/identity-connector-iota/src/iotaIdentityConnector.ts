@@ -606,7 +606,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const identityClient = await this.getIdentityClient(controller);
+			const identityClient = await this.getIdentityClient();
 			const issuerDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(issuerDocument)) {
@@ -971,7 +971,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const identityClient = await this.getIdentityClient(controller);
+			const identityClient = await this.getIdentityClient();
 			const issuerDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(issuerDocument)) {
@@ -1229,7 +1229,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const identityClient = await this.getIdentityClient(controller);
+			const identityClient = await this.getIdentityClient();
 			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(document)) {
