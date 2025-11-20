@@ -26,6 +26,24 @@ Runtime name for the class.
 
 ## Methods
 
+### className()
+
+> **className**(): `string`
+
+The class name of the component.
+
+#### Returns
+
+`string`
+
+The class name.
+
+#### Implementation of
+
+`IContextIdHandler.className`
+
+***
+
 ### short()
 
 > **short**(`value`): `string`

@@ -15,6 +15,14 @@ export class DidContextIdHandler implements IContextIdHandler {
 	public static readonly CLASS_NAME: string = nameof<DidContextIdHandler>();
 
 	/**
+	 * The class name of the component.
+	 * @returns The class name.
+	 */
+	public className(): string {
+		return DidContextIdHandler.CLASS_NAME;
+	}
+
+	/**
 	 * Get the short form of the DID which is the last part.
 	 * @param value The full context id value.
 	 * @returns Short form string.
