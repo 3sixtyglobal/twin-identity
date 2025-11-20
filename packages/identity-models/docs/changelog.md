@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.3-next.5](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.4...identity-models-v0.0.3-next.5) (2025-11-20)
+
+
+### Features
+
+* update did context handler definition ([02aa59a](https://github.com/twinfoundation/identity/commit/02aa59ae8100b1afb2325ea858411fc3e4d9d1e9))
+
 ## [0.0.3-next.4](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.3...identity-models-v0.0.3-next.4) (2025-11-17)
 
 

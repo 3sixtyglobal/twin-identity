@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.3-next.5](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.4...identity-cli-v0.0.3-next.5) (2025-11-20)
+
+
+### Bug Fixes
+
+* remove unused address index params in CLI ([c4c0cc1](https://github.com/twinfoundation/identity/commit/c4c0cc18e17804380cf52330e1b9de8716cc193d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.4 to 0.0.3-next.5
+    * @twin.org/identity-connector-iota bumped from 0.0.3-next.4 to 0.0.3-next.5
+
 ## [0.0.3-next.4](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.3...identity-cli-v0.0.3-next.4) (2025-11-17)
 
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.5](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.4...identity-authentication-v0.0.3-next.5) (2025-11-20)
+
+
+### Miscellaneous Chores
+
+* **identity-authentication:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.4 to 0.0.3-next.5
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.4 to 0.0.3-next.5
+
 ## [0.0.3-next.4](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.3...identity-authentication-v0.0.3-next.4) (2025-11-17)
 
 
