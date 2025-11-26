@@ -7,7 +7,7 @@ import type {
 	IHttpServerRequest
 } from "@twin.org/api-models";
 import { ContextIdKeys, type IContextIds } from "@twin.org/context";
-import { GeneralError, Is } from "@twin.org/core";
+import { Is, UnauthorizedError } from "@twin.org/core";
 import { IdentityConnectorFactory, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import { VerifiableCredentialHelper } from "@twin.org/standards-w3c-did";
@@ -80,88 +80,95 @@ export class VerifiableCredentialAuthenticationProcessor implements IBaseRoutePr
 		contextIds: IContextIds,
 		processorState: { [id: string]: unknown }
 	): Promise<void> {
-		try {
-			// Only process if the route has the verifiableCredential feature
-			if (
-				Is.arrayValue(route?.processorFeatures) &&
-				route?.processorFeatures.includes("verifiableCredential")
-			) {
-				const token = HeaderHelper.extractBearer(request.headers?.[HeaderTypes.Authorization]);
+		// Only process if the route has the verifiableCredential feature
+		if (
+			Is.arrayValue(route?.processorFeatures) &&
+			route?.processorFeatures.includes("verifiableCredential")
+		) {
+			const token = HeaderHelper.extractBearer(request.headers?.[HeaderTypes.Authorization]);
 
-				const result = await this._identityConnector.checkVerifiableCredential(token);
-
-				const verifiableCredential = result.verifiableCredential;
-				if (Is.empty(verifiableCredential)) {
-					throw new GeneralError(
-						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
-						"tokenNoCredential"
-					);
-				}
-
-				const issuer: string | undefined = Is.stringValue(verifiableCredential.issuer)
-					? verifiableCredential.issuer
-					: undefined;
-				if (Is.empty(issuer)) {
-					throw new GeneralError(
-						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
-						"tokenNoIssuer"
-					);
-				}
-
-				const issuanceDate = VerifiableCredentialHelper.getValidFrom(verifiableCredential);
-
-				if (Is.empty(issuanceDate)) {
-					throw new GeneralError(
-						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
-						"tokenMissingIssuanceDate",
-						{
-							issuer
-						}
-					);
-				}
-
-				const tokenCreated = new Date(issuanceDate);
-				const now = Date.now();
-				const tokenTtlInMs = this._tokenTtlInSeconds * 1000;
-
-				// If the token has expired then we should reject it
-				if (tokenCreated.getTime() + tokenTtlInMs < now) {
-					throw new GeneralError(
-						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
-						"tokenExpired",
-						{
-							issuer
-						}
-					);
-				}
-
-				const subject = verifiableCredential.credentialSubject;
-				if (Is.empty(subject)) {
-					throw new GeneralError(
-						VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
-						"tokenMissingSubject",
-						{
-							issuer
-						}
-					);
-				}
-
-				let contextId: string = ContextIdKeys.Organization;
-				if (Is.object<{ contextId?: string }>(processorState?.verifiableCredential)) {
-					contextId = processorState.verifiableCredential.contextId ?? contextId;
-				}
-
-				contextIds[contextId] = issuer;
-				processorState.verifiableCredentialJsonLd = verifiableCredential;
-				processorState.verifiableCredentialSubject = subject;
+			if (!Is.stringValue(token)) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenMissing"
+				);
 			}
-		} catch (err) {
-			throw new GeneralError(
-				VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
-				"tokenFailed",
-				undefined,
-				err
-			);
+
+			let verificationResult;
+			try {
+				verificationResult = await this._identityConnector.checkVerifiableCredential(token);
+			} catch (error) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenVerificationFailed",
+					undefined,
+					error
+				);
+			}
+
+			const verifiableCredential = verificationResult.verifiableCredential;
+			if (Is.empty(verifiableCredential)) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenMissingCredential"
+				);
+			}
+
+			const issuer: string | undefined = Is.stringValue(verifiableCredential.issuer)
+				? verifiableCredential.issuer
+				: undefined;
+			if (Is.empty(issuer)) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenMissingIssuer"
+				);
+			}
+
+			const issuanceDate = VerifiableCredentialHelper.getValidFrom(verifiableCredential);
+			if (Is.empty(issuanceDate)) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenMissingIssuanceDate",
+					{
+						issuer
+					}
+				);
+			}
+
+			const tokenCreated = new Date(issuanceDate);
+			const now = Date.now();
+			const tokenTtlInMs = this._tokenTtlInSeconds * 1000;
+
+			// If the token has expired then we should reject it
+			if (tokenCreated.getTime() + tokenTtlInMs < now) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenExpired",
+					{
+						issuer
+					}
+				);
+			}
+
+			const subject = verifiableCredential.credentialSubject;
+			if (Is.empty(subject)) {
+				throw new UnauthorizedError(
+					VerifiableCredentialAuthenticationProcessor.CLASS_NAME,
+					"tokenMissingSubject",
+					{
+						issuer
+					}
+				);
+			}
+
+			let contextId: string = ContextIdKeys.Organization;
+			if (Is.object<{ contextId?: string }>(processorState?.verifiableCredential)) {
+				contextId = processorState.verifiableCredential.contextId ?? contextId;
+			}
+
+			contextIds[contextId] = issuer;
+			processorState.verifiableCredentialJsonLd = verifiableCredential;
+			processorState.verifiableCredentialSubject = subject;
 		}
 	}
 }

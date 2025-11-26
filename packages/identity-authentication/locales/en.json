@@ -1,9 +1,10 @@
 {
 	"error": {
 		"verifiableCredentialAuthenticationProcessor": {
-			"tokenFailed": "Failed to verify token",
-			"tokenNoCredential": "The token does not contain a verifiable credential",
-			"tokenNoIssuer": "The token does not contain an issuer",
+			"tokenMissing": "No token provided",
+			"tokenVerificationFailed": "The token could not be verified",
+			"tokenMissingCredential": "The token does not contain a verifiable credential",
+			"tokenMissingIssuer": "The token does not contain an issuer",
 			"tokenMissingIssuanceDate": "The token is missing the 'issuanceDate' field for issuer \"{issuer}\"",
 			"tokenExpired": "The token has expired for issuer \"{issuer}\"",
 			"tokenMissingSubject": "The token is missing the 'credentialSubject' field for issuer \"{issuer}\""
