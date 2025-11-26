@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.6](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.5...identity-authentication-v0.0.3-next.6) (2025-11-26)
+
+
+### Bug Fixes
+
+* use correct error types for vc auth processor ([fcd54fb](https://github.com/twinfoundation/identity/commit/fcd54fbe59e747b7a1d84eac70451e7f6ea5930b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.5 to 0.0.3-next.6
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.5 to 0.0.3-next.6
+
 ## [0.0.3-next.5](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.4...identity-authentication-v0.0.3-next.5) (2025-11-20)
 
 
