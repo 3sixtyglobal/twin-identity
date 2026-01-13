@@ -395,15 +395,13 @@ describe("EntityStorageIdentityConnector", () => {
 	});
 
 	test("can create a verifiable credential", async () => {
-		await vaultKeyEntityStorageConnector.set(testDocumentKey);
-		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
-		await didDocumentEntityStorage.set(testIdentityDocument);
-
 		const identityConnector = new EntityStorageIdentityConnector();
 
-		await identityConnector.addVerificationMethod(
+		const issuerDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const vm = await identityConnector.addVerificationMethod(
 			TEST_IDENTITY_ID,
-			testIdentityDocument.id,
+			issuerDocument.id,
 			"assertionMethod",
 			"my-verification-id"
 		);
@@ -412,7 +410,7 @@ describe("EntityStorageIdentityConnector", () => {
 
 		const result = await identityConnector.createVerifiableCredential(
 			TEST_IDENTITY_ID,
-			testDocumentVerificationMethodId,
+			vm.id,
 			"https://example.com/credentials/3732",
 			{
 				"@context": "https://schema.org",

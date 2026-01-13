@@ -52,6 +52,7 @@ import {
 	Is,
 	NotFoundError,
 	ObjectHelper,
+	RandomHelper,
 	Url,
 	Urn
 } from "@twin.org/core";
@@ -290,17 +291,21 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			if (Is.stringValue(verificationMethodId)) {
 				// If there is a verification method id, we will try to get the key from the vault.
 				try {
-					const defaultMethodId = `${controller}/${verificationMethodId}`;
 					// If there is an existing key, we will use it.
-					const existingKey = await this._vaultConnector.getKey(defaultMethodId);
+					const existingKey = await this._vaultConnector.getKey(
+						this.buildVaultKey(documentId, verificationMethodId)
+					);
 					methodKeyPublic = existingKey.publicKey;
 				} catch {}
 			}
 
 			if (Is.empty(methodKeyPublic)) {
 				// If there is no existing key, we will create a new one with a temporary name.
-				tempKeyId = `${controller}/temp-vm-${Date.now()}`;
-				methodKeyPublic = await this._vaultConnector.createKey(tempKeyId, VaultKeyType.Ed25519);
+				tempKeyId = `temp-vm-${Converter.bytesToBase64Url(RandomHelper.generate(16))}`;
+				methodKeyPublic = await this._vaultConnector.createKey(
+					this.buildVaultKey(documentId, tempKeyId),
+					VaultKeyType.Ed25519
+				);
 			}
 
 			const jwkParams = await JwkHelper.fromEd25519Public(methodKeyPublic);
@@ -310,7 +315,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			if (Is.stringValue(tempKeyId)) {
 				// If we created a temporary key, we will rename it to the final method id.
-				await this._vaultConnector.renameKey(tempKeyId, `${controller}/${methodId.slice(1)}`);
+				await this._vaultConnector.renameKey(
+					this.buildVaultKey(documentId, tempKeyId),
+					this.buildVaultKey(documentId, methodId.slice(1))
+				);
 				tempKeyId = undefined;
 			}
 
@@ -632,7 +640,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const verificationMethodKey = await this._vaultConnector.getKey(
-				`${controller}/${idParts.fragment}`
+				this.buildVaultKey(idParts.id, idParts.fragment)
 			);
 
 			if (Is.undefined(verificationMethodKey)) {
@@ -1020,7 +1028,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			});
 
 			const verificationMethodKey = await this._vaultConnector.getKey(
-				`${controller}/${idParts.fragment}`
+				this.buildVaultKey(idParts.id, idParts.fragment)
 			);
 
 			if (Is.undefined(verificationMethodKey)) {
@@ -1245,7 +1253,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				});
 			}
 
-			const keyId = `${controller}/${idParts.fragment}`;
+			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
 			const verificationMethodKey = await this._vaultConnector.getKey(keyId);
 
 			if (Is.undefined(verificationMethodKey)) {
@@ -1715,5 +1723,15 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				Iota.extractPayloadError(error)
 			);
 		}
+	}
+
+	/**
+	 * Build the key name to access the specified key in the vault.
+	 * @param identity The identity of the user to access the vault keys.
+	 * @returns The vault key.
+	 * @internal
+	 */
+	private buildVaultKey(identity: string, key: string): string {
+		return `${identity}/${key}`;
 	}
 }

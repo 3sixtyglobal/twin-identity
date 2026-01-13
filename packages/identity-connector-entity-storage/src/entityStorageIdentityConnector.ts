@@ -257,9 +257,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			if (Is.stringValue(verificationMethodId)) {
 				// If there is a verification method id, we will try to get the key from the vault.
 				try {
-					const defaultMethodId = `${controller}/${verificationMethodId}`;
 					// If there is an existing key, we will use it.
-					const existingKey = await this._vaultConnector.getKey(defaultMethodId);
+					const existingKey = await this._vaultConnector.getKey(
+						EntityStorageIdentityConnector.buildVaultKey(didDocument.id, verificationMethodId)
+					);
 					methodKeyPublic = existingKey.publicKey;
 				} catch {}
 			}
