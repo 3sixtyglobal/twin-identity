@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.0.3-next.7](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.6...identity-connector-entity-storage-v0.0.3-next.7) (2026-01-13)
+
+
+### Bug Fixes
+
+* associate vault keys with document not controller ([#86](https://github.com/twinfoundation/identity/issues/86)) ([6430f4b](https://github.com/twinfoundation/identity/commit/6430f4b559315a1fe99b60c6db1c661d317bc243))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.6 to 0.0.3-next.7
+
 ## [0.0.3-next.6](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.5...identity-connector-entity-storage-v0.0.3-next.6) (2025-11-26)
 
 

@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.3-next.7](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.6...identity-authentication-v0.0.3-next.7) (2026-01-13)
+
+
+### Features
+
+* remove unused config property ([672e61f](https://github.com/twinfoundation/identity/commit/672e61f83925e9fe5cd188af30bc2d45d75d2882))
+
+
+### Bug Fixes
+
+* associate vault keys with document not controller ([#86](https://github.com/twinfoundation/identity/issues/86)) ([6430f4b](https://github.com/twinfoundation/identity/commit/6430f4b559315a1fe99b60c6db1c661d317bc243))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.6 to 0.0.3-next.7
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.6 to 0.0.3-next.7
+
 ## [0.0.3-next.6](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.5...identity-authentication-v0.0.3-next.6) (2025-11-26)
 
 
