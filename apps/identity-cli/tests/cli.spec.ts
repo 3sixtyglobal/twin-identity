@@ -2,6 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0.
 import path from "node:path";
 import { CLIDisplay } from "@twin.org/cli-core";
+import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
+import { DocumentHelper } from "@twin.org/identity-models";
+import { nameof } from "@twin.org/nameof";
+import {
+	EntityStorageVaultConnector,
+	type VaultKey,
+	type VaultSecret,
+	initSchema as initSchemaVault
+} from "@twin.org/vault-connector-entity-storage";
+import { VaultConnectorFactory, VaultKeyType } from "@twin.org/vault-models";
 import { CLI } from "../src/cli.js";
 
 let writeBuffer: string[] = [];
@@ -28,5 +39,115 @@ describe("CLI", () => {
 			overrideOutputWidth: 1000
 		});
 		expect(exitCode).toBe(0);
+	});
+});
+
+describe("CLI Vault Key Naming", () => {
+	let vaultConnector: EntityStorageVaultConnector;
+
+	beforeEach(() => {
+		initSchemaVault();
+
+		const vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
+			entitySchema: nameof<VaultKey>()
+		});
+
+		const vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
+			entitySchema: nameof<VaultSecret>()
+		});
+
+		EntityStorageConnectorFactory.register("vault-key", () => vaultKeyEntityStorage);
+		EntityStorageConnectorFactory.register("vault-secret", () => vaultSecretEntityStorage);
+
+		vaultConnector = new EntityStorageVaultConnector();
+		VaultConnectorFactory.register("vault", () => vaultConnector);
+	});
+
+	describe("verifiable-credential-create key naming", () => {
+		test("should store key with document ID prefix", async () => {
+			const verificationMethodId =
+				"did:iota:testnet:0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef#test-vm";
+			const privateKey = new Uint8Array(32).fill(42);
+
+			const vmParts = DocumentHelper.parseId(verificationMethodId);
+			const correctKeyName = `${vmParts.id}/${vmParts.fragment}`;
+
+			await vaultConnector.addKey(
+				correctKeyName,
+				VaultKeyType.Ed25519,
+				privateKey,
+				new Uint8Array()
+			);
+
+			const storedKey = await vaultConnector.getKey(correctKeyName);
+			expect(storedKey).toBeDefined();
+			expect(storedKey.privateKey).toBeDefined();
+			expect(correctKeyName).toContain("did:iota:testnet:");
+			expect(correctKeyName).not.toContain("local/");
+		});
+
+		test("keys with local prefix cannot be found by connector", async () => {
+			const verificationMethodId =
+				"did:iota:testnet:0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef#test-vm";
+			const privateKey = new Uint8Array(32).fill(42);
+
+			const vmParts = DocumentHelper.parseId(verificationMethodId);
+			const buggyKeyName = `local/${vmParts.fragment}`;
+
+			await vaultConnector.addKey(buggyKeyName, VaultKeyType.Ed25519, privateKey, new Uint8Array());
+
+			const correctKeyName = `${vmParts.id}/${vmParts.fragment}`;
+			await expect(vaultConnector.getKey(correctKeyName)).rejects.toMatchObject({
+				name: "NotFoundError",
+				message: "entityStorageVaultConnector.keyNotFound"
+			});
+		});
+	});
+
+	describe("proof-create key naming", () => {
+		test("should store key with document ID prefix", async () => {
+			const verificationMethodId =
+				"did:iota:testnet:0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890#proof-vm";
+			const privateKey = new Uint8Array(32).fill(99);
+
+			const vmParts = DocumentHelper.parseId(verificationMethodId);
+			const correctKeyName = `${vmParts.id}/${vmParts.fragment}`;
+
+			await vaultConnector.addKey(
+				correctKeyName,
+				VaultKeyType.Ed25519,
+				privateKey,
+				new Uint8Array()
+			);
+
+			const storedKey = await vaultConnector.getKey(correctKeyName);
+			expect(storedKey).toBeDefined();
+			expect(storedKey.privateKey).toBeDefined();
+			expect(correctKeyName).toContain("did:iota:testnet:");
+			expect(correctKeyName).not.toContain("local/");
+		});
+	});
+
+	describe("DocumentHelper.parseId", () => {
+		test("parses verification method ID into document ID and fragment", () => {
+			const vmId =
+				"did:iota:testnet:0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef#my-vm-id";
+
+			const parts = DocumentHelper.parseId(vmId);
+
+			expect(parts.id).toEqual(
+				"did:iota:testnet:0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+			);
+			expect(parts.fragment).toEqual("my-vm-id");
+		});
+
+		test("handles entity-storage DIDs", () => {
+			const vmId = "did:entity-storage:0xabcdef#test-fragment";
+
+			const parts = DocumentHelper.parseId(vmId);
+
+			expect(parts.id).toEqual("did:entity-storage:0xabcdef");
+			expect(parts.fragment).toEqual("test-fragment");
+		});
 	});
 });

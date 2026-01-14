@@ -152,13 +152,11 @@ export async function actionCommandVerifiableCredentialCreate(
 
 	setupVault();
 
-	const localIdentity = "local";
-
 	const vmParts = DocumentHelper.parseId(id);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
 	await vaultConnector.addKey(
-		`${localIdentity}/${vmParts.fragment}`,
+		`${vmParts.id}/${vmParts.fragment}`,
 		VaultKeyType.Ed25519,
 		privateKey,
 		new Uint8Array()
@@ -192,7 +190,7 @@ export async function actionCommandVerifiableCredentialCreate(
 	CLIDisplay.spinnerStart();
 
 	const verifiableCredential = await identityConnector.createVerifiableCredential(
-		localIdentity,
+		vmParts.id,
 		id,
 		credentialId,
 		jsonData,

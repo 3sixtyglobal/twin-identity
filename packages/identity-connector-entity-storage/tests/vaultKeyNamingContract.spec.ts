@@ -1,0 +1,175 @@
+// Copyright 2024 IOTA Stiftung.
+// SPDX-License-Identifier: Apache-2.0.
+
+import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
+import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
+import { DocumentHelper } from "@twin.org/identity-models";
+import { nameof } from "@twin.org/nameof";
+import {
+	EntityStorageVaultConnector,
+	type VaultKey,
+	type VaultSecret,
+	initSchema as initSchemaVault
+} from "@twin.org/vault-connector-entity-storage";
+import { VaultConnectorFactory, VaultKeyType } from "@twin.org/vault-models";
+import type { IdentityDocument } from "../src/entities/identityDocument.js";
+import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector.js";
+import { initSchema as initSchemaIdentity } from "../src/schema.js";
+
+const TEST_IDENTITY_ID = "test-identity";
+
+describe("Vault Key Naming Contract", () => {
+	let identityConnector: EntityStorageIdentityConnector;
+	let vaultConnector: EntityStorageVaultConnector;
+
+	beforeEach(() => {
+		initSchemaVault();
+		initSchemaIdentity();
+
+		const didDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
+			entitySchema: nameof<IdentityDocument>()
+		});
+
+		const vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
+			entitySchema: nameof<VaultKey>()
+		});
+
+		const vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
+			entitySchema: nameof<VaultSecret>()
+		});
+
+		EntityStorageConnectorFactory.register("identity-document", () => didDocumentEntityStorage);
+		EntityStorageConnectorFactory.register("vault-key", () => vaultKeyEntityStorage);
+		EntityStorageConnectorFactory.register("vault-secret", () => vaultSecretEntityStorage);
+
+		vaultConnector = new EntityStorageVaultConnector();
+		VaultConnectorFactory.register("vault", () => vaultConnector);
+
+		identityConnector = new EntityStorageIdentityConnector();
+	});
+
+	test("verification method keys are stored with document ID prefix", async () => {
+		const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			document.id,
+			"assertionMethod",
+			"test-vm-id"
+		);
+
+		const vmParts = DocumentHelper.parseId(verificationMethod.id);
+		const expectedKeyName = `${vmParts.id}/${vmParts.fragment}`;
+
+		const storedKey = await vaultConnector.getKey(expectedKeyName);
+		expect(storedKey).toBeDefined();
+		expect(storedKey.privateKey).toBeDefined();
+	});
+
+	test("keys stored with wrong prefix fail to be found by connector", async () => {
+		const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			document.id,
+			"assertionMethod",
+			"buggy-vm-id"
+		);
+
+		const vmParts = DocumentHelper.parseId(verificationMethod.id);
+
+		await vaultConnector.removeKey(`${vmParts.id}/${vmParts.fragment}`);
+
+		// Store key with wrong "local/" prefix instead of document ID
+		const wrongKeyName = `local/${vmParts.fragment}`;
+		await vaultConnector.addKey(
+			wrongKeyName,
+			VaultKeyType.Ed25519,
+			new Uint8Array(32).fill(1),
+			new Uint8Array()
+		);
+
+		await expect(
+			identityConnector.createVerifiableCredential(
+				"local",
+				verificationMethod.id,
+				"https://example.com/credentials/test",
+				{
+					id: document.id,
+					name: "Test Subject"
+				} as IJsonLdNodeObject
+			)
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "entityStorageIdentityConnector.createVerifiableCredentialFailed"
+		});
+	});
+
+	test("keys stored with correct document ID prefix work for VC creation", async () => {
+		const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			document.id,
+			"assertionMethod",
+			"correct-vm-id"
+		);
+
+		const vmParts = DocumentHelper.parseId(verificationMethod.id);
+
+		const result = await identityConnector.createVerifiableCredential(
+			vmParts.id,
+			verificationMethod.id,
+			"https://example.com/credentials/test",
+			{
+				id: document.id,
+				name: "Test Subject"
+			} as IJsonLdNodeObject
+		);
+
+		expect(result).toBeDefined();
+		expect(result.verifiableCredential).toBeDefined();
+		expect(result.jwt).toBeDefined();
+		expect(result.jwt.split(".").length).toEqual(3);
+	});
+
+	test("keys stored with correct document ID prefix work for proof creation", async () => {
+		const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			document.id,
+			"assertionMethod",
+			"proof-vm-id"
+		);
+
+		const vmParts = DocumentHelper.parseId(verificationMethod.id);
+
+		const proof = await identityConnector.createProof(
+			vmParts.id,
+			verificationMethod.id,
+			"DataIntegrityProof",
+			{
+				"@context": ["https://www.w3.org/2018/credentials/v1"],
+				id: "test-document",
+				type: ["TestDocument"],
+				name: "Test"
+			} as IJsonLdNodeObject
+		);
+
+		expect(proof).toBeDefined();
+		expect(proof.type).toEqual("DataIntegrityProof");
+		expect(proof.verificationMethod).toEqual(verificationMethod.id);
+	});
+
+	test("buildVaultKey helper produces correct format", () => {
+		const documentId = "did:entity-storage:0x1234567890abcdef";
+		const fragment = "my-verification-method";
+
+		const vaultKey = EntityStorageIdentityConnector.buildVaultKey(documentId, fragment);
+
+		expect(vaultKey).toEqual(`${documentId}/${fragment}`);
+		expect(vaultKey).toEqual("did:entity-storage:0x1234567890abcdef/my-verification-method");
+	});
+});

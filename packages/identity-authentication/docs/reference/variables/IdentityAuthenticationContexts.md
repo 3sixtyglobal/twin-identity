@@ -8,6 +8,6 @@ The LD Contexts concerning Identity Authentication.
 
 ### Namespace
 
-> `readonly` **Namespace**: `"https://schema.twindev.org/identity-authentication/"` = `"https://schema.twindev.org/identity-authentication/"`
+> `readonly` **Namespace**: `"https://schema.twindev.org/identity-authentication"` = `"https://schema.twindev.org/identity-authentication"`
 
 The Namespace.

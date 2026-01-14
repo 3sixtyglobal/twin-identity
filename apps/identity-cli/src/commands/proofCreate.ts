@@ -120,13 +120,11 @@ export async function actionCommandProofCreate(
 
 	setupVault();
 
-	const localIdentity = "local";
-
 	const vmParts = DocumentHelper.parseId(id);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
 	await vaultConnector.addKey(
-		`${localIdentity}/${vmParts.fragment}`,
+		`${vmParts.id}/${vmParts.fragment}`,
 		VaultKeyType.Ed25519,
 		privateKey,
 		new Uint8Array()
@@ -147,7 +145,7 @@ export async function actionCommandProofCreate(
 		throw new GeneralError("commands", "commands.proof-create.documentJsonFileNotFound");
 	}
 	const proof = await identityConnector.createProof(
-		localIdentity,
+		vmParts.id,
 		id,
 		ProofTypes.DataIntegrityProof,
 		document
