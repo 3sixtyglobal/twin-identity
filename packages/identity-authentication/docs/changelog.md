@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.9](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.8...identity-authentication-v0.0.3-next.9) (2026-01-14)
+
+
+### Bug Fixes
+
+* update vault key naming convention to use document ID prefix ([#94](https://github.com/twinfoundation/identity/issues/94)) ([ab125c1](https://github.com/twinfoundation/identity/commit/ab125c1b7eb189b5dceaddc69e5e53e33a0886db))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.8 to 0.0.3-next.9
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.8 to 0.0.3-next.9
+
 ## [0.0.3-next.8](https://github.com/twinfoundation/identity/compare/identity-authentication-v0.0.3-next.7...identity-authentication-v0.0.3-next.8) (2026-01-14)
 
 
