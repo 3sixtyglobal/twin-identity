@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.3-next.8](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.7...identity-cli-v0.0.3-next.8) (2026-01-14)
+
+
+### Features
+
+* update namespaces and contexts ([#90](https://github.com/twinfoundation/identity/issues/90)) ([0c34d64](https://github.com/twinfoundation/identity/commit/0c34d64add8cca77856fa2d0357e774d72fbbfc1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.7 to 0.0.3-next.8
+    * @twin.org/identity-connector-iota bumped from 0.0.3-next.7 to 0.0.3-next.8
+
 ## [0.0.3-next.7](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.6...identity-cli-v0.0.3-next.7) (2026-01-13)
 
 
