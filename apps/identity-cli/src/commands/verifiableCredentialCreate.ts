@@ -45,6 +45,12 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 			I18n.formatMessage("commands.verifiable-credential-create.options.subject-json.description")
 		)
 		.option(
+			I18n.formatMessage("commands.verifiable-credential-create.options.expiration-date.param"),
+			I18n.formatMessage(
+				"commands.verifiable-credential-create.options.expiration-date.description"
+			)
+		)
+		.option(
 			I18n.formatMessage("commands.verifiable-credential-create.options.revocation-index.param"),
 			I18n.formatMessage(
 				"commands.verifiable-credential-create.options.revocation-index.description"
@@ -89,6 +95,7 @@ export function buildCommandVerifiableCredentialCreate(): Command {
  * @param opts.privateKey The private key for the verification method.
  * @param opts.credentialId The id of the credential.
  * @param opts.subjectJson The JSON data for the subject.
+ * @param opts.expirationDate The expiration date for the credential.
  * @param opts.revocationIndex The revocation index for the credential.
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
@@ -99,6 +106,7 @@ export async function actionCommandVerifiableCredentialCreate(
 		privateKey: string;
 		credentialId?: string;
 		subjectJson: string;
+		expirationDate?: string;
 		revocationIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
@@ -131,6 +139,10 @@ export async function actionCommandVerifiableCredentialCreate(
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.revocationIndex"),
 		revocationIndex
+	);
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verifiable-credential-create.labels.expirationDate"),
+		opts.expirationDate
 	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
@@ -185,7 +197,8 @@ export async function actionCommandVerifiableCredentialCreate(
 		credentialId,
 		jsonData,
 		{
-			revocationIndex
+			revocationIndex,
+			expirationDate: Coerce.date(opts.expirationDate)
 		}
 	);
 

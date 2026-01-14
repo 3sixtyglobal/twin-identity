@@ -89,7 +89,7 @@ export function generateRestRoutesIdentity(
 						id: "identityCreateResponseExample",
 						response: {
 							body: {
-								"@context": DidContexts.Context,
+								"@context": DidContexts.Namespace,
 								id: "did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a",
 								service: [
 									{

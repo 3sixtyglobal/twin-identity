@@ -190,9 +190,14 @@ export async function actionCommandVerificationMethodAdd(
 	const keyParts = DocumentHelper.parseId(verificationMethod.id);
 
 	const keyPair = await vaultConnector.getKey(`${localIdentity}/${keyParts.fragment}`);
-	const privateKeyBase64 = Converter.bytesToBase64Url(keyPair.privateKey);
-	const publicKeyBase64 = Is.uint8Array(keyPair.publicKey)
+	const privateKeyBase64Url = Converter.bytesToBase64Url(keyPair.privateKey);
+	const publicKeyBase64Url = Is.uint8Array(keyPair.publicKey)
 		? Converter.bytesToBase64Url(keyPair.publicKey)
+		: "";
+
+	const privateKeyBase64 = Converter.bytesToBase64(keyPair.privateKey);
+	const publicKeyBase64 = Is.uint8Array(keyPair.publicKey)
+		? Converter.bytesToBase64(keyPair.publicKey)
 		: "";
 
 	const privateKeyHex = Converter.bytesToHex(keyPair.privateKey, true);
@@ -210,6 +215,15 @@ export async function actionCommandVerificationMethodAdd(
 		);
 
 		CLIDisplay.value(I18n.formatMessage("commands.verification-method-add.labels.kid"), kid);
+		CLIDisplay.value(
+			I18n.formatMessage("commands.verification-method-add.labels.privateKeyBase64Url"),
+			privateKeyBase64Url
+		);
+		CLIDisplay.value(
+			I18n.formatMessage("commands.verification-method-add.labels.publicKeyBase64Url"),
+			publicKeyBase64Url
+		);
+
 		CLIDisplay.value(
 			I18n.formatMessage("commands.verification-method-add.labels.privateKeyBase64"),
 			privateKeyBase64
@@ -235,8 +249,15 @@ export async function actionCommandVerificationMethodAdd(
 		await CLIUtils.writeJsonFile(
 			opts.json,
 			{
-				kid,
-				...jwk
+				verificationMethodId: verificationMethod.id,
+				privateKeyJwk: {
+					kid,
+					...jwk
+				},
+				privateKeyHex,
+				publicKeyHex,
+				privateKeyBase64,
+				publicKeyBase64
 			},
 			opts.mergeJson
 		);
@@ -247,8 +268,16 @@ export async function actionCommandVerificationMethodAdd(
 			[
 				`DID_VERIFICATION_METHOD_ID="${verificationMethod.id}"`,
 				`DID_VERIFICATION_METHOD_KID="${kid}"`,
-				`DID_VERIFICATION_METHOD_PRIVATE_KEY="${privateKeyHex}"`,
-				`DID_VERIFICATION_METHOD_PUBLIC_KEY="${publicKeyHex}"`
+				`DID_VERIFICATION_METHOD_JWK_KTY="${jwk.kty}"`,
+				`DID_VERIFICATION_METHOD_JWK_USE="${jwk.use}"`,
+				`DID_VERIFICATION_METHOD_JWK_ALG="${jwk.alg}"`,
+				`DID_VERIFICATION_METHOD_JWK_CRV="${jwk.crv}"`,
+				`DID_VERIFICATION_METHOD_JWK_X="${jwk.x}"`,
+				`DID_VERIFICATION_METHOD_JWK_D="${jwk.d}"`,
+				`DID_VERIFICATION_METHOD_PRIVATE_KEY_HEX="${privateKeyHex}"`,
+				`DID_VERIFICATION_METHOD_PUBLIC_KEY_HEX="${publicKeyHex}"`,
+				`DID_VERIFICATION_METHOD_PRIVATE_KEY_BASE64="${privateKeyBase64}"`,
+				`DID_VERIFICATION_METHOD_PUBLIC_KEY_BASE64="${publicKeyBase64}"`
 			],
 			opts.mergeEnv
 		);

@@ -883,14 +883,14 @@ describe("IotaIdentityConnector", () => {
 			TEST_IDENTITY_ID,
 			testVerificationMethodId,
 			"http://example.com/12345",
-			DidContexts.ContextVCv1,
+			DidContexts.NamespaceVCv1,
 			["Person"],
 			[testVcJwt],
 			14400
 		);
 
 		expect(result.verifiablePresentation["@context"]).toEqual([
-			DidContexts.ContextVCv1,
+			DidContexts.NamespaceVCv1,
 			"https://www.w3.org/2018/credentials/v1"
 		]);
 		expect(result.verifiablePresentation.type).toEqual([DidTypes.VerifiablePresentation, "Person"]);

@@ -10,7 +10,7 @@ export interface IIdentityAuthenticationActionRequest {
 	/**
 	 * The JSON-LD context.
 	 */
-	"@context": typeof IdentityAuthenticationContexts.ContextRoot;
+	"@context": typeof IdentityAuthenticationContexts.Namespace;
 
 	/**
 	 * The type of the request.

@@ -6,7 +6,7 @@ The JSON-LD definition for a action request.
 
 ### @context
 
-> **@context**: `"https://schema.twindev.org/identity-authentication"`
+> **@context**: `"https://schema.twindev.org/identity-authentication/"`
 
 The JSON-LD context.
 

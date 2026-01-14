@@ -6,8 +6,8 @@ The LD Contexts concerning Identity Authentication.
 
 ## Type Declaration
 
-### ContextRoot
+### Namespace
 
-> `readonly` **ContextRoot**: `"https://schema.twindev.org/identity-authentication"` = `"https://schema.twindev.org/identity-authentication"`
+> `readonly` **Namespace**: `"https://schema.twindev.org/identity-authentication/"` = `"https://schema.twindev.org/identity-authentication/"`
 
-The Identity Authentication LD Context.
+The Namespace.

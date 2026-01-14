@@ -75,7 +75,7 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 
 	it("should create a token for the request", async () => {
 		const authenticationRequest: IIdentityAuthenticationActionRequest = {
-			"@context": IdentityAuthenticationContexts.ContextRoot,
+			"@context": IdentityAuthenticationContexts.Namespace,
 			type: IdentityAuthenticationTypes.ActionRequest,
 			requester: testOrganizationIdentity,
 			action: "urn:action:action-1",

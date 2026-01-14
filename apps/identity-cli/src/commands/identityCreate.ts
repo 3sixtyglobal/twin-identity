@@ -30,6 +30,10 @@ export function buildCommandIdentityCreate(): Command {
 			I18n.formatMessage("commands.identity-create.options.seed.description")
 		)
 		.option(
+			I18n.formatMessage("commands.identity-create.options.controller.param"),
+			I18n.formatMessage("commands.identity-create.options.controller.description")
+		)
+		.option(
 			I18n.formatMessage("commands.identity-create.options.addressIndex.param"),
 			I18n.formatMessage("commands.identity-create.options.addressIndex.description"),
 			"0"
@@ -89,6 +93,7 @@ export async function actionCommandIdentityCreate(
 		network?: string;
 		explorer: string;
 		addressIndex?: string;
+		controller?: string;
 	} & CliOutputOptions
 ): Promise<void> {
 	const seed: Uint8Array = CLIParam.hexBase64("seed", opts.seed);
@@ -114,7 +119,7 @@ export async function actionCommandIdentityCreate(
 	setupVault();
 
 	const vaultSeedId = "local-seed";
-	const localIdentity = "local";
+	const localIdentity = opts.controller ?? "local";
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
 	await vaultConnector.setSecret(`${localIdentity}/${vaultSeedId}`, Converter.bytesToBase64(seed));

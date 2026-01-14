@@ -7,9 +7,9 @@
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const IdentityAuthenticationContexts = {
 	/**
-	 * The Identity Authentication LD Context.
+	 * The Namespace.
 	 */
-	ContextRoot: "https://schema.twindev.org/identity-authentication"
+	Namespace: "https://schema.twindev.org/identity-authentication"
 } as const;
 
 /**
