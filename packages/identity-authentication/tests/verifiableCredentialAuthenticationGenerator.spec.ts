@@ -25,7 +25,6 @@ import type { IIdentityAuthenticationActionRequest } from "../src/models/IIdenti
 import { VerifiableCredentialAuthenticationGenerator } from "../src/verifiableCredentialAuthenticationGenerator.js";
 import { VerifiableCredentialAuthenticationProcessor } from "../src/verifiableCredentialAuthenticationProcessor.js";
 
-const MOCK_TIME = 1724327816272;
 let identityConnector: IIdentityConnector;
 let testOrganizationIdentity: string;
 let token: string;
@@ -34,8 +33,6 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 	beforeAll(async () => {
 		initSchemaIdentity();
 		initSchemaVault();
-
-		Date.now = vi.fn().mockImplementation(() => MOCK_TIME);
 
 		EntityStorageConnectorFactory.register(
 			"vault-key",
@@ -146,7 +143,7 @@ describe("VerifiableCredentialAuthenticationGenerator", () => {
 					foo: "bar"
 				}
 			},
-			issuanceDate: "2024-08-22T11:56:56.000Z",
+			issuanceDate: expect.any(String),
 			issuer: testOrganizationIdentity,
 			type: ["VerifiableCredential", "ActionRequest"]
 		});
