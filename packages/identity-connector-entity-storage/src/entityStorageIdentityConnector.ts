@@ -732,6 +732,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				vc: jwtVc
 			};
 
+			if (Is.date(options?.expirationDate)) {
+				jwtPayload.exp = Math.floor(options.expirationDate.getTime() / 1000);
+			}
+
 			const signature = await Jwt.encodeWithSigner(jwtHeader, jwtPayload, async (header, payload) =>
 				VaultConnectorHelper.jwtSigner(
 					this._vaultConnector,
