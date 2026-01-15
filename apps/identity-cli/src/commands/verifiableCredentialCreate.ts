@@ -196,7 +196,7 @@ export async function actionCommandVerifiableCredentialCreate(
 		jsonData,
 		{
 			revocationIndex,
-			expirationDate: Coerce.date(opts.expirationDate)
+			expirationDate: Coerce.dateTime(opts.expirationDate)
 		}
 	);
 
