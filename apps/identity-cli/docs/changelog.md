@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.3-next.10](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.9...identity-cli-v0.0.3-next.10) (2026-01-15)
+
+
+### Bug Fixes
+
+* expiration date coerced to full date time ([83e94e3](https://github.com/twinfoundation/identity/commit/83e94e3fc2b982fbb41f87a177e0e79a7f2e4079))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.9 to 0.0.3-next.10
+    * @twin.org/identity-connector-iota bumped from 0.0.3-next.9 to 0.0.3-next.10
+
 ## [0.0.3-next.9](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.8...identity-cli-v0.0.3-next.9) (2026-01-14)
 
 
