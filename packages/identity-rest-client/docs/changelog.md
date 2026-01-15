@@ -1,5 +1,34 @@
 # @twin.org/identity-rest-client - Changelog
 
+## [0.0.3-next.11](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.10...identity-rest-client-v0.0.3-next.11) (2026-01-15)
+
+
+### Features
+
+* add context id features ([#62](https://github.com/twinfoundation/identity/issues/62)) ([e02ecca](https://github.com/twinfoundation/identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add expiration date option to vc creation ([73e05e1](https://github.com/twinfoundation/identity/commit/73e05e1ae61112c7e056889969751f4ff82d9f29))
+* add identity remove ([eebc13f](https://github.com/twinfoundation/identity/commit/eebc13f4c2cd994d2d9cce4da2128fb346c80ba7))
+* add validate-locales ([04d74b4](https://github.com/twinfoundation/identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* eslint migration to flat config ([fd6246d](https://github.com/twinfoundation/identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+* identity key separator use slash ([1319d0d](https://github.com/twinfoundation/identity/commit/1319d0d07164a36b3ec279e6421b8835ffefc3d3))
+* update framework core ([c824497](https://github.com/twinfoundation/identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+* use shared store mechanism ([#27](https://github.com/twinfoundation/identity/issues/27)) ([ce41f3f](https://github.com/twinfoundation/identity/commit/ce41f3fc3da1b206ec06da7ea5b2c968f788804d))
+
+
+### Bug Fixes
+
+* Import path and bump version ([#21](https://github.com/twinfoundation/identity/issues/21)) ([ccea845](https://github.com/twinfoundation/identity/commit/ccea845bf32562267280bc1b3dde1c9af1a00360))
+* Install sdk-wasm ([#20](https://github.com/twinfoundation/identity/issues/20)) ([75ec14e](https://github.com/twinfoundation/identity/commit/75ec14e072f8c219863a1c028a3b0783802086e9))
+* query params force coercion ([d9347d2](https://github.com/twinfoundation/identity/commit/d9347d29d4a9cc58759f30f5d8526de864ea7522))
+* stricter pathParam types ([a174cdf](https://github.com/twinfoundation/identity/commit/a174cdf0ca4272bee35fcf20ab7e8e4e17b8b6f4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.10 to 0.0.3-next.11
+
 ## [0.0.3-next.10](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.9...identity-rest-client-v0.0.3-next.10) (2026-01-15)
 
 

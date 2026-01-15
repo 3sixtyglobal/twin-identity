@@ -1,5 +1,38 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.0.3-next.11](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.10...identity-connector-entity-storage-v0.0.3-next.11) (2026-01-15)
+
+
+### Features
+
+* add context id features ([#62](https://github.com/twinfoundation/identity/issues/62)) ([e02ecca](https://github.com/twinfoundation/identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add expiration date option to vc creation ([73e05e1](https://github.com/twinfoundation/identity/commit/73e05e1ae61112c7e056889969751f4ff82d9f29))
+* add identity remove ([eebc13f](https://github.com/twinfoundation/identity/commit/eebc13f4c2cd994d2d9cce4da2128fb346c80ba7))
+* add validate-locales ([04d74b4](https://github.com/twinfoundation/identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* eslint migration to flat config ([fd6246d](https://github.com/twinfoundation/identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+* identity key separator use slash ([1319d0d](https://github.com/twinfoundation/identity/commit/1319d0d07164a36b3ec279e6421b8835ffefc3d3))
+* re-use vault keys if available ([5a848d7](https://github.com/twinfoundation/identity/commit/5a848d7520829d9c891ec889fd773fbc0ee77ba5))
+* update framework core ([c824497](https://github.com/twinfoundation/identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+* update namespaces and contexts ([#90](https://github.com/twinfoundation/identity/issues/90)) ([0c34d64](https://github.com/twinfoundation/identity/commit/0c34d64add8cca77856fa2d0357e774d72fbbfc1))
+* use new generateKid method ([f0fe779](https://github.com/twinfoundation/identity/commit/f0fe779323b675575bb9f80aa74f1957dc57a094))
+* use shared store mechanism ([#27](https://github.com/twinfoundation/identity/issues/27)) ([ce41f3f](https://github.com/twinfoundation/identity/commit/ce41f3fc3da1b206ec06da7ea5b2c968f788804d))
+
+
+### Bug Fixes
+
+* add exp to jwt payload in entity storage vc ([41f0fbd](https://github.com/twinfoundation/identity/commit/41f0fbd641b4fd1fe3b23f1a16f4748e09b31f50))
+* associate vault keys with document not controller ([#86](https://github.com/twinfoundation/identity/issues/86)) ([6430f4b](https://github.com/twinfoundation/identity/commit/6430f4b559315a1fe99b60c6db1c661d317bc243))
+* Import path and bump version ([#21](https://github.com/twinfoundation/identity/issues/21)) ([ccea845](https://github.com/twinfoundation/identity/commit/ccea845bf32562267280bc1b3dde1c9af1a00360))
+* Install sdk-wasm ([#20](https://github.com/twinfoundation/identity/issues/20)) ([75ec14e](https://github.com/twinfoundation/identity/commit/75ec14e072f8c219863a1c028a3b0783802086e9))
+* update vault key naming convention to use document ID prefix ([#94](https://github.com/twinfoundation/identity/issues/94)) ([ab125c1](https://github.com/twinfoundation/identity/commit/ab125c1b7eb189b5dceaddc69e5e53e33a0886db))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.10 to 0.0.3-next.11
+
 ## [0.0.3-next.10](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.9...identity-connector-entity-storage-v0.0.3-next.10) (2026-01-15)
 
 
