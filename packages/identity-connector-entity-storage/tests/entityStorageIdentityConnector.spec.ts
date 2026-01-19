@@ -690,13 +690,15 @@ describe("EntityStorageIdentityConnector", () => {
 				{ "@context": "" },
 				["types"],
 				["verifiableCredentials"],
-				"foo" as unknown as number
+				{
+					expirationDate: "foo" as unknown as Date
+				}
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
-			message: "guard.integer",
+			message: "guard.date",
 			properties: {
-				property: "expiresInMinutes",
+				property: "options.expirationDate",
 				value: "foo"
 			}
 		});
@@ -716,7 +718,7 @@ describe("EntityStorageIdentityConnector", () => {
 			"https://schema.org",
 			["Person"],
 			[testVcJwt],
-			14400
+			{ expirationDate: new Date(Date.now() + 14400000) }
 		);
 
 		expect(result.verifiablePresentation["@context"]).toEqual([

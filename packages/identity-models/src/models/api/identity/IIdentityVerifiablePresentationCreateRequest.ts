@@ -47,8 +47,8 @@ export interface IIdentityVerifiablePresentationCreateRequest {
 		verifiableCredentials: (string | IDidVerifiableCredential)[];
 
 		/**
-		 * The expiration time for the presentation.
+		 * The expiration date/time for the presentation.
 		 */
-		expiresInMinutes?: number;
+		expirationDate?: string;
 	};
 }

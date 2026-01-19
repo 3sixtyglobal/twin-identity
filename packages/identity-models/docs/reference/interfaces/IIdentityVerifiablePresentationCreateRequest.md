@@ -54,8 +54,8 @@ The types of the presentation.
 
 The verifiable credentials to include in the presentation.
 
-#### expiresInMinutes?
+#### expirationDate?
 
-> `optional` **expiresInMinutes**: `number`
+> `optional` **expirationDate**: `string`
 
-The expiration time for the presentation.
+The expiration date/time for the presentation.

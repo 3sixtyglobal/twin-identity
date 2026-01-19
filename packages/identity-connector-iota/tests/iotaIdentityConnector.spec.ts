@@ -832,7 +832,7 @@ describe("IotaIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[testVcJwt],
-				14400
+				{ expirationDate: new Date(Date.now() + 14400000) }
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -853,7 +853,7 @@ describe("IotaIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[],
-				14400
+				{ expirationDate: new Date(Date.now() + 14400000) }
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -873,7 +873,9 @@ describe("IotaIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[testVcJwt],
-				"foo" as unknown as number
+				{
+					expirationDate: "foo" as unknown as Date
+				}
 			)
 		).rejects.toHaveProperty("name", "GuardError");
 	});
@@ -886,7 +888,7 @@ describe("IotaIdentityConnector", () => {
 			DidContexts.NamespaceVCv1,
 			["Person"],
 			[testVcJwt],
-			14400
+			{ expirationDate: new Date(Date.now() + 14400000) }
 		);
 
 		expect(result.verifiablePresentation["@context"]).toEqual([
@@ -919,7 +921,7 @@ describe("IotaIdentityConnector", () => {
 			"https://schema.org",
 			["Person"],
 			[testVcJwt],
-			14400
+			{ expirationDate: new Date(Date.now() + 14400000) }
 		);
 
 		const vpJwt = createResult.jwt;

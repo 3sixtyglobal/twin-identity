@@ -5,6 +5,5 @@
 	"packages/identity-rest-client": "0.0.3-next.11",
 	"packages/identity-connector-iota": "0.0.3-next.11",
 	"packages/identity-connector-universal": "0.0.3-next.11",
-	"packages/identity-authentication": "0.0.3-next.11",
 	"apps/identity-cli": "0.0.3-next.11"
 }

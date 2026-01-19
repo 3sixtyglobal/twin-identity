@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0.
 import {
 	Credential,
-	Duration,
 	EdDSAJwsVerifier,
 	FailFast,
 	IdentityClient,
@@ -58,7 +57,7 @@ import {
 } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { Iota } from "@twin.org/dlt-iota";
-import { DocumentHelper, Did, type IIdentityConnector } from "@twin.org/identity-models";
+import { Did, DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
 	DidVerificationMethodType,
@@ -933,7 +932,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param contexts The contexts for the data stored in the verifiable credential.
 	 * @param types The types for the data stored in the verifiable credential.
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
-	 * @param expiresInMinutes The time in minutes for the presentation to expire.
+	 * @param options Additional options for creating the verifiable presentation.
+	 * @param options.expirationDate The date the verifiable presentation is valid until.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -944,7 +944,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
 		verifiableCredentials: (string | IDidVerifiableCredentialV1)[],
-		expiresInMinutes?: number
+		options?: { expirationDate?: Date }
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentationV1;
 		jwt: string;
@@ -965,8 +965,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			nameof(verifiableCredentials),
 			verifiableCredentials
 		);
-		if (!Is.undefined(expiresInMinutes)) {
-			Guards.integer(IotaIdentityConnector.CLASS_NAME, nameof(expiresInMinutes), expiresInMinutes);
+		if (!Is.undefined(options?.expirationDate)) {
+			Guards.date(
+				IotaIdentityConnector.CLASS_NAME,
+				"options.expirationDate",
+				options?.expirationDate
+			);
 		}
 
 		try {
@@ -1059,18 +1063,17 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			await keyIdMemStore.insertKeyId(methodDigest, keyId);
 
-			const expirationDate =
-				Is.integer(expiresInMinutes) && expiresInMinutes > 0
-					? Timestamp.nowUTC().checkedAdd(Duration.minutes(expiresInMinutes))
-					: undefined;
-
 			const storage = new Storage(jwkMemStore, keyIdMemStore);
 			const presentationJwt = await issuerDocument.createPresentationJwt(
 				storage,
 				`#${method.id().fragment()?.toString()}`,
 				unsignedVp,
 				new JwsSignatureOptions(),
-				new JwtPresentationOptions({ expirationDate })
+				new JwtPresentationOptions({
+					expirationDate: Is.date(options?.expirationDate)
+						? Timestamp.parse(options.expirationDate?.toISOString())
+						: undefined
+				})
 			);
 			const validatedCredential = new JwtPresentationValidator(new EdDSAJwsVerifier());
 			const decoded = validatedCredential.validate(

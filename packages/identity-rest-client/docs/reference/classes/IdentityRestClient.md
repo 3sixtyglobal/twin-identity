@@ -422,7 +422,7 @@ Nothing.
 
 ### verifiablePresentationCreate()
 
-> **verifiablePresentationCreate**(`verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `expiresInMinutes?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentation`; `jwt`: `string`; \}\>
+> **verifiablePresentationCreate**(`verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `options?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentation`; `jwt`: `string`; \}\>
 
 Create a verifiable presentation from the supplied verifiable credentials.
 
@@ -458,11 +458,15 @@ The types for the data stored in the verifiable credential.
 
 The credentials to use for creating the presentation in jwt format.
 
-##### expiresInMinutes?
+##### options?
 
-`number`
+Additional options for creating the verifiable presentation.
 
-The time in minutes for the presentation to expire.
+###### expirationDate?
+
+`Date`
+
+The date the verifiable presentation is valid until.
 
 #### Returns
 

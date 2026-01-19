@@ -438,7 +438,8 @@ export class IdentityService implements IIdentityComponent {
 	 * @param contexts The contexts for the data stored in the verifiable credential.
 	 * @param types The types for the data stored in the verifiable credential.
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
-	 * @param expiresInMinutes The time in minutes for the presentation to expire.
+	 * @param options Additional options for creating the verifiable presentation.
+	 * @param options.expirationDate The date the verifiable presentation is valid until.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
@@ -449,7 +450,7 @@ export class IdentityService implements IIdentityComponent {
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
 		verifiableCredentials: (string | IDidVerifiableCredential)[],
-		expiresInMinutes?: number,
+		options?: { expirationDate?: Date },
 		controller?: string
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentation;
@@ -474,7 +475,7 @@ export class IdentityService implements IIdentityComponent {
 				contexts,
 				types,
 				verifiableCredentials,
-				expiresInMinutes
+				options
 			);
 			return result;
 		} catch (error) {

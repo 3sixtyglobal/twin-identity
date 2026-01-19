@@ -1072,7 +1072,7 @@ export async function identityVerifiableCredentialCreate(
 		request.body.subject,
 		{
 			revocationIndex: request.body.revocationIndex,
-			expirationDate: Coerce.date(request.body.expirationDate)
+			expirationDate: Coerce.dateTime(request.body.expirationDate)
 		},
 		contextIds[ContextIdKeys.Organization]
 	);
@@ -1253,7 +1253,7 @@ export async function identityVerifiablePresentationCreate(
 		request.body.contexts,
 		request.body.types,
 		request.body.verifiableCredentials,
-		request.body.expiresInMinutes,
+		{ expirationDate: Coerce.dateTime(request.body.expirationDate) },
 		contextIds[ContextIdKeys.Organization]
 	);
 

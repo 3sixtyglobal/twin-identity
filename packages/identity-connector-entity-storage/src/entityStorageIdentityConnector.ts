@@ -1044,7 +1044,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param contexts The contexts for the data stored in the verifiable credential.
 	 * @param types The types for the data stored in the verifiable credential.
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
-	 * @param expiresInMinutes The time in minutes for the presentation to expire.
+	 * @param options Additional options for creating the verifiable presentation.
+	 * @param options.expirationDate The date the verifiable presentation is valid until.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -1055,7 +1056,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
 		verifiableCredentials: (string | IDidVerifiableCredentialV1)[],
-		expiresInMinutes?: number
+		options?: {
+			expirationDate?: Date;
+		}
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentationV1;
 		jwt: string;
@@ -1076,11 +1079,11 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			nameof(verifiableCredentials),
 			verifiableCredentials
 		);
-		if (!Is.undefined(expiresInMinutes)) {
-			Guards.integer(
+		if (!Is.undefined(options?.expirationDate)) {
+			Guards.date(
 				EntityStorageIdentityConnector.CLASS_NAME,
-				nameof(expiresInMinutes),
-				expiresInMinutes
+				"options.expirationDate",
+				options.expirationDate
 			);
 		}
 
@@ -1164,9 +1167,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				vp: jwtVp
 			};
 
-			if (Is.integer(expiresInMinutes)) {
-				const expiresInSeconds = expiresInMinutes * 60;
-				jwtPayload.exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
+			if (Is.date(options?.expirationDate)) {
+				jwtPayload.exp = Math.floor(options.expirationDate.getTime() / 1000);
 			}
 
 			const signature = await Jwt.encodeWithSigner(jwtHeader, jwtPayload, async (header, payload) =>

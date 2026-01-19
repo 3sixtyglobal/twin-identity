@@ -376,7 +376,8 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	 * @param contexts The contexts for the data stored in the verifiable credential.
 	 * @param types The types for the data stored in the verifiable credential.
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
-	 * @param expiresInMinutes The time in minutes for the presentation to expire.
+	 * @param options Additional options for creating the verifiable presentation.
+	 * @param options.expirationDate The date the verifiable presentation is valid until.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -386,7 +387,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
 		verifiableCredentials: (string | IDidVerifiableCredential)[],
-		expiresInMinutes?: number
+		options?: { expirationDate?: Date }
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentation;
 		jwt: string;
@@ -406,8 +407,8 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			nameof(verifiableCredentials),
 			verifiableCredentials
 		);
-		if (!Is.undefined(expiresInMinutes)) {
-			Guards.integer(IdentityRestClient.CLASS_NAME, nameof(expiresInMinutes), expiresInMinutes);
+		if (!Is.undefined(options?.expirationDate)) {
+			Guards.date(IdentityRestClient.CLASS_NAME, "options.expirationDate", options?.expirationDate);
 		}
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -425,7 +426,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 				contexts,
 				types,
 				verifiableCredentials,
-				expiresInMinutes
+				expirationDate: options?.expirationDate?.toISOString()
 			}
 		});
 
