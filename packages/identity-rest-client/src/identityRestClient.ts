@@ -408,7 +408,11 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			verifiableCredentials
 		);
 		if (!Is.undefined(options?.expirationDate)) {
-			Guards.date(IdentityRestClient.CLASS_NAME, "options.expirationDate", options?.expirationDate);
+			Guards.date(
+				IdentityRestClient.CLASS_NAME,
+				nameof(options.expirationDate),
+				options?.expirationDate
+			);
 		}
 
 		const idParts = DocumentHelper.parseId(verificationMethodId);

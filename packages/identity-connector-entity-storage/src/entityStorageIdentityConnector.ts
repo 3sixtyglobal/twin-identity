@@ -618,6 +618,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				options.revocationIndex
 			);
 		}
+		if (!Is.undefined(options?.expirationDate)) {
+			Guards.date(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(options.expirationDate),
+				options.expirationDate
+			);
+		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -1082,7 +1089,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		if (!Is.undefined(options?.expirationDate)) {
 			Guards.date(
 				EntityStorageIdentityConnector.CLASS_NAME,
-				"options.expirationDate",
+				nameof(options.expirationDate),
 				options.expirationDate
 			);
 		}

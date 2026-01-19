@@ -968,7 +968,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		if (!Is.undefined(options?.expirationDate)) {
 			Guards.date(
 				IotaIdentityConnector.CLASS_NAME,
-				"options.expirationDate",
+				nameof(options.expirationDate),
 				options?.expirationDate
 			);
 		}
