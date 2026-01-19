@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.3-next.12](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.11...identity-models-v0.0.3-next.12) (2026-01-19)
+
+
+### Features
+
+* remove auth generator ([#98](https://github.com/twinfoundation/identity/issues/98)) ([a8969e8](https://github.com/twinfoundation/identity/commit/a8969e85a5a2804abfc787406e2d12eb168dd978))
+
 ## [0.0.3-next.11](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.10...identity-models-v0.0.3-next.11) (2026-01-15)
 
 

@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.0.3-next.12](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.11...identity-connector-entity-storage-v0.0.3-next.12) (2026-01-19)
+
+
+### Features
+
+* remove auth generator ([#98](https://github.com/twinfoundation/identity/issues/98)) ([a8969e8](https://github.com/twinfoundation/identity/commit/a8969e85a5a2804abfc787406e2d12eb168dd978))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.11 to 0.0.3-next.12
+
 ## [0.0.3-next.11](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.10...identity-connector-entity-storage-v0.0.3-next.11) (2026-01-15)
 
 
