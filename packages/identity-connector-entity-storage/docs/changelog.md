@@ -1,5 +1,24 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.0.3-next.13](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.12...identity-connector-entity-storage-v0.0.3-next.13) (2026-01-21)
+
+
+### Features
+
+* update contexts ([#100](https://github.com/twinfoundation/identity/issues/100)) ([7c17f98](https://github.com/twinfoundation/identity/commit/7c17f983110b2fc5db1b19531d0b2a7c53e02aaa))
+
+
+### Bug Fixes
+
+* use nameof for property guards ([9d571cf](https://github.com/twinfoundation/identity/commit/9d571cffae8838035fcbca8966795783013e1a99))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.12 to 0.0.3-next.13
+
 ## [0.0.3-next.12](https://github.com/twinfoundation/identity/compare/identity-connector-entity-storage-v0.0.3-next.11...identity-connector-entity-storage-v0.0.3-next.12) (2026-01-19)
 
 

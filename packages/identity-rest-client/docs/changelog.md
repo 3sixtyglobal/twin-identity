@@ -1,5 +1,19 @@
 # @twin.org/identity-rest-client - Changelog
 
+## [0.0.3-next.13](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.12...identity-rest-client-v0.0.3-next.13) (2026-01-21)
+
+
+### Bug Fixes
+
+* use nameof for property guards ([9d571cf](https://github.com/twinfoundation/identity/commit/9d571cffae8838035fcbca8966795783013e1a99))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.12 to 0.0.3-next.13
+
 ## [0.0.3-next.12](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.11...identity-rest-client-v0.0.3-next.12) (2026-01-19)
 
 
