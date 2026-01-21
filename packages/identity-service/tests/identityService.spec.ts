@@ -93,7 +93,7 @@ describe("IdentityService", () => {
 		const identity = await service.identityCreate(undefined, TEST_CONTROLLER);
 
 		expect(identity).toEqual({
-			"@context": DidContexts.Namespace,
+			"@context": DidContexts.Context,
 			id: "did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101",
 			service: [
 				{

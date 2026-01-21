@@ -65,7 +65,7 @@ export function generateRestRoutesIdentityResolver(
 						id: "identityResolveResponseExample",
 						response: {
 							body: {
-								"@context": DidContexts.Namespace,
+								"@context": DidContexts.Context,
 								id: "did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a",
 								service: [
 									{

@@ -156,7 +156,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const compressed = await Compression.compress(bitString.getBits(), CompressionType.Gzip);
 
 			const didDocument: IDidDocument = {
-				"@context": DidContexts.Namespace,
+				"@context": DidContexts.Context,
 				id: did,
 				service: [
 					{
@@ -686,8 +686,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			const verifiableCredential: IDidVerifiableCredentialV1 = {
-				"@context": JsonLdProcessor.combineContexts(DidContexts.NamespaceVCv1, credContext) as [
-					typeof DidContexts.NamespaceVCv1
+				"@context": JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) as [
+					typeof DidContexts.ContextVCv1
 				],
 				id,
 				type: finalTypes,
@@ -1147,8 +1147,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			const verifiablePresentation: IDidVerifiablePresentationV1 = {
-				"@context": JsonLdProcessor.combineContexts(DidContexts.NamespaceVCv1, contexts) as [
-					typeof DidContexts.NamespaceVCv1
+				"@context": JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, contexts) as [
+					typeof DidContexts.ContextVCv1
 				],
 				id: presentationId,
 				type: finalTypes,
@@ -1276,7 +1276,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 								this._vaultConnector
 							);
 							issuers.push({
-								"@context": DidContexts.Namespace,
+								"@context": DidContexts.Context,
 								...issuerDidDocument
 							});
 
@@ -1286,7 +1286,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 								if (Is.object(credentialStatus)) {
 									revoked = await this.checkRevocation(
 										{
-											"@context": DidContexts.Namespace,
+											"@context": DidContexts.Context,
 											...issuerDidDocument
 										},
 										credentialStatus.revocationBitmapIndex
@@ -1295,7 +1295,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 									for (let i = 0; i < credentialStatus.length; i++) {
 										revoked = await this.checkRevocation(
 											{
-												"@context": DidContexts.Namespace,
+												"@context": DidContexts.Context,
 												...issuerDidDocument
 											},
 											credentialStatus[i].revocationBitmapIndex
