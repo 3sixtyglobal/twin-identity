@@ -16,6 +16,7 @@ import {
 	RandomHelper
 } from "@twin.org/core";
 import {
+	JsonLdHelper,
 	JsonLdProcessor,
 	type IJsonLdContextDefinitionRoot,
 	type IJsonLdNodeObject
@@ -708,6 +709,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 							}
 						: undefined
 			};
+
+			verifiableCredential.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(verifiableCredential)
+			);
 
 			const jwtHeader: IJwtHeader = {
 				kid: verificationDidMethod.id,
