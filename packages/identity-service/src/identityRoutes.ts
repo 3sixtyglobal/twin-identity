@@ -7,7 +7,7 @@ import type {
 	ITag
 } from "@twin.org/api-models";
 import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
-import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
+import { Coerce, ComponentFactory, Guards, Is } from "@twin.org/core";
 import {
 	DocumentHelper,
 	type IIdentityComponent,
@@ -36,7 +36,7 @@ import {
 	type IIdentityVerificationMethodRemoveRequest
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import { DidContexts } from "@twin.org/standards-w3c-did";
+import { DidContexts, type IDidVerifiableCredential } from "@twin.org/standards-w3c-did";
 import { HttpStatusCode } from "@twin.org/web";
 
 /**
@@ -690,7 +690,7 @@ export function generateRestRoutesIdentity(
 						response: {
 							body: {
 								"@context": [
-									"https://www.w3.org/ns/credentials/v2",
+									"https://w3id.org/security/data-integrity/v2",
 									"https://www.w3.org/ns/credentials/examples/v2"
 								],
 								type: "DataIntegrityProof",
@@ -744,7 +744,7 @@ export function generateRestRoutesIdentity(
 								}
 							},
 							proof: {
-								"@context": "https://www.w3.org/ns/credentials/v2",
+								"@context": "https://w3id.org/security/data-integrity/v2",
 								type: "DataIntegrityProof",
 								cryptosuite: "eddsa-jcs-2022",
 								created: "2025-01-24T11:32:13.106Z",
@@ -1099,16 +1099,33 @@ export async function identityVerifiableCredentialVerify(
 		nameof(request),
 		request
 	);
-	Guards.object<IIdentityVerifiableCredentialVerifyRequest["query"]>(
-		ROUTES_SOURCE,
-		nameof(request.query),
-		request.query
-	);
-	Guards.stringValue(ROUTES_SOURCE, nameof(request.query.jwt), request.query.jwt);
+
+	let credential: string | IDidVerifiableCredential;
+	if (Is.object(request.query)) {
+		Guards.object<IIdentityVerifiableCredentialVerifyRequest["query"]>(
+			ROUTES_SOURCE,
+			nameof(request.query),
+			request.query
+		);
+		Guards.stringValue(ROUTES_SOURCE, nameof(request.query.jwt), request.query.jwt);
+		credential = request.query.jwt;
+	} else {
+		Guards.object<IIdentityVerifiableCredentialVerifyRequest["body"]>(
+			ROUTES_SOURCE,
+			nameof(request.body),
+			request.body
+		);
+		Guards.object<IDidVerifiableCredential>(
+			ROUTES_SOURCE,
+			nameof(request.body?.credential),
+			request.body?.credential
+		);
+		credential = request.body?.credential;
+	}
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
-	const result = await component.verifiableCredentialVerify(request.query.jwt);
+	const result = await component.verifiableCredentialVerify(credential);
 
 	return {
 		body: result

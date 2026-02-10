@@ -215,7 +215,11 @@ describe("IdentityService", () => {
 
 		expect(vc).toEqual({
 			verifiableCredential: {
-				"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+				"@context": [
+					"https://www.w3.org/2018/credentials/v1",
+					"https://schema.org",
+					"https://w3id.org/security/data-integrity/v2"
+				],
 				id: "https://example.com/credentials/3732",
 				type: ["VerifiableCredential", "Person"],
 				credentialSubject: {
@@ -228,6 +232,16 @@ describe("IdentityService", () => {
 					id: "did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#revocation",
 					type: "BitstringStatusList",
 					revocationBitmapIndex: "5"
+				},
+				proof: {
+					created: "2020-01-01T00:00:00.000Z",
+					cryptosuite: "eddsa-jcs-2022",
+					proofPurpose: "assertionMethod",
+					proofValue:
+						"z2TGvboLbuQYLChaBnQJyAAD5fXeZXZWgAC1i8TLj9Z58jozNrTpLFDBmPtCrJMHd52MkrNQVTfXRFq4Mm2vz8Cwr",
+					type: "DataIntegrityProof",
+					verificationMethod:
+						"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#hGHGs0DxLAWcgzx0QjTbzJc3PO-NMqSFAPcdgzx_qQo"
 				}
 			},
 			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI2hHSEdzMER4TEFXY2d6eDBRalRiekpjM1BPLU5NcVNGQVBjZGd6eF9xUW8iLCJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vc2NoZW1hLm9yZyJdLCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiUGVyc29uIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOiJKYW5lIERvZSJ9LCJjcmVkZW50aWFsU3RhdHVzIjp7ImlkIjoiZGlkOmVudGl0eS1zdG9yYWdlOjB4MDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMSNyZXZvY2F0aW9uIiwidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3QiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiI1In19fQ.qIBfIKqPiNaOiood39A7q1OY83eBABhd_N-WtCPZthjqVaR-lmmUMrjtaAxkMwbDcRfgdW4IIM38cqMuTjiVCw"

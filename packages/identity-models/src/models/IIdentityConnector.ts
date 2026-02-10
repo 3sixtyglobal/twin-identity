@@ -114,10 +114,10 @@ export interface IIdentityConnector extends IComponent {
 
 	/**
 	 * Check a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	checkVerifiableCredential(credentialJwt: string): Promise<{
+	checkVerifiableCredential(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}>;

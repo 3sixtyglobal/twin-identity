@@ -6,6 +6,7 @@ import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 import { nameof } from "@twin.org/nameof";
+import { SchemaOrgDataTypes } from "@twin.org/standards-schema-org";
 import {
 	DidContexts,
 	DidTypes,
@@ -14,7 +15,8 @@ import {
 	type IDidService,
 	type IDidVerifiableCredential,
 	type IProof,
-	ProofTypes
+	ProofTypes,
+	VerifiableCredentialHelper
 } from "@twin.org/standards-w3c-did";
 import {
 	EntityStorageVaultConnector,
@@ -34,6 +36,7 @@ let testDocumentVerificationMethodKey: VaultKey;
 let testDocumentVerificationMethodId: string;
 let testServiceId: string;
 let testVcJwt: string;
+let testVc: IDidVerifiableCredential;
 let testVpJwt: string;
 
 let didDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
@@ -47,6 +50,7 @@ describe("EntityStorageIdentityConnector", () => {
 	beforeEach(() => {
 		initSchemaVault();
 		initSchemaIdentity();
+		SchemaOrgDataTypes.registerRedirects();
 
 		didDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
 			entitySchema: nameof<IdentityDocument>()
@@ -423,7 +427,8 @@ describe("EntityStorageIdentityConnector", () => {
 
 		expect(result.verifiableCredential["@context"]).toEqual([
 			DidContexts.ContextVCv1,
-			"https://schema.org"
+			"https://schema.org",
+			"https://w3id.org/security/data-integrity/v2"
 		]);
 		expect(result.verifiableCredential.id).toEqual("https://example.com/credentials/3732");
 		expect(result.verifiableCredential.type).toContain(DidTypes.VerifiableCredential);
@@ -450,8 +455,10 @@ describe("EntityStorageIdentityConnector", () => {
 			(result.verifiableCredential?.credentialStatus as IDidCredentialStatus)?.revocationBitmapIndex
 		).toEqual("5");
 		expect(result.jwt.split(".").length).toEqual(3);
+		expect(result.verifiableCredential.proof).toBeDefined();
 
 		testVcJwt = result.jwt;
+		testVc = result.verifiableCredential;
 		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
 	});
 
@@ -462,13 +469,13 @@ describe("EntityStorageIdentityConnector", () => {
 			name: "GuardError",
 			message: "guard.stringEmpty",
 			properties: {
-				property: "credentialJwt",
+				property: "credential",
 				value: ""
 			}
 		});
 	});
 
-	test("can validate a verifiable credential", async () => {
+	test("can validate a verifiable credential jwt", async () => {
 		await didDocumentEntityStorage.set(testIdentityDocument);
 		await vaultKeyEntityStorageConnector.set(testDocumentKey);
 		const identityConnector = new EntityStorageIdentityConnector();
@@ -491,7 +498,51 @@ describe("EntityStorageIdentityConnector", () => {
 		expect(
 			(result.verifiableCredential?.issuer as string)?.startsWith("did:entity-storage")
 		).toBeTruthy();
-		expect(result.verifiableCredential?.issuanceDate).toBeDefined();
+		if (result.verifiableCredential) {
+			const issuanceDate = VerifiableCredentialHelper.getValidFrom(result.verifiableCredential);
+			expect(issuanceDate).toBeDefined();
+		}
+		expect(
+			(result.verifiableCredential?.credentialStatus as IDidCredentialStatus)?.id?.startsWith(
+				"did:entity-storage"
+			)
+		).toBeTruthy();
+		expect((result.verifiableCredential?.credentialStatus as IDidCredentialStatus)?.type).toEqual(
+			"BitstringStatusList"
+		);
+		expect(
+			(result.verifiableCredential?.credentialStatus as IDidCredentialStatus)?.revocationBitmapIndex
+		).toEqual("5");
+	});
+
+	test("can validate a verifiable credential document", async () => {
+		await didDocumentEntityStorage.set(testIdentityDocument);
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const result = await identityConnector.checkVerifiableCredential(testVc);
+
+		expect(result.revoked).toBeFalsy();
+		expect(result.verifiableCredential?.["@context"]).toEqual([
+			DidContexts.ContextVCv1,
+			"https://schema.org",
+			"https://w3id.org/security/data-integrity/v2"
+		]);
+		expect(result.verifiableCredential?.id).toEqual("https://example.com/credentials/3732");
+		expect(result.verifiableCredential?.type).toContain(DidTypes.VerifiableCredential);
+		expect(result.verifiableCredential?.type).toContain("Person");
+		const subject = Is.array(result.verifiableCredential?.credentialSubject)
+			? result.verifiableCredential?.credentialSubject[0]
+			: result.verifiableCredential?.credentialSubject;
+		expect((subject?.id as string).startsWith("did:entity-storage")).toBeTruthy();
+		expect(subject?.name).toEqual("Jane Doe");
+		expect(
+			(result.verifiableCredential?.issuer as string)?.startsWith("did:entity-storage")
+		).toBeTruthy();
+		if (result.verifiableCredential) {
+			const issuanceDate = VerifiableCredentialHelper.getValidFrom(result.verifiableCredential);
+			expect(issuanceDate).toBeDefined();
+		}
 		expect(
 			(result.verifiableCredential?.credentialStatus as IDidCredentialStatus)?.id?.startsWith(
 				"did:entity-storage"
@@ -844,7 +895,7 @@ describe("EntityStorageIdentityConnector", () => {
 			"@context": [
 				"https://www.w3.org/2018/credentials/v1",
 				"https://www.w3.org/2018/credentials/examples/v1",
-				"https://www.w3.org/ns/credentials/v2"
+				"https://w3id.org/security/data-integrity/v2"
 			],
 			type: "DataIntegrityProof",
 			cryptosuite: "eddsa-jcs-2022",
@@ -853,7 +904,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#my-verification-id",
 			proofPurpose: "assertionMethod",
 			proofValue:
-				"zPTz1nTVvHSyfuPV9GdUJYSD6M9KWMvNBc5GFzx7EfhFbrNRRsWdnrGpw1FW4MziE2ZHuau4EzeuGF8yApLjq5Yk"
+				"z3jMZJzQWavDziHmQDSwcb7MJw6fP3Gnhtg5coU3KwzxGW3dZh9NCYm3QuRUktronz2fHtQHdB4RZkJfE7vU7hjFv"
 		});
 	});
 
@@ -914,8 +965,8 @@ describe("EntityStorageIdentityConnector", () => {
 
 		const signedProof: IProof = {
 			"@context": [
-				"https://www.w3.org/ns/credentials/v2",
-				"https://www.w3.org/ns/credentials/examples/v2"
+				"https://w3id.org/security/data-integrity/v2",
+				"https://w3id.org/security/data-integrity/v2"
 			],
 			type: "DataIntegrityProof",
 			cryptosuite: "eddsa-jcs-2022",
@@ -924,7 +975,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#my-verification-id",
 			proofPurpose: "assertionMethod",
 			proofValue:
-				"z2zGoejwpX6HH2T11BZaniEVZrqRKDpwbQSvPcL7eL9M7hV5P9zQQZxs85n6qyDzkkXCL8aFUWfwQD5bxVGqDK1fa"
+				"z4uVZbk4nnoB1HByK8SqAWFhgnP6UBNj5Td4oqYcwjHG9Znx27kVJQQFiuq2mgxr2kKPyGsLW9rDQ3mhHRnfba1pS"
 		};
 
 		const verified = await identityConnector.verifyProof(unsecuredDocument, signedProof);

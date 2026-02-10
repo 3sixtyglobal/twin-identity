@@ -292,17 +292,17 @@ NotFoundError if the id can not be resolved.
 
 ### verifiableCredentialVerify()
 
-> **verifiableCredentialVerify**(`credentialJwt`): `Promise`\<\{ `revoked`: `boolean`; `verifiableCredential?`: `IDidVerifiableCredential`; \}\>
+> **verifiableCredentialVerify**(`credential`): `Promise`\<\{ `revoked`: `boolean`; `verifiableCredential?`: `IDidVerifiableCredential`; \}\>
 
 Verify a verifiable credential is valid.
 
 #### Parameters
 
-##### credentialJwt
-
-`string`
+##### credential
 
 The credential to verify.
+
+`string` | `IDidVerifiableCredential`
 
 #### Returns
 

@@ -298,23 +298,30 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 	/**
 	 * Verify a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	public async verifiableCredentialVerify(credentialJwt: string): Promise<{
+	public async verifiableCredentialVerify(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(credentialJwt), credentialJwt);
+		let request: IIdentityVerifiableCredentialVerifyRequest;
+		if (Is.object(credential)) {
+			Guards.object<IDidVerifiableCredential>(
+				IdentityRestClient.CLASS_NAME,
+				nameof(credential),
+				credential
+			);
+			request = { body: { credential } };
+		} else {
+			Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(credential), credential);
+			request = { query: { jwt: credential } };
+		}
 
 		const response = await this.fetch<
 			IIdentityVerifiableCredentialVerifyRequest,
 			IIdentityVerifiableCredentialVerifyResponse
-		>("/verifiable-credential/verify", "POST", {
-			query: {
-				jwt: credentialJwt
-			}
-		});
+		>("/verifiable-credential/verify", "POST", request);
 
 		return response.body;
 	}

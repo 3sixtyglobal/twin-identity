@@ -43,6 +43,7 @@
 		"@twin.org/entity-storage-connector-memory": "next",
 		"@twin.org/nameof-transformer": "next",
 		"@twin.org/nameof-vitest-plugin": "next",
+		"@twin.org/standards-schema-org": "next",
 		"@twin.org/validate-locales": "next",
 		"@twin.org/vault-connector-entity-storage": "next",
 		"@vitest/coverage-v8": "4.0.8",

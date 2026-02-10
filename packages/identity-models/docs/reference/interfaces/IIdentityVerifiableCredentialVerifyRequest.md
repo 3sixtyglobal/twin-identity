@@ -4,9 +4,9 @@ Request to verify a verifiable credential.
 
 ## Properties
 
-### query
+### query?
 
-> **query**: `object`
+> `optional` **query**: `object`
 
 The path parameters.
 
@@ -15,3 +15,17 @@ The path parameters.
 > **jwt**: `string`
 
 The jwt to verify.
+
+***
+
+### body?
+
+> `optional` **body**: `object`
+
+The body parameters.
+
+#### credential
+
+> **credential**: `IDidVerifiableCredential`
+
+The verifiable credential to verify.

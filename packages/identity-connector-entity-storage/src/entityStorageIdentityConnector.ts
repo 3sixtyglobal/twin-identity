@@ -1,6 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import {
+	ArrayHelper,
 	BaseError,
 	BitString,
 	Coerce,
@@ -31,6 +32,7 @@ import {
 	DidContexts,
 	DidTypes,
 	DidVerificationMethodType,
+	type IDidVerifiableCredential,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
@@ -710,13 +712,6 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 						: undefined
 			};
 
-			verifiableCredential.proof = await this.createProof(
-				controller,
-				verificationMethodId,
-				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiableCredential)
-			);
-
 			const jwtHeader: IJwtHeader = {
 				kid: verificationDidMethod.id,
 				typ: "JWT",
@@ -729,6 +724,25 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				"credentialSubject",
 				"credentialStatus"
 			]);
+
+			// Add the proof to the VC after extracting the jwt data
+			// as the jwt does not include the proof
+			verifiableCredential.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(verifiableCredential)
+			);
+
+			// As we are adding the receipt to the data we update the JSON-LD context
+			const proofContext = verifiableCredential.proof["@context"];
+			if (!Is.empty(proofContext)) {
+				verifiableCredential["@context"] = JsonLdProcessor.combineContexts(
+					verifiableCredential["@context"],
+					proofContext
+				) as IDidVerifiableCredentialV1["@context"];
+				delete verifiableCredential.proof["@context"];
+			}
 
 			if (Is.array(jwtVc.credentialSubject)) {
 				jwtVc.credentialSubject = jwtVc.credentialSubject.map(c => {
@@ -776,21 +790,38 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	public async checkVerifiableCredential(credentialJwt: string): Promise<{
+	public async checkVerifiableCredential(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
-		verifiableCredential?: IDidVerifiableCredentialV1;
+		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(
-			EntityStorageIdentityConnector.CLASS_NAME,
-			nameof(credentialJwt),
-			credentialJwt
-		);
+		if (Is.object(credential)) {
+			Guards.objectValue<IDidVerifiableCredential>(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(credential),
+				credential
+			);
+			Guards.objectValue<IDidVerifiableCredential>(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(credential.proof),
+				credential.proof
+			);
+			const { proof, ...doc } = credential;
+			await this.verifyProof(
+				JsonLdHelper.toNodeObject(doc),
+				ArrayHelper.fromObjectOrArray(proof)[0]
+			);
+			return {
+				revoked: false,
+				verifiableCredential: doc
+			};
+		}
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(credential), credential);
 
 		try {
-			const jwtDecoded = await Jwt.decode(credentialJwt);
+			const jwtDecoded = await Jwt.decode(credential);
 
 			const jwtHeader = jwtDecoded.header;
 			const jwtPayload = jwtDecoded.payload;
@@ -841,7 +872,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				});
 			}
 
-			await Jwt.verifySignature(credentialJwt, await Jwk.toCryptoKey(didMethod.publicKeyJwk));
+			await Jwt.verifySignature(credential, await Jwk.toCryptoKey(didMethod.publicKeyJwk));
 
 			const verifiableCredential = jwtPayload.vc as IDidVerifiableCredentialV1;
 			if (Is.object(verifiableCredential)) {

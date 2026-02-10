@@ -8,6 +8,7 @@ import {
 	DidContexts,
 	DidTypes,
 	ProofTypes,
+	VerifiableCredentialHelper,
 	type DidVerificationMethodType,
 	type IDataIntegrityProof,
 	type IDidService,
@@ -28,6 +29,7 @@ import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnec
 import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig.js";
 
 let testVcJwt: string;
+let testVc: IDidVerifiableCredential;
 let testDocumentId: string;
 let testVerificationMethodId: string;
 let identityConnector: IotaIdentityConnector;
@@ -595,6 +597,7 @@ describe("IotaIdentityConnector", () => {
 			verificationMethod.id,
 			"https://example.edu/credentials/3732",
 			{
+				"@context": ["https://schema.org"],
 				id: did,
 				name: "Jane Doe"
 			},
@@ -609,6 +612,12 @@ describe("IotaIdentityConnector", () => {
 
 		expect(result.verifiableCredential.id).toEqual("https://example.edu/credentials/3732");
 		expect(result.verifiableCredential.type).toContain("VerifiableCredential");
+		expect(result.verifiableCredential.proof).toBeDefined();
+		expect(result.verifiableCredential["@context"]).toEqual([
+			"https://www.w3.org/2018/credentials/v1",
+			"https://schema.org/",
+			"https://w3id.org/security/data-integrity/v2"
+		]);
 
 		// Check credential subject
 		const credentialSubject = result.verifiableCredential.credentialSubject;
@@ -619,10 +628,10 @@ describe("IotaIdentityConnector", () => {
 		}
 
 		expect(result.verifiableCredential.issuer).toEqual(did);
-		expect(result.verifiableCredential.issuanceDate).toBeDefined();
-		expect(new Date(result.verifiableCredential.expirationDate ?? "").getFullYear()).toEqual(
-			new Date().getFullYear() + 1
-		);
+		const issuanceDate = VerifiableCredentialHelper.getValidFrom(result.verifiableCredential);
+		const expirationDate = VerifiableCredentialHelper.getValidUntil(result.verifiableCredential);
+		expect(issuanceDate).toBeDefined();
+		expect(new Date(expirationDate ?? "").getFullYear()).toEqual(new Date().getFullYear() + 1);
 
 		// Check credential status
 		if (result.verifiableCredential.credentialStatus) {
@@ -640,6 +649,7 @@ describe("IotaIdentityConnector", () => {
 
 		// Store the JWT for the next test
 		testVcJwt = result.jwt;
+		testVc = result.verifiableCredential;
 	});
 
 	test("can fail to validate a verifiable credential with no jwt", async () => {
@@ -647,14 +657,42 @@ describe("IotaIdentityConnector", () => {
 			name: "GuardError",
 			message: "guard.stringEmpty",
 			properties: {
-				property: "credentialJwt",
+				property: "credential",
 				value: ""
 			}
 		});
 	});
 
-	test("can validate a verifiable credential", async () => {
+	test("can validate a verifiable credential jwt", async () => {
 		const checkResult = await identityConnector.checkVerifiableCredential(testVcJwt);
+
+		expect(checkResult).toBeDefined();
+		expect(checkResult.revoked).toBeFalsy();
+		expect(checkResult.verifiableCredential).toBeDefined();
+
+		expect(checkResult.verifiableCredential?.id).toEqual("https://example.edu/credentials/3732");
+		expect(checkResult.verifiableCredential?.type).toContain("VerifiableCredential");
+
+		const checkedCredentialSubject = checkResult.verifiableCredential?.credentialSubject;
+
+		expect(checkedCredentialSubject).toBeDefined();
+		if (checkedCredentialSubject && !Array.isArray(checkedCredentialSubject)) {
+			expect(checkedCredentialSubject.name).toEqual("Jane Doe");
+		}
+
+		// Check credential status in the check result
+		if (checkResult.verifiableCredential?.credentialStatus) {
+			const status = Array.isArray(checkResult.verifiableCredential.credentialStatus)
+				? checkResult.verifiableCredential.credentialStatus[0]
+				: checkResult.verifiableCredential.credentialStatus;
+
+			expect(status.type).toEqual("RevocationBitmap2022");
+			expect(status.revocationBitmapIndex).toEqual("123");
+		}
+	});
+
+	test("can validate a verifiable credential document", async () => {
+		const checkResult = await identityConnector.checkVerifiableCredential(testVc);
 
 		expect(checkResult).toBeDefined();
 		expect(checkResult.revoked).toBeFalsy();
@@ -686,7 +724,7 @@ describe("IotaIdentityConnector", () => {
 			name: "GuardError",
 			message: "guard.stringEmpty",
 			properties: {
-				property: "credentialJwt",
+				property: "credential",
 				value: ""
 			}
 		});

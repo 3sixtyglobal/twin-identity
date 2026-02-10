@@ -6,6 +6,7 @@ import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 import { DocumentHelper } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
+import { SchemaOrgDataTypes } from "@twin.org/standards-schema-org";
 import {
 	EntityStorageVaultConnector,
 	type VaultKey,
@@ -26,6 +27,7 @@ describe("Vault Key Naming Contract", () => {
 	beforeEach(() => {
 		initSchemaVault();
 		initSchemaIdentity();
+		SchemaOrgDataTypes.registerRedirects();
 
 		const didDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
 			entitySchema: nameof<IdentityDocument>()
@@ -96,6 +98,8 @@ describe("Vault Key Naming Contract", () => {
 				verificationMethod.id,
 				"https://example.com/credentials/test",
 				{
+					"@context": "https://schema.org",
+					"@type": "Person",
 					id: document.id,
 					name: "Test Subject"
 				} as IJsonLdNodeObject
@@ -123,6 +127,8 @@ describe("Vault Key Naming Contract", () => {
 			verificationMethod.id,
 			"https://example.com/credentials/test",
 			{
+				"@context": "https://schema.org",
+				"@type": "Person",
 				id: document.id,
 				name: "Test Subject"
 			} as IJsonLdNodeObject
@@ -151,10 +157,10 @@ describe("Vault Key Naming Contract", () => {
 			verificationMethod.id,
 			"DataIntegrityProof",
 			{
-				"@context": ["https://www.w3.org/2018/credentials/v1"],
-				id: "test-document",
-				type: ["TestDocument"],
-				name: "Test"
+				"@context": "https://schema.org",
+				"@type": "Person",
+				id: document.id,
+				name: "Test Subject"
 			} as IJsonLdNodeObject
 		);
 

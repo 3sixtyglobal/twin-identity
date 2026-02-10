@@ -945,6 +945,17 @@
 						"example": "eyJraWQiOi...D1Z3AQ"
 					}
 				],
+				"requestBody": {
+					"description": "Request to verify a verifiable credential.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/IdentityVerifiableCredentialVerifyRequest"
+							}
+						}
+					}
+				},
 				"responses": {
 					"200": {
 						"description": "Response to verifying a verifiable credential.",
@@ -1556,7 +1567,7 @@
 									"identityProofCreateResponseExample": {
 										"value": {
 											"@context": [
-												"https://www.w3.org/ns/credentials/v2",
+												"https://w3id.org/security/data-integrity/v2",
 												"https://www.w3.org/ns/credentials/examples/v2"
 											],
 											"type": "DataIntegrityProof",
@@ -1669,7 +1680,7 @@
 											}
 										},
 										"proof": {
-											"@context": "https://www.w3.org/ns/credentials/v2",
+											"@context": "https://w3id.org/security/data-integrity/v2",
 											"type": "DataIntegrityProof",
 											"cryptosuite": "eddsa-jcs-2022",
 											"created": "2025-01-24T11:32:13.106Z",
@@ -2792,6 +2803,19 @@
 				],
 				"additionalProperties": false,
 				"description": "The response payload."
+			},
+			"IdentityVerifiableCredentialVerifyRequest": {
+				"type": "object",
+				"properties": {
+					"credential": {
+						"$ref": "https://schema.twindev.org/w3c-did/DidVerifiableCredential"
+					}
+				},
+				"required": [
+					"credential"
+				],
+				"additionalProperties": false,
+				"description": "The body parameters."
 			},
 			"IdentityVerifiableCredentialVerifyResponse": {
 				"type": "object",

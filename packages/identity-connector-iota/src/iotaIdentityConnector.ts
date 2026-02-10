@@ -44,6 +44,7 @@ import type {
 	TransactionOutput
 } from "@iota/iota-interaction-ts/node/transaction_internal.js";
 import {
+	ArrayHelper,
 	BaseError,
 	Converter,
 	GeneralError,
@@ -55,19 +56,24 @@ import {
 	Url,
 	Urn
 } from "@twin.org/core";
-import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
+import {
+	JsonLdHelper,
+	JsonLdProcessor,
+	type IJsonLdContextDefinitionRoot,
+	type IJsonLdNodeObject
+} from "@twin.org/data-json-ld";
 import { Iota } from "@twin.org/dlt-iota";
 import { Did, DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
 	DidVerificationMethodType,
+	type IDidVerifiableCredential,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
 	type IDidDocumentVerificationMethod,
 	type IDidService,
-	type IDidVerifiableCredentialV1,
-	type IDidVerifiablePresentationV1,
+	type IDidVerifiablePresentation,
 	type IProof
 } from "@twin.org/standards-w3c-did";
 import { VaultConnectorFactory, VaultKeyType, type IVaultConnector } from "@twin.org/vault-models";
@@ -585,7 +591,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			expirationDate?: Date;
 		}
 	): Promise<{
-		verifiableCredential: IDidVerifiableCredentialV1;
+		verifiableCredential: IDidVerifiableCredential;
 		jwt: string;
 	}> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
@@ -711,8 +717,27 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				FailFast.FirstError
 			);
 
+			const vc = decoded.credential().toJSON() as IDidVerifiableCredential;
+
+			vc.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(vc)
+			);
+
+			// As we are adding the proof to the data we update the JSON-LD context
+			const proofContext = vc.proof["@context"];
+			if (!Is.empty(proofContext)) {
+				vc["@context"] = JsonLdProcessor.combineContexts(
+					vc["@context"],
+					proofContext
+				) as IDidVerifiableCredential["@context"];
+				delete vc.proof["@context"];
+			}
+
 			return {
-				verifiableCredential: decoded.credential().toJSON() as IDidVerifiableCredentialV1,
+				verifiableCredential: vc,
 				jwt: credentialJwt.toString()
 			};
 		} catch (error) {
@@ -724,21 +749,42 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	public async checkVerifiableCredential(credentialJwt: string): Promise<{
+	public async checkVerifiableCredential(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
-		verifiableCredential?: IDidVerifiableCredentialV1;
+		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(credentialJwt), credentialJwt);
+		if (Is.object(credential)) {
+			Guards.objectValue<IDidVerifiableCredential>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(credential),
+				credential
+			);
+			Guards.objectValue<IDidVerifiableCredential>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(credential.proof),
+				credential.proof
+			);
+			const { proof, ...doc } = credential;
+			await this.verifyProof(
+				JsonLdHelper.toNodeObject(doc),
+				ArrayHelper.fromObjectOrArray(proof)[0]
+			);
+			return {
+				revoked: false,
+				verifiableCredential: doc
+			};
+		}
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(credential), credential);
 
 		try {
 			const iotaClient = Iota.createClient(this._config);
 			// @ts-expect-error IotaClient has a mismatch with the library types
 			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
 			const resolver = new Resolver({ client: identityClientReadOnly });
-			const jwt = new Jwt(credentialJwt);
+			const jwt = new Jwt(credential);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
 			const issuerDocument = await resolver.resolve(issuerDocumentId.toString());
 
@@ -757,11 +803,11 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				new JwtCredentialValidationOptions(),
 				FailFast.FirstError
 			);
-			const credential = decoded.credential();
+			const decodedCredential = decoded.credential();
 
 			return {
 				revoked: false,
-				verifiableCredential: credential.toJSON() as IDidVerifiableCredentialV1
+				verifiableCredential: decodedCredential.toJSON() as IDidVerifiableCredential
 			};
 		} catch (error) {
 			if (BaseError.isErrorMessage(error, /revoked/i)) {
@@ -943,10 +989,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		presentationId: string | undefined,
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
-		verifiableCredentials: (string | IDidVerifiableCredentialV1)[],
+		verifiableCredentials: (string | IDidVerifiableCredential)[],
 		options?: { expirationDate?: Date }
 	): Promise<{
-		verifiablePresentation: IDidVerifiablePresentationV1;
+		verifiablePresentation: IDidVerifiablePresentation;
 		jwt: string;
 	}> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
@@ -1083,7 +1129,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			);
 
 			return {
-				verifiablePresentation: decoded.presentation().toJSON() as IDidVerifiablePresentationV1,
+				verifiablePresentation: decoded.presentation().toJSON() as IDidVerifiablePresentation,
 				jwt: presentationJwt.toString()
 			};
 		} catch (error) {
@@ -1103,7 +1149,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	public async checkVerifiablePresentation(presentationJwt: string): Promise<{
 		revoked: boolean;
-		verifiablePresentation?: IDidVerifiablePresentationV1;
+		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(presentationJwt), presentationJwt);
@@ -1179,7 +1225,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			return {
 				revoked: false,
-				verifiablePresentation: presentation.toJSON() as IDidVerifiablePresentationV1,
+				verifiablePresentation: presentation.toJSON() as IDidVerifiablePresentation,
 				issuers: jsonIssuers as IDidDocument[]
 			};
 		} catch (error) {

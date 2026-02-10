@@ -317,16 +317,45 @@ export class IdentityService implements IIdentityComponent {
 
 	/**
 	 * Verify a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	public async verifiableCredentialVerify(credentialJwt: string): Promise<{
+	public async verifiableCredentialVerify(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(IdentityService.CLASS_NAME, nameof(credentialJwt), credentialJwt);
+		if (Is.object(credential)) {
+			Guards.objectValue<IDidVerifiableCredential>(
+				IdentityService.CLASS_NAME,
+				nameof(credential),
+				credential
+			);
+			Guards.stringValue(IdentityService.CLASS_NAME, nameof(credential.issuer), credential.issuer);
+			Guards.objectValue<IDidVerifiableCredential>(
+				IdentityService.CLASS_NAME,
+				nameof(credential.proof),
+				credential.proof
+			);
 
-		const jwtDecoded = await Jwt.decode(credentialJwt);
+			try {
+				const identityConnector = this.getConnectorByUri(credential.issuer);
+
+				const service = await identityConnector.checkVerifiableCredential(credential);
+
+				return service;
+			} catch (error) {
+				throw new GeneralError(
+					IdentityService.CLASS_NAME,
+					"verifiableCredentialVerifyFailed",
+					undefined,
+					error
+				);
+			}
+		}
+
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(credential), credential);
+
+		const jwtDecoded = await Jwt.decode(credential);
 
 		const jwtHeader = jwtDecoded.header;
 		const jwtPayload = jwtDecoded.payload;
@@ -344,7 +373,7 @@ export class IdentityService implements IIdentityComponent {
 		try {
 			const identityConnector = this.getConnectorByUri(jwtPayload.iss);
 
-			const service = await identityConnector.checkVerifiableCredential(credentialJwt);
+			const service = await identityConnector.checkVerifiableCredential(credential);
 
 			return service;
 		} catch (error) {
