@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.3-next.14](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.13...identity-cli-v0.0.3-next.14) (2026-02-10)
+
+
+### Miscellaneous Chores
+
+* **identity-cli:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.13 to 0.0.3-next.14
+    * @twin.org/identity-connector-iota bumped from 0.0.3-next.13 to 0.0.3-next.14
+
 ## [0.0.3-next.13](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.12...identity-cli-v0.0.3-next.13) (2026-01-21)
 
 

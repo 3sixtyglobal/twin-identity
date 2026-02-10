@@ -1,5 +1,12 @@
 # @twin.org/identity-service-models - Changelog
 
+## [0.0.3-next.14](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.13...identity-models-v0.0.3-next.14) (2026-02-10)
+
+
+### Features
+
+* add proof to vcs and verify vs documents ([#103](https://github.com/twinfoundation/identity/issues/103)) ([b60bf0c](https://github.com/twinfoundation/identity/commit/b60bf0cb7d453d67574c5c0e4f769e67cf7cd6d1))
+
 ## [0.0.3-next.13](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.12...identity-models-v0.0.3-next.13) (2026-01-21)
 
 
