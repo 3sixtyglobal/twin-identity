@@ -1,5 +1,20 @@
 # @twin.org/identity-cli - Changelog
 
+## [0.0.3-next.15](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.14...identity-cli-v0.0.3-next.15) (2026-02-12)
+
+
+### Bug Fixes
+
+* correct vault usage in cli commands ([#106](https://github.com/twinfoundation/identity/issues/106)) ([d81671d](https://github.com/twinfoundation/identity/commit/d81671d994390c9db7ded82e5f42b4bc521603fc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.14 to 0.0.3-next.15
+    * @twin.org/identity-connector-iota bumped from 0.0.3-next.14 to 0.0.3-next.15
+
 ## [0.0.3-next.14](https://github.com/twinfoundation/identity/compare/identity-cli-v0.0.3-next.13...identity-cli-v0.0.3-next.14) (2026-02-10)
 
 
