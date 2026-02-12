@@ -8,6 +8,7 @@ import {
 	type CliOutputOptions
 } from "@twin.org/cli-core";
 import { Converter, I18n, Is, StringHelper, Urn } from "@twin.org/core";
+import { DocumentHelper } from "@twin.org/identity-models";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
@@ -142,10 +143,10 @@ export async function actionCommandServiceAdd(
 	setupVault();
 
 	const vaultSeedId = "local-seed";
-	const localIdentity = "local";
+	const vmParts = DocumentHelper.parseId(did);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
-	await vaultConnector.setSecret(`${localIdentity}/${vaultSeedId}`, Converter.bytesToBase64(seed));
+	await vaultConnector.setSecret(`${vmParts.id}/${vaultSeedId}`, Converter.bytesToBase64(seed));
 
 	const walletConnector = setupWalletConnector(
 		{ nodeEndpoint, vaultSeedId, network },
@@ -163,7 +164,7 @@ export async function actionCommandServiceAdd(
 
 	CLIDisplay.spinnerStart();
 
-	const service = await identityConnector.addService(localIdentity, did, id, type, endpoint);
+	const service = await identityConnector.addService(vmParts.id, did, id, type, endpoint);
 
 	CLIDisplay.spinnerStop();
 

@@ -112,10 +112,10 @@ export async function actionCommandServiceRemove(opts: {
 	setupVault();
 
 	const vaultSeedId = "local-seed";
-	const localIdentity = "local";
+	const vmParts = DocumentHelper.parseId(id);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
-	await vaultConnector.setSecret(`${localIdentity}/${vaultSeedId}`, Converter.bytesToBase64(seed));
+	await vaultConnector.setSecret(`${vmParts.id}/${vaultSeedId}`, Converter.bytesToBase64(seed));
 
 	const walletConnector = setupWalletConnector(
 		{ nodeEndpoint, vaultSeedId, network },
@@ -133,7 +133,7 @@ export async function actionCommandServiceRemove(opts: {
 
 	CLIDisplay.spinnerStart();
 
-	await identityConnector.removeService(localIdentity, id);
+	await identityConnector.removeService(vmParts.id, id);
 
 	CLIDisplay.spinnerStop();
 

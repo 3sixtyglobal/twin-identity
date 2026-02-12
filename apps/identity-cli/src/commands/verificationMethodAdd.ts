@@ -155,10 +155,11 @@ export async function actionCommandVerificationMethodAdd(
 	setupVault();
 
 	const vaultSeedId = "local-seed";
-	const localIdentity = "local";
+
+	const vmParts = DocumentHelper.parseId(did);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
-	await vaultConnector.setSecret(`${localIdentity}/${vaultSeedId}`, Converter.bytesToBase64(seed));
+	await vaultConnector.setSecret(`${vmParts.id}/${vaultSeedId}`, Converter.bytesToBase64(seed));
 
 	const walletConnector = setupWalletConnector(
 		{ nodeEndpoint, vaultSeedId, network },
@@ -179,7 +180,7 @@ export async function actionCommandVerificationMethodAdd(
 	CLIDisplay.spinnerStart();
 
 	const verificationMethod = await identityConnector.addVerificationMethod(
-		localIdentity,
+		vmParts.id,
 		did,
 		type,
 		opts?.id
@@ -189,7 +190,7 @@ export async function actionCommandVerificationMethodAdd(
 
 	const keyParts = DocumentHelper.parseId(verificationMethod.id);
 
-	const keyPair = await vaultConnector.getKey(`${localIdentity}/${keyParts.fragment}`);
+	const keyPair = await vaultConnector.getKey(`${vmParts.id}/${keyParts.fragment}`);
 	const privateKeyBase64Url = Converter.bytesToBase64Url(keyPair.privateKey);
 	const publicKeyBase64Url = Is.uint8Array(keyPair.publicKey)
 		? Converter.bytesToBase64Url(keyPair.publicKey)
