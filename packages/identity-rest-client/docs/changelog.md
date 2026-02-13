@@ -1,5 +1,19 @@
 # @twin.org/identity-rest-client - Changelog
 
+## [0.0.3-next.16](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.15...identity-rest-client-v0.0.3-next.16) (2026-02-13)
+
+
+### Features
+
+* separate vc verification routes with query and body ([ea7d891](https://github.com/twinfoundation/identity/commit/ea7d8910472150cf76dbd51e282625e70226d9b3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.15 to 0.0.3-next.16
+
 ## [0.0.3-next.15](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.14...identity-rest-client-v0.0.3-next.15) (2026-02-12)
 
 
