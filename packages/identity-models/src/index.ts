@@ -18,6 +18,7 @@ export * from "./models/api/identity/IIdentityVerifiableCredentialCreateRequest.
 export * from "./models/api/identity/IIdentityVerifiableCredentialCreateResponse.js";
 export * from "./models/api/identity/IIdentityVerifiableCredentialRevokeRequest.js";
 export * from "./models/api/identity/IIdentityVerifiableCredentialUnrevokeRequest.js";
+export * from "./models/api/identity/IIdentityVerifiableCredentialVerifyDocumentRequest.js";
 export * from "./models/api/identity/IIdentityVerifiableCredentialVerifyRequest.js";
 export * from "./models/api/identity/IIdentityVerifiableCredentialVerifyResponse.js";
 export * from "./models/api/identity/IIdentityVerifiablePresentationCreateRequest.js";

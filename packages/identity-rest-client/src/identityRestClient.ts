@@ -6,6 +6,7 @@ import { Guards, Is } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
+	type IIdentityVerifiableCredentialVerifyDocumentRequest,
 	type IIdentityComponent,
 	type IIdentityCreateRequest,
 	type IIdentityCreateResponse,
@@ -305,23 +306,25 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		let request: IIdentityVerifiableCredentialVerifyRequest;
 		if (Is.object(credential)) {
 			Guards.object<IDidVerifiableCredential>(
 				IdentityRestClient.CLASS_NAME,
 				nameof(credential),
 				credential
 			);
-			request = { body: { credential } };
-		} else {
-			Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(credential), credential);
-			request = { query: { jwt: credential } };
+			const response = await this.fetch<
+				IIdentityVerifiableCredentialVerifyDocumentRequest,
+				IIdentityVerifiableCredentialVerifyResponse
+			>("/verifiable-credential/verify/document", "POST", { body: credential });
+
+			return response.body;
 		}
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(credential), credential);
 
 		const response = await this.fetch<
 			IIdentityVerifiableCredentialVerifyRequest,
 			IIdentityVerifiableCredentialVerifyResponse
-		>("/verifiable-credential/verify", "POST", request);
+		>("/verifiable-credential/verify", "GET", { query: { jwt: credential } });
 
 		return response.body;
 	}

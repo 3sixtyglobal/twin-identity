@@ -7,7 +7,7 @@ import type {
 	ITag
 } from "@twin.org/api-models";
 import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
-import { Coerce, ComponentFactory, Guards, Is } from "@twin.org/core";
+import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import {
 	DocumentHelper,
 	type IIdentityComponent,
@@ -26,6 +26,7 @@ import {
 	type IIdentityVerifiableCredentialRevokeRequest,
 	type IIdentityVerifiableCredentialUnrevokeRequest,
 	type IIdentityVerifiableCredentialVerifyRequest,
+	type IIdentityVerifiableCredentialVerifyDocumentRequest,
 	type IIdentityVerifiableCredentialVerifyResponse,
 	type IIdentityVerifiablePresentationCreateRequest,
 	type IIdentityVerifiablePresentationCreateResponse,
@@ -449,6 +450,79 @@ export function generateRestRoutesIdentity(
 		skipAuth: true
 	};
 
+	const identityVerifiableCredentialVerifyDocumentRoute: IRestRoute<
+		IIdentityVerifiableCredentialVerifyDocumentRequest,
+		IIdentityVerifiableCredentialVerifyResponse
+	> = {
+		operationId: "identityVerifiableCredentialVerifyDocument",
+		summary: "Verify an identity verifiable credential document",
+		tag: tagsIdentity[0].name,
+		method: "POST",
+		path: `${baseRouteName}/verifiable-credential/verify/document`,
+		handler: async (httpRequestContext, request) =>
+			identityVerifiableCredentialVerifyDocument(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityVerifiableCredentialVerifyDocumentRequest>(),
+			examples: [
+				{
+					id: "identityVerifiableCredentialVerifyDocumentRequestExample",
+					request: {
+						body: {
+							"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+							id: "https://example.com/credentials/3732",
+							type: ["VerifiableCredential", "Person"],
+							credentialSubject: {
+								id: "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+								name: "Jane Doe"
+							},
+							issuer:
+								"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+							issuanceDate: "2025-01-24T09:21:51.500Z",
+							credentialStatus: {
+								id: "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+								type: "BitstringStatusList",
+								revocationBitmapIndex: "5"
+							}
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<IIdentityVerifiableCredentialVerifyResponse>(),
+				examples: [
+					{
+						id: "identityVerifiableCredentialVerifyResponseExample",
+						response: {
+							body: {
+								revoked: false,
+								verifiableCredential: {
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+									id: "https://example.com/credentials/3732",
+									type: ["VerifiableCredential", "Person"],
+									credentialSubject: {
+										id: "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+										name: "Jane Doe"
+									},
+									issuer:
+										"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+									issuanceDate: "2025-01-24T09:21:51.500Z",
+									credentialStatus: {
+										id: "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+										type: "BitstringStatusList",
+										revocationBitmapIndex: "5"
+									}
+								}
+							}
+						}
+					}
+				]
+			}
+		],
+		skipAuth: true
+	};
+
 	const identityVerifiableCredentialRevokeRoute: IRestRoute<
 		IIdentityVerifiableCredentialRevokeRequest,
 		INoContentResponse
@@ -785,6 +859,7 @@ export function generateRestRoutesIdentity(
 		identityServiceCreateRoute,
 		identityServiceRemoveRoute,
 		identityVerifiableCredentialCreateRoute,
+		identityVerifiableCredentialVerifyDocumentRoute,
 		identityVerifiableCredentialVerifyRoute,
 		identityVerifiableCredentialRevokeRoute,
 		identityVerifiableCredentialUnrevokeRoute,
@@ -1094,38 +1169,55 @@ export async function identityVerifiableCredentialVerify(
 	componentName: string,
 	request: IIdentityVerifiableCredentialVerifyRequest
 ): Promise<IIdentityVerifiableCredentialVerifyResponse> {
-	Guards.object<IIdentityVerifiableCredentialVerifyRequest>(
+	Guards.object<IIdentityVerifiableCredentialVerifyDocumentRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
 		request
 	);
 
-	let credential: string | IDidVerifiableCredential;
-	if (Is.object(request.query)) {
-		Guards.object<IIdentityVerifiableCredentialVerifyRequest["query"]>(
-			ROUTES_SOURCE,
-			nameof(request.query),
-			request.query
-		);
-		Guards.stringValue(ROUTES_SOURCE, nameof(request.query.jwt), request.query.jwt);
-		credential = request.query.jwt;
-	} else {
-		Guards.object<IIdentityVerifiableCredentialVerifyRequest["body"]>(
-			ROUTES_SOURCE,
-			nameof(request.body),
-			request.body
-		);
-		Guards.object<IDidVerifiableCredential>(
-			ROUTES_SOURCE,
-			nameof(request.body?.credential),
-			request.body?.credential
-		);
-		credential = request.body?.credential;
-	}
+	Guards.object<IIdentityVerifiableCredentialVerifyRequest["query"]>(
+		ROUTES_SOURCE,
+		nameof(request.query),
+		request.query
+	);
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
-	const result = await component.verifiableCredentialVerify(credential);
+	const result = await component.verifiableCredentialVerify(request.query?.jwt);
+
+	return {
+		body: result
+	};
+}
+
+/**
+ * Verify a verifiable credential document.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityVerifiableCredentialVerifyDocument(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityVerifiableCredentialVerifyDocumentRequest
+): Promise<IIdentityVerifiableCredentialVerifyResponse> {
+	Guards.object<IIdentityVerifiableCredentialVerifyDocumentRequest>(
+		ROUTES_SOURCE,
+		nameof(request),
+		request
+	);
+
+	Guards.object<IIdentityVerifiableCredentialVerifyDocumentRequest["body"]>(
+		ROUTES_SOURCE,
+		nameof(request.body),
+		request.body
+	);
+	Guards.object<IDidVerifiableCredential>(ROUTES_SOURCE, nameof(request.body), request.body);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	const result = await component.verifiableCredentialVerify(request.body);
 
 	return {
 		body: result

@@ -41,6 +41,7 @@
 - [identityServiceRemove](functions/identityServiceRemove.md)
 - [identityVerifiableCredentialCreate](functions/identityVerifiableCredentialCreate.md)
 - [identityVerifiableCredentialVerify](functions/identityVerifiableCredentialVerify.md)
+- [identityVerifiableCredentialVerifyDocument](functions/identityVerifiableCredentialVerifyDocument.md)
 - [identityVerifiableCredentialRevoke](functions/identityVerifiableCredentialRevoke.md)
 - [identityVerifiableCredentialUnrevoke](functions/identityVerifiableCredentialUnrevoke.md)
 - [identityVerifiablePresentationCreate](functions/identityVerifiablePresentationCreate.md)
