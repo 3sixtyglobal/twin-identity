@@ -1,5 +1,19 @@
 # @twin.org/identity-rest-client - Changelog
 
+## [0.0.3-next.17](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.16...identity-rest-client-v0.0.3-next.17) (2026-02-24)
+
+
+### Miscellaneous Chores
+
+* **identity-rest-client:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.16 to 0.0.3-next.17
+
 ## [0.0.3-next.16](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.15...identity-rest-client-v0.0.3-next.16) (2026-02-13)
 
 

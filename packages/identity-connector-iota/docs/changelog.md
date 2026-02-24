@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-iota - Changelog
 
+## [0.0.3-next.17](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.3-next.16...identity-connector-iota-v0.0.3-next.17) (2026-02-24)
+
+
+### Features
+
+* implement async proof signing with vault security ([#110](https://github.com/twinfoundation/identity/issues/110)) ([9651c24](https://github.com/twinfoundation/identity/commit/9651c2492d63eca6545735f5638d3191e25bd185))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.16 to 0.0.3-next.17
+
 ## [0.0.3-next.16](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.3-next.15...identity-connector-iota-v0.0.3-next.16) (2026-02-13)
 
 
