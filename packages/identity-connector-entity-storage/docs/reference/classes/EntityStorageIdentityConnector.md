@@ -569,6 +569,8 @@ The presentation stored in the jwt and the revocation status.
 > **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
 
 Create a proof for arbitrary data with the specified verification method.
+This method uses async signing to ensure the private key never leaves the vault,
+with algorithm validation to ensure key type compatibility.
 
 #### Parameters
 
@@ -601,6 +603,14 @@ The unsecure document to create the proof for.
 `Promise`\<`IProof`\>
 
 The proof.
+
+#### Throws
+
+NotFoundError if the identity or method is not found.
+
+#### Throws
+
+GeneralError if algorithm doesn't match key type or proof creation fails.
 
 #### Implementation of
 

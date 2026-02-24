@@ -33,6 +33,7 @@ import {
 	DidTypes,
 	DidVerificationMethodType,
 	type IDidVerifiableCredential,
+	JwsAlgorithms,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
@@ -689,9 +690,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			const verifiableCredential: IDidVerifiableCredentialV1 = {
-				"@context": JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) as [
-					typeof DidContexts.ContextVCv1
-				],
+				"@context": (JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) ??
+					DidContexts.ContextVCv1) as [typeof DidContexts.ContextVCv1],
 				id,
 				type: finalTypes,
 				credentialSubject: subjectClone,
@@ -715,7 +715,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const jwtHeader: IJwtHeader = {
 				kid: verificationDidMethod.id,
 				typ: "JWT",
-				alg: "EdDSA"
+				alg: JwsAlgorithms.EdDSA
 			};
 
 			const jwtVc = ObjectHelper.pick(ObjectHelper.clone(verifiableCredential), [
@@ -737,10 +737,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			// As we are adding the receipt to the data we update the JSON-LD context
 			const proofContext = verifiableCredential.proof["@context"];
 			if (!Is.empty(proofContext)) {
-				verifiableCredential["@context"] = JsonLdProcessor.combineContexts(
+				verifiableCredential["@context"] = (JsonLdProcessor.combineContexts(
 					verifiableCredential["@context"],
 					proofContext
-				) as IDidVerifiableCredentialV1["@context"];
+				) ?? verifiableCredential["@context"]) as IDidVerifiableCredentialV1["@context"];
 				delete verifiableCredential.proof["@context"];
 			}
 
@@ -1185,10 +1185,12 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				finalTypes.push(types);
 			}
 
+			const combinedContext =
+				JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, contexts) ??
+				DidContexts.ContextVCv1;
+
 			const verifiablePresentation: IDidVerifiablePresentationV1 = {
-				"@context": JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, contexts) as [
-					typeof DidContexts.ContextVCv1
-				],
+				"@context": combinedContext as [typeof DidContexts.ContextVCv1],
 				id: presentationId,
 				type: finalTypes,
 				verifiableCredential: verifiableCredentials,
@@ -1198,7 +1200,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const jwtHeader: IJwtHeader = {
 				kid: didMethod.id,
 				typ: "JWT",
-				alg: "EdDSA"
+				alg: JwsAlgorithms.EdDSA
 			};
 
 			const jwtVp = ObjectHelper.pick(ObjectHelper.clone(verifiablePresentation), [
@@ -1208,7 +1210,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			]);
 
 			const jwtPayload: IJwtPayload = {
-				iss: idParts.id,
+				iss: verifiablePresentation.holder,
 				nbf: Math.floor(Date.now() / 1000),
 				vp: jwtVp
 			};
@@ -1376,11 +1378,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a proof for arbitrary data with the specified verification method.
+	 * This method uses async signing to ensure the private key never leaves the vault,
+	 * with algorithm validation to ensure key type compatibility.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
 	 * @returns The proof.
+	 * @throws NotFoundError if the identity or method is not found.
+	 * @throws GeneralError if algorithm doesn't match key type or proof creation fails.
 	 */
 	public async createProof(
 		controller: string,
@@ -1455,13 +1461,21 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				didDocument.id,
 				idParts.fragment ?? ""
 			);
-			const key = await this._vaultConnector.getKey(vaultKey);
+			const keyType = await this._vaultConnector.getKeyType(vaultKey);
 
-			const signedProof = await ProofHelper.createProof(
+			if (Is.undefined(keyType)) {
+				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "privateKeyMissing", {
+					keyId: vaultKey
+				});
+			}
+
+			const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
+
+			const signedProof = await ProofHelper.createProofWithSigner(
 				proofType,
 				unsecureDocument,
-				ProofHelper.createUnsignedProof(proofType, verificationMethodId),
-				await Jwk.fromEd25519Private(key.privateKey)
+				unsignedProof,
+				async (data, algorithm) => this.signWithVault(vaultKey, keyType, data, algorithm)
 			);
 
 			return signedProof;
@@ -1550,6 +1564,37 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				error
 			);
 		}
+	}
+
+	/**
+	 * Signs data using the vault connector with algorithm validation.
+	 * @param vaultKey The vault key identifier.
+	 * @param keyType The type of the key.
+	 * @param data The data to sign.
+	 * @param algorithm The signing algorithm.
+	 * @returns The signature bytes.
+	 * @throws GeneralError if algorithm doesn't match key type.
+	 * @internal
+	 */
+	private async signWithVault(
+		vaultKey: string,
+		keyType: VaultKeyType,
+		data: Uint8Array,
+		algorithm: string
+	): Promise<Uint8Array> {
+		if (algorithm === JwsAlgorithms.EdDSA && keyType !== VaultKeyType.Ed25519) {
+			throw new GeneralError(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				"algorithmKeyTypeMismatch",
+				{
+					algorithm,
+					expectedKeyType: VaultKeyType.Ed25519,
+					actualKeyType: keyType,
+					keyId: vaultKey
+				}
+			);
+		}
+		return this._vaultConnector.sign(vaultKey, data);
 	}
 
 	/**

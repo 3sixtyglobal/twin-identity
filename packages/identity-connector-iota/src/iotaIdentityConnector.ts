@@ -12,31 +12,25 @@ import {
 	JwkMemStore,
 	JwkType,
 	JwsAlgorithm,
-	JwsSignatureOptions,
 	Jwt,
 	JwtCredentialValidationOptions,
 	JwtCredentialValidator,
-	JwtPresentationOptions,
 	JwtPresentationValidationOptions,
 	JwtPresentationValidator,
 	KeyIdMemStore,
-	MethodDigest,
 	MethodScope,
 	OnChainIdentity,
-	Presentation,
 	Resolver,
 	RevocationBitmap,
 	Service,
 	Storage,
 	StorageSigner,
 	SubjectHolderRelationship,
-	Timestamp,
 	VerificationMethod,
 	type ControllerToken,
 	type DIDUrl,
 	type ICredential,
-	type IJwkParams,
-	type IPresentation
+	type IJwkParams
 } from "@iota/identity-wasm/node/index.js";
 import type {
 	Transaction,
@@ -66,8 +60,13 @@ import { Iota } from "@twin.org/dlt-iota";
 import { Did, DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
+	DidContexts,
+	DidTypes,
 	DidVerificationMethodType,
+	JwsAlgorithms,
 	type IDidVerifiableCredential,
+	type IDidVerifiableCredentialV1,
+	type IDidVerifiablePresentationV1,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
@@ -76,14 +75,36 @@ import {
 	type IDidVerifiablePresentation,
 	type IProof
 } from "@twin.org/standards-w3c-did";
-import { VaultConnectorFactory, VaultKeyType, type IVaultConnector } from "@twin.org/vault-models";
-import { Jwk as JwkHelper } from "@twin.org/web";
+import {
+	VaultConnectorFactory,
+	VaultConnectorHelper,
+	VaultKeyType,
+	type IVaultConnector
+} from "@twin.org/vault-models";
+import {
+	Jwk as JwkHelper,
+	Jwt as JwtHelper,
+	type IJwtHeader,
+	type IJwtPayload
+} from "@twin.org/web";
 import { NetworkConstants } from "./constants/networkConstants.js";
 import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig.js";
 import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIdentityConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations on IOTA.
+ *
+ * This connector integrates with the TWIN Vault system to ensure secure
+ * key management. Private keys are stored in the vault and signing operations
+ * are delegated to the vault connector to prevent key exposure.
+ *
+ * Security Implementation:
+ * - Verifiable Credentials: JWT signing delegated to VaultConnectorHelper
+ * - Verifiable Presentations: JWT signing delegated to VaultConnectorHelper
+ * - Data Integrity Proofs: Async signing delegated to vault via signWithVault method
+ *
+ * @see VaultConnectorHelper for JWT signing implementation
+ * @see signWithVault for Data Integrity Proof signing implementation
  */
 export class IotaIdentityConnector implements IIdentityConnector {
 	/**
@@ -571,6 +592,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a verifiable credential for a verification method.
+	 * The credential is signed using the vault connector to ensure the private key
+	 * never leaves the secure vault environment.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The verification method id to use.
 	 * @param id The id of the credential.
@@ -580,6 +603,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param options.expirationDate The date the verifiable credential is valid until.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
+	 * @throws GeneralError if signature operation fails.
 	 */
 	public async createVerifiableCredential(
 		controller: string,
@@ -636,41 +660,24 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const subjectClone = ObjectHelper.clone(subject);
 
-			const credContext = ObjectHelper.extractProperty(subjectClone, "@context", true);
+			const credContext = ObjectHelper.extractProperty<IJsonLdContextDefinitionRoot>(subjectClone, [
+				"@context"
+			]);
 			const credType = ObjectHelper.extractProperty(subjectClone, ["@type", "type"], false);
 
-			const finalTypes = [];
+			const finalTypes: string[] = [DidTypes.VerifiableCredential];
 			if (Is.stringValue(credType)) {
 				finalTypes.push(credType);
 			}
 
-			const verificationMethodKey = await this._vaultConnector.getKey(
-				this.buildVaultKey(idParts.id, idParts.fragment)
-			);
+			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
+			const keyType = await this._vaultConnector.getKeyType(keyId);
 
-			if (Is.undefined(verificationMethodKey)) {
+			if (Is.undefined(keyType)) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "verificationKeyMissing", {
 					method: verificationMethodId
 				});
 			}
-
-			if (Is.undefined(verificationMethodKey.publicKey)) {
-				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "publicKeyJwkMethodMissing", {
-					method: verificationMethodId
-				});
-			}
-
-			const jwkMemStore = new JwkMemStore();
-
-			const jwkResult = await JwkHelper.fromEd25519Private(verificationMethodKey.privateKey);
-			const jwkParams = jwkResult as IJwkParams;
-
-			const keyId = await jwkMemStore.insert(new Jwk(jwkParams));
-			const keyIdMemStore = new KeyIdMemStore();
-			const methodDigest = new MethodDigest(method);
-			await keyIdMemStore.insertKeyId(methodDigest, keyId);
-
-			const storage = new Storage(jwkMemStore, keyIdMemStore);
 
 			const subjectId = subjectClone.id;
 			if (
@@ -681,37 +688,53 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "invalidSubjectId", { subjectId });
 			}
 
-			const unsignedVc = new Credential({
-				issuer: idParts.id,
-				credentialSubject: subjectClone,
+			// Build the credential structure manually to avoid exposing private key
+			const credentialData: IDidVerifiableCredentialV1 = {
+				"@context": (JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) ??
+					DidContexts.ContextVCv1) as [typeof DidContexts.ContextVCv1],
 				type: finalTypes,
-				id,
-				context: credContext as ICredential["context"],
-				expirationDate: Is.date(options?.expirationDate)
-					? Timestamp.parse(options.expirationDate?.toISOString())
-					: undefined
-			});
+				credentialSubject: subjectClone
+			};
 
 			if (!Is.undefined(options?.revocationIndex)) {
-				Object.assign(unsignedVc, {
-					credentialStatus: {
-						id: `${issuerDocument.id().toString()}#revocation`,
-						type: RevocationBitmap.type(),
-						revocationBitmapIndex: options.revocationIndex.toString()
-					}
-				});
+				credentialData.credentialStatus = {
+					id: `${issuerDocument.id().toString()}#revocation`,
+					type: RevocationBitmap.type(),
+					revocationBitmapIndex: options.revocationIndex.toString()
+				};
 			}
 
-			const credentialJwt = await issuerDocument.createCredentialJwt(
-				storage,
-				`#${idParts.fragment}`,
-				unsignedVc,
-				new JwsSignatureOptions()
+			// Construct JWT header and payload
+			const jwtHeader: IJwtHeader = {
+				kid: verificationMethodId,
+				typ: "JWT",
+				alg: JwsAlgorithms.EdDSA
+			};
+
+			const jwtPayload: IJwtPayload = {
+				iss: idParts.id,
+				nbf: Math.floor(Date.now() / 1000),
+				jti: id,
+				sub: Is.stringValue(subjectId) ? subjectId : undefined,
+				vc: credentialData
+			};
+
+			if (Is.date(options?.expirationDate)) {
+				jwtPayload.exp = Math.floor(options.expirationDate.getTime() / 1000);
+			}
+
+			// Sign using vault connector - private key never leaves the vault
+			const credentialJwt = await JwtHelper.encodeWithSigner(
+				jwtHeader,
+				jwtPayload,
+				async (header, payload) =>
+					VaultConnectorHelper.jwtSigner(this._vaultConnector, keyId, header, payload)
 			);
 
+			// Validate the credential JWT
 			const validatedCredential = new JwtCredentialValidator(new EdDSAJwsVerifier());
 			const decoded = validatedCredential.validate(
-				credentialJwt,
+				new Jwt(credentialJwt),
 				issuerDocument,
 				new JwtCredentialValidationOptions(),
 				FailFast.FirstError
@@ -726,19 +749,17 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				JsonLdHelper.toNodeObject(vc)
 			);
 
-			// As we are adding the proof to the data we update the JSON-LD context
+			// Promote the proof's @context to the VC root so JSON-LD processors can resolve DataIntegrity terms (proofValue, cryptosuite, etc.)
 			const proofContext = vc.proof["@context"];
 			if (!Is.empty(proofContext)) {
-				vc["@context"] = JsonLdProcessor.combineContexts(
-					vc["@context"],
-					proofContext
-				) as IDidVerifiableCredential["@context"];
+				vc["@context"] = (JsonLdProcessor.combineContexts(vc["@context"], proofContext) ??
+					vc["@context"]) as IDidVerifiableCredential["@context"];
 				delete vc.proof["@context"];
 			}
 
 			return {
 				verifiableCredential: vc,
-				jwt: credentialJwt.toString()
+				jwt: credentialJwt
 			};
 		} catch (error) {
 			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "createVerifiableCredentialFailed", {
@@ -803,11 +824,11 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				new JwtCredentialValidationOptions(),
 				FailFast.FirstError
 			);
-			const decodedCredential = decoded.credential();
+			const vc = decoded.credential().toJSON() as IDidVerifiableCredential;
 
 			return {
 				revoked: false,
-				verifiableCredential: decodedCredential.toJSON() as IDidVerifiableCredential
+				verifiableCredential: vc
 			};
 		} catch (error) {
 			if (BaseError.isErrorMessage(error, /revoked/i)) {
@@ -972,6 +993,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a verifiable presentation from the supplied verifiable credentials.
+	 * The presentation is signed using the vault connector to ensure the private key
+	 * never leaves the secure vault environment.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The method to associate with the presentation.
 	 * @param presentationId The id of the presentation.
@@ -982,6 +1005,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param options.expirationDate The date the verifiable presentation is valid until.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
+	 * @throws GeneralError if signature operation fails.
 	 */
 	public async createVerifiablePresentation(
 		controller: string,
@@ -1030,13 +1054,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const identityClient = await this.getIdentityClient();
-			const issuerDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
+			const holderDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
-			if (Is.undefined(issuerDocument)) {
+			if (Is.undefined(holderDocument)) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
-			const methods = issuerDocument.methods();
+			const methods = holderDocument.methods();
 			const method = methods.find(m => m.id().toString() === verificationMethodId);
 
 			if (!method) {
@@ -1053,12 +1077,27 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				});
 			}
 
-			const finalTypes = [];
+			const finalTypes: string[] = [DidTypes.VerifiablePresentation];
 			if (Is.array(types)) {
 				finalTypes.push(...types);
 			} else if (Is.stringValue(types)) {
 				finalTypes.push(types);
 			}
+
+			// Build context with base VC context while avoiding duplicates
+			const combinedContext: IJsonLdContextDefinitionRoot =
+				JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, contexts) ??
+				DidContexts.ContextVCv1;
+
+			// Build the complete verifiable presentation first
+			const verifiablePresentation: IDidVerifiablePresentationV1 = {
+				"@context": combinedContext as IDidVerifiablePresentationV1["@context"],
+				id: presentationId,
+				type: finalTypes,
+				verifiableCredential:
+					verifiableCredentials as IDidVerifiablePresentationV1["verifiableCredential"],
+				holder: idParts.id
+			};
 
 			const credentials = [];
 			for (const cred of verifiableCredentials) {
@@ -1069,68 +1108,56 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			const unsignedVp = new Presentation({
-				context: contexts as IPresentation["context"],
-				id: presentationId,
-				verifiableCredential: credentials,
-				type: finalTypes,
-				holder: idParts.id
-			});
+			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
+			const keyType = await this._vaultConnector.getKeyType(keyId);
 
-			const verificationMethodKey = await this._vaultConnector.getKey(
-				this.buildVaultKey(idParts.id, idParts.fragment)
-			);
-
-			if (Is.undefined(verificationMethodKey)) {
+			if (Is.undefined(keyType)) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "verificationKeyMissing", {
 					method: verificationMethodId
 				});
 			}
 
-			const jwkParams = {
-				alg: didMethod.publicKeyJwk.alg,
-				kty: didMethod.publicKeyJwk.kty as JwkType,
-				crv: didMethod.publicKeyJwk.crv,
-				x: didMethod.publicKeyJwk.x,
-				d: Converter.bytesToBase64Url(verificationMethodKey.privateKey)
-			} as IJwkParams;
+			// Construct JWT header and payload
+			const jwtHeader: IJwtHeader = {
+				kid: verificationMethodId,
+				typ: "JWT",
+				alg: JwsAlgorithms.EdDSA
+			};
 
-			const jwkMemStore = new JwkMemStore();
-			const jwk = new Jwk(jwkParams);
-			const publicKeyJwk = jwk.toPublic();
-			if (!publicKeyJwk) {
-				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "publicKeyJwkMissing", {
-					jwk: jwk.kid()
-				});
+			const jwtVp = ObjectHelper.pick(ObjectHelper.clone(verifiablePresentation), [
+				"@context",
+				"type",
+				"verifiableCredential"
+			]);
+
+			const jwtPayload: IJwtPayload = {
+				iss: verifiablePresentation.holder,
+				nbf: Math.floor(Date.now() / 1000),
+				vp: jwtVp
+			};
+			if (Is.date(options?.expirationDate)) {
+				jwtPayload.exp = Math.floor(options.expirationDate.getTime() / 1000);
 			}
-			const keyId = await jwkMemStore.insert(jwk);
-			const keyIdMemStore = new KeyIdMemStore();
-			const methodDigest = new MethodDigest(method);
 
-			await keyIdMemStore.insertKeyId(methodDigest, keyId);
-
-			const storage = new Storage(jwkMemStore, keyIdMemStore);
-			const presentationJwt = await issuerDocument.createPresentationJwt(
-				storage,
-				`#${method.id().fragment()?.toString()}`,
-				unsignedVp,
-				new JwsSignatureOptions(),
-				new JwtPresentationOptions({
-					expirationDate: Is.date(options?.expirationDate)
-						? Timestamp.parse(options.expirationDate?.toISOString())
-						: undefined
-				})
+			// Sign using vault connector - private key never leaves the vault
+			const presentationJwt = await JwtHelper.encodeWithSigner(
+				jwtHeader,
+				jwtPayload,
+				async (header, payload) =>
+					VaultConnectorHelper.jwtSigner(this._vaultConnector, keyId, header, payload)
 			);
-			const validatedCredential = new JwtPresentationValidator(new EdDSAJwsVerifier());
-			const decoded = validatedCredential.validate(
-				presentationJwt,
-				issuerDocument,
+
+			// Validate the presentation JWT
+			const validatedPresentation = new JwtPresentationValidator(new EdDSAJwsVerifier());
+			validatedPresentation.validate(
+				new Jwt(presentationJwt),
+				holderDocument,
 				new JwtPresentationValidationOptions()
 			);
 
 			return {
-				verifiablePresentation: decoded.presentation().toJSON() as IDidVerifiablePresentation,
-				jwt: presentationJwt.toString()
+				verifiablePresentation,
+				jwt: presentationJwt
 			};
 		} catch (error) {
 			throw new GeneralError(
@@ -1246,11 +1273,18 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a proof for arbitrary data with the specified verification method.
+	 *
+	 * This method uses async signing to ensure the private key never leaves the vault.
+	 * The signing operation is delegated to the vault connector through a callback,
+	 * with algorithm validation to ensure key type compatibility.
+	 *
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
 	 * @returns The proof.
+	 * @throws NotFoundError if the id can not be resolved.
+	 * @throws GeneralError if the proof creation fails or if there is an algorithm/key type mismatch.
 	 */
 	public async createProof(
 		controller: string,
@@ -1303,20 +1337,19 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
-			const verificationMethodKey = await this._vaultConnector.getKey(keyId);
+			const keyType = await this._vaultConnector.getKeyType(keyId);
 
-			if (Is.undefined(verificationMethodKey)) {
+			if (Is.undefined(keyType)) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "privateKeyMissing", { keyId });
 			}
 
 			const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
 
-			const jwk = await JwkHelper.fromEd25519Private(verificationMethodKey.privateKey);
-			const signedProof = await ProofHelper.createProof(
+			const signedProof = await ProofHelper.createProofWithSigner(
 				proofType,
 				unsecureDocument,
 				unsignedProof,
-				jwk
+				async (data, algorithm) => this.signWithVault(keyId, keyType, data, algorithm)
 			);
 			return signedProof;
 		} catch (error) {
@@ -1388,6 +1421,33 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				Iota.extractPayloadError(error)
 			);
 		}
+	}
+
+	/**
+	 * Signs data using the vault connector with algorithm validation.
+	 * @param keyId The vault key identifier.
+	 * @param keyType The type of the key.
+	 * @param data The data to sign.
+	 * @param algorithm The signing algorithm.
+	 * @returns The signature bytes.
+	 * @throws GeneralError if algorithm doesn't match key type.
+	 * @internal
+	 */
+	private async signWithVault(
+		keyId: string,
+		keyType: VaultKeyType,
+		data: Uint8Array,
+		algorithm: string
+	): Promise<Uint8Array> {
+		if (algorithm === JwsAlgorithms.EdDSA && keyType !== VaultKeyType.Ed25519) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "algorithmKeyTypeMismatch", {
+				algorithm,
+				expectedKeyType: VaultKeyType.Ed25519,
+				actualKeyType: keyType,
+				keyId
+			});
+		}
+		return this._vaultConnector.sign(keyId, data);
 	}
 
 	/**

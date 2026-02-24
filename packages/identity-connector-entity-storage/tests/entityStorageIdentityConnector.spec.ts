@@ -908,6 +908,49 @@ describe("EntityStorageIdentityConnector", () => {
 		});
 	});
 
+	test("should use vault signing without exposing private key", async () => {
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
+		await didDocumentEntityStorage.set(testIdentityDocument);
+
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		// eslint-disable-next-line @typescript-eslint/dot-notation
+		const vaultConnector = identityConnector["_vaultConnector"];
+		const getKeyTypeSpy = vi.spyOn(vaultConnector, "getKeyType");
+		const signSpy = vi.spyOn(vaultConnector, "sign");
+
+		const unsecuredDocument = {
+			"@context": [
+				"https://www.w3.org/2018/credentials/v1",
+				"https://www.w3.org/2018/credentials/examples/v1"
+			],
+			type: ["VerifiableCredential", "AlumniCredential"],
+			issuer: testIdentityDocument.id,
+			issuanceDate: "2023-01-01T00:00:00Z",
+			validFrom: "2023-01-01T00:00:00Z",
+			credentialSubject: {
+				id: "did:example:test",
+				description: "Verifies secure vault delegation pattern"
+			}
+		};
+
+		const proof = await identityConnector.createProof(
+			TEST_IDENTITY_ID,
+			testDocumentVerificationMethodId,
+			ProofTypes.DataIntegrityProof,
+			unsecuredDocument
+		);
+
+		expect(getKeyTypeSpy).toHaveBeenCalledTimes(1);
+		expect(signSpy).toHaveBeenCalledTimes(1);
+		expect(proof).toBeDefined();
+		expect(proof.type).toBe("DataIntegrityProof");
+
+		getKeyTypeSpy.mockRestore();
+		signSpy.mockRestore();
+	});
+
 	test("can fail to verify a proof with no document", async () => {
 		const identityConnector = new EntityStorageIdentityConnector();
 		await expect(

@@ -452,9 +452,8 @@ describe.sequential("CLI Commands", () => {
 		const revokedJson = await CLIUtils.readJsonFile<{ isVerified?: boolean; isRevoked?: boolean }>(
 			revokedJsonPath
 		);
-		expect(revokedJson?.isVerified).toEqual(true);
-		// Current validation only checks signature and does not report revocation.
-		expect(revokedJson?.isRevoked).toEqual(false);
+		expect(revokedJson?.isVerified).toEqual(false);
+		expect(revokedJson?.isRevoked).toEqual(true);
 	});
 
 	test("Can execute verifiable-credential-unrevoke", async () => {

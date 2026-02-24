@@ -17,6 +17,7 @@ import {
 	type IProof
 } from "@twin.org/standards-w3c-did";
 import type { VaultSecret } from "@twin.org/vault-connector-entity-storage";
+import { vi } from "vitest";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
@@ -614,10 +615,14 @@ describe("IotaIdentityConnector", () => {
 		expect(result.verifiableCredential.type).toContain("VerifiableCredential");
 		expect(result.verifiableCredential.proof).toBeDefined();
 		expect(result.verifiableCredential["@context"]).toEqual([
-			"https://www.w3.org/2018/credentials/v1",
+			DidContexts.ContextVCv1,
 			"https://schema.org/",
-			"https://w3id.org/security/data-integrity/v2"
+			DidContexts.ContextDataIntegrity
 		]);
+		const proofObj = Array.isArray(result.verifiableCredential.proof)
+			? result.verifiableCredential.proof[0]
+			: result.verifiableCredential.proof;
+		expect((proofObj as IDataIntegrityProof)?.["@context"]).toBeUndefined();
 
 		// Check credential subject
 		const credentialSubject = result.verifiableCredential.credentialSubject;
@@ -929,10 +934,7 @@ describe("IotaIdentityConnector", () => {
 			{ expirationDate: new Date(Date.now() + 14400000) }
 		);
 
-		expect(result.verifiablePresentation["@context"]).toEqual([
-			DidContexts.ContextVCv1,
-			"https://www.w3.org/2018/credentials/v1"
-		]);
+		expect(result.verifiablePresentation["@context"]).toEqual(DidContexts.ContextVCv1);
 		expect(result.verifiablePresentation.type).toEqual([DidTypes.VerifiablePresentation, "Person"]);
 		expect(result.verifiablePresentation.verifiableCredential).toBeDefined();
 		expect((result.verifiablePresentation.verifiableCredential as string[])[0]).toEqual(testVcJwt);
@@ -1181,6 +1183,40 @@ describe("IotaIdentityConnector", () => {
 
 		const isValid = await identityConnector.verifyProof(unsecuredDocument, tamperedProof);
 		expect(isValid).toBeFalsy();
+	});
+
+	it("should use vault signing without exposing private key", async () => {
+		// This test verifies that createProof uses the secure async signing pattern:
+		// - getKeyType() is called once (for key type validation only)
+		// - sign() is called once (privateKey stays in vault)
+		// - Private key is never retrieved or exposed
+		// eslint-disable-next-line @typescript-eslint/dot-notation
+		const vaultConnector = identityConnector["_vaultConnector"];
+		const getKeyTypeSpy = vi.spyOn(vaultConnector, "getKeyType");
+		const signSpy = vi.spyOn(vaultConnector, "sign");
+
+		const testDocument = {
+			"@context": "https://www.w3.org/ns/did/v1",
+			id: "did:example:123456789abcdefghi",
+			name: "Test Document for Vault Security",
+			description: "Verifies secure vault delegation pattern"
+		};
+
+		const proof = await identityConnector.createProof(
+			TEST_IDENTITY_ID,
+			testVerificationMethodId,
+			ProofTypes.DataIntegrityProof,
+			testDocument
+		);
+
+		// Verify secure vault delegation pattern
+		expect(getKeyTypeSpy).toHaveBeenCalledTimes(1);
+		expect(signSpy).toHaveBeenCalledTimes(1);
+		expect(proof).toBeDefined();
+		expect(proof.type).toBe("DataIntegrityProof");
+
+		getKeyTypeSpy.mockRestore();
+		signSpy.mockRestore();
 	});
 
 	test("can handle methods without a controller", async () => {
