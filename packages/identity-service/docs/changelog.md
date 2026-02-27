@@ -1,5 +1,21 @@
 # @twin.org/identity-service - Changelog
 
+## [0.0.3-next.18](https://github.com/twinfoundation/identity/compare/identity-service-v0.0.3-next.17...identity-service-v0.0.3-next.18) (2026-02-27)
+
+
+### Bug Fixes
+
+* allow empty subject data in vc ([5bbf14e](https://github.com/twinfoundation/identity/commit/5bbf14eefd3c99b6cdca1af0ca741954d1b02cd3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.17 to 0.0.3-next.18
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.17 to 0.0.3-next.18
+
 ## [0.0.3-next.17](https://github.com/twinfoundation/identity/compare/identity-service-v0.0.3-next.16...identity-service-v0.0.3-next.17) (2026-02-24)
 
 
