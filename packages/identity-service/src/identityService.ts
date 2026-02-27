@@ -289,7 +289,7 @@ export class IdentityService implements IIdentityComponent {
 	}> {
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 		Urn.guard(IdentityService.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
-		Guards.objectValue(IdentityService.CLASS_NAME, nameof(subject), subject);
+		Guards.object(IdentityService.CLASS_NAME, nameof(subject), subject);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
