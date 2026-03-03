@@ -860,9 +860,11 @@ describe("IotaIdentityConnector", () => {
 
 		// Attempt to unrevoke the credential and expect an error
 		await expect(
-			identityConnector.unrevokeVerifiableCredentials(TEST_IDENTITY_ID, nonExistentDocumentId, [
-				123
-			])
+			identityConnector.unrevokeVerifiableCredentials(
+				TEST_IDENTITY_ID,
+				nonExistentDocumentId,
+				[123]
+			)
 		).rejects.toThrow();
 	});
 

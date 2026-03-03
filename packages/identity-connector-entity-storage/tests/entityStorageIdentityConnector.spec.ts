@@ -600,9 +600,11 @@ describe("EntityStorageIdentityConnector", () => {
 
 		const identityConnector = new EntityStorageIdentityConnector();
 
-		await identityConnector.revokeVerifiableCredentials(TEST_IDENTITY_ID, testIdentityDocument.id, [
-			5
-		]);
+		await identityConnector.revokeVerifiableCredentials(
+			TEST_IDENTITY_ID,
+			testIdentityDocument.id,
+			[5]
+		);
 
 		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
 		const testDocument = testIdentityDocument.document;

@@ -21,9 +21,9 @@ import { nameof } from "@twin.org/nameof";
  * Client for performing identity through to REST endpoints.
  */
 export class IdentityProfileRestClient<
-		T extends IJsonLdDocument = IJsonLdDocument,
-		U extends IJsonLdDocument = IJsonLdDocument
-	>
+	T extends IJsonLdDocument = IJsonLdDocument,
+	U extends IJsonLdDocument = IJsonLdDocument
+>
 	extends BaseRestClient
 	implements IIdentityProfileComponent<T, U>
 {

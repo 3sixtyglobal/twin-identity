@@ -17,8 +17,7 @@ import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdenti
 export class IdentityProfileService<
 	T extends IJsonLdDocument = IJsonLdDocument,
 	U extends IJsonLdDocument = IJsonLdDocument
-> implements IIdentityProfileComponent<T, U>
-{
+> implements IIdentityProfileComponent<T, U> {
 	/**
 	 * Runtime name for the class.
 	 */

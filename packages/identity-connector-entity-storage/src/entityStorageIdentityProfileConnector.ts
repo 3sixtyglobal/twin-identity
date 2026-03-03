@@ -26,8 +26,7 @@ import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from ".
 export class EntityStorageIdentityProfileConnector<
 	T extends IJsonLdDocument = IJsonLdDocument,
 	U extends IJsonLdDocument = IJsonLdDocument
-> implements IIdentityProfileConnector<T, U>
-{
+> implements IIdentityProfileConnector<T, U> {
 	/**
 	 * The namespace supported by the identity profile connector.
 	 */
