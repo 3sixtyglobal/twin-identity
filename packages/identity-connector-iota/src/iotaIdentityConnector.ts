@@ -350,7 +350,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const method = VerificationMethod.newFromJwk(document.id(), jwk, methodId);
 			const methods = document.methods();
-			const existingMethod = methods.find(m => m.id().toString() === method.id().toString());
+			const existingMethod = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === this.stringifyIdentityValue(method.id())
+			);
 
 			if (existingMethod) {
 				document.removeMethod(method.id());
@@ -432,7 +434,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const methods = document.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 			if (!method) {
 				throw new NotFoundError(
 					IotaIdentityConnector.CLASS_NAME,
@@ -509,8 +513,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
+			const documentIdValue = this.stringifyIdentityValue(document.id());
 			const service = new Service({
-				id: `${document.id().toString()}#${serviceId}`,
+				id: `${documentIdValue}#${serviceId}`,
 				type: serviceType,
 				serviceEndpoint
 			});
@@ -560,7 +565,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const services = document.service();
-			const service = services.find(s => s.id().toString() === serviceId);
+			const service = services.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
 
 			if (!service) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "serviceNotFound", serviceId);
@@ -651,7 +656,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const methods = issuerDocument.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 			if (!method) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
 					method: verificationMethodId
@@ -697,8 +704,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			};
 
 			if (!Is.undefined(options?.revocationIndex)) {
+				const issuerDocumentIdValue = this.stringifyIdentityValue(issuerDocument.id());
 				credentialData.credentialStatus = {
-					id: `${issuerDocument.id().toString()}#revocation`,
+					id: `${issuerDocumentIdValue}#revocation`,
 					type: RevocationBitmap.type(),
 					revocationBitmapIndex: options.revocationIndex.toString()
 				};
@@ -807,13 +815,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const resolver = new Resolver({ client: identityClientReadOnly });
 			const jwt = new Jwt(credential);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
-			const issuerDocument = await resolver.resolve(issuerDocumentId.toString());
+			const issuerDid = this.stringifyIdentityValue(issuerDocumentId);
+			const issuerDocument = await resolver.resolve(issuerDid);
 
 			if (Is.undefined(issuerDocument)) {
 				throw new NotFoundError(
 					IotaIdentityConnector.CLASS_NAME,
 					"documentNotFound",
-					issuerDocumentId.toString()
+					issuerDid
 				);
 			}
 
@@ -878,8 +887,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const serviceId = `${document.id().toString()}#revocation`;
-			const revocationService = document.service().find(s => s.id().toString() === serviceId);
+			const serviceId = `${this.stringifyIdentityValue(document.id())}#revocation`;
+			const revocationService = document
+				.service()
+				.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
 
 			if (Is.undefined(revocationService)) {
 				const revocationBitmap = new RevocationBitmap();
@@ -949,8 +960,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const serviceId = `${document.id().toString()}#revocation`;
-			const revocationService = document.service().find(s => s.id().toString() === serviceId);
+			const serviceId = `${this.stringifyIdentityValue(document.id())}#revocation`;
+			const revocationService = document
+				.service()
+				.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
 
 			if (Is.undefined(revocationService)) {
 				throw new NotFoundError(
@@ -1061,7 +1074,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const methods = holderDocument.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 
 			if (!method) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
@@ -1188,13 +1203,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(presentationJwt);
 			const holderId = JwtPresentationValidator.extractHolder(jwt);
-			const holderDocument = await resolver.resolve(holderId.toString());
+			const holderDid = this.stringifyIdentityValue(holderId);
+			const holderDocument = await resolver.resolve(holderDid);
 
 			if (Is.undefined(holderDocument)) {
 				throw new NotFoundError(
 					IotaIdentityConnector.CLASS_NAME,
 					"documentNotFound",
-					holderId.toString()
+					holderDid
 				);
 			}
 
@@ -1208,7 +1224,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const credentialValidator = new JwtCredentialValidator(new EdDSAJwsVerifier());
 			const validationOptions = new JwtCredentialValidationOptions({
-				subjectHolderRelationship: [holderId.toString(), SubjectHolderRelationship.AlwaysSubject]
+				subjectHolderRelationship: [holderDid, SubjectHolderRelationship.AlwaysSubject]
 			});
 
 			const jwtCredentials: Jwt[] = decoded
@@ -1227,7 +1243,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			for (const jwtCredential of jwtCredentials) {
 				const issuer = JwtCredentialValidator.extractIssuerFromJwt(jwtCredential);
-				issuers.push(issuer.toString());
+				issuers.push(this.stringifyIdentityValue(issuer));
 			}
 
 			const resolvedIssuers = await resolver.resolveMultiple(issuers);
@@ -1328,7 +1344,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const methods = document.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 
 			if (!method) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
@@ -1396,7 +1414,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const methods = resolvedDocument.methods();
-			const method = methods.find(m => m.id().toString() === proof.verificationMethod);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === proof.verificationMethod
+			);
 
 			if (!method) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
@@ -1448,6 +1468,16 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			});
 		}
 		return this._vaultConnector.sign(keyId, data);
+	}
+
+	/**
+	 * Stringify identity-wasm values with an explicit toString contract.
+	 * @param value The identity value to stringify.
+	 * @returns The string representation.
+	 * @internal
+	 */
+	private stringifyIdentityValue(value: unknown): string {
+		return (value as { toString: () => string }).toString();
 	}
 
 	/**

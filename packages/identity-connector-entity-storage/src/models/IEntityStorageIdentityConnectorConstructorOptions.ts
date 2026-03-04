@@ -5,5 +5,5 @@ import type { IEntityStorageIdentityResolverConnectorConstructorOptions } from "
 /**
  * Options for the entity storage identity connector constructor.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-interface, max-len
 export interface IEntityStorageIdentityConnectorConstructorOptions extends IEntityStorageIdentityResolverConnectorConstructorOptions {}
