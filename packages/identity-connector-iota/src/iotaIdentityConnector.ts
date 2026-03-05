@@ -819,11 +819,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const issuerDocument = await resolver.resolve(issuerDid);
 
 			if (Is.undefined(issuerDocument)) {
-				throw new NotFoundError(
-					IotaIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					issuerDid
-				);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", issuerDid);
 			}
 
 			const validatedCredential = new JwtCredentialValidator(new EdDSAJwsVerifier());
@@ -1207,11 +1203,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const holderDocument = await resolver.resolve(holderDid);
 
 			if (Is.undefined(holderDocument)) {
-				throw new NotFoundError(
-					IotaIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					holderDid
-				);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", holderDid);
 			}
 
 			const validatedCredential = new JwtPresentationValidator(new EdDSAJwsVerifier());
