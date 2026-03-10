@@ -1,7 +1,7 @@
 {
 	"name": "@twin.org/identity",
 	"version": "0.0.0",
-	"description": "Identity",
+	"description": "Identity packages for decentralised identifiers, credential workflows, and connector integrations across TWIN applications.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/twinfoundation/identity.git"
