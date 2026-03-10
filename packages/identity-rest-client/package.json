@@ -1,7 +1,7 @@
 {
 	"name": "@twin.org/identity-rest-client",
 	"version": "0.0.3-next.18",
-	"description": "Identity contract implementation which can connect to REST endpoints",
+	"description": "Client library for consuming identity REST endpoints through shared request and response contracts.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/twinfoundation/identity.git",

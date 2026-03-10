@@ -1,7 +1,7 @@
 {
 	"name": "@twin.org/identity-connector-universal",
 	"version": "0.0.3-next.18",
-	"description": "Identity connector implementation using universal resolver",
+	"description": "Connector for resolving decentralised identifiers through the Universal Resolver ecosystem.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/twinfoundation/identity.git",

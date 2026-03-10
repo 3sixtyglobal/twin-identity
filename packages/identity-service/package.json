@@ -1,7 +1,7 @@
 {
 	"name": "@twin.org/identity-service",
 	"version": "0.0.3-next.18",
-	"description": "Identity contract implementation and REST endpoint definitions",
+	"description": "Service contracts and REST endpoint definitions for exposing identity workflows through stable interfaces.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/twinfoundation/identity.git",

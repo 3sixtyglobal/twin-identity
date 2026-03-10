@@ -1,6 +1,6 @@
-# TWIN Identity REST Client
+# TWIN Identity
 
-Identity contract implementation which can connect to REST endpoints.
+The identity-rest-client package offers a reusable client interface for consuming identity REST endpoints defined by shared contracts. It simplifies application-side integration with identity services and keeps request and response handling consistent across projects.
 
 ## Installation
 

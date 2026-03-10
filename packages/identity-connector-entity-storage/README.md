@@ -1,6 +1,6 @@
-# TWIN Identity Connector Entity Storage
+# TWIN Identity
 
-Identity connector implementation using entity storage.
+The identity-connector-entity-storage package provides an entity storage backed connector for identity workflows, enabling reliable persistence and retrieval of identity records. It supports implementations that need consistent storage semantics while staying aligned with shared contracts across the ecosystem.
 
 ## Installation
 

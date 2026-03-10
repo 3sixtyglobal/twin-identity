@@ -1,4 +1,6 @@
-# @twin.org/identity-cli - Examples
+# Identity CLI Usage
+
+Use this output to check available commands quickly before running identity workflows from your terminal.
 
 ## Running
 
@@ -15,7 +17,7 @@ or run directly using NPX:
 npx "@twin.org/identity-cli"
 ```
 
-Output
+## Help
 
 ```shell
 🌍 TWIN Identity v1.0.0
@@ -47,13 +49,7 @@ Commands:
   proof-verify [options]                    Verify a proof for some data using a verification method.
 ```
 
-You can get further detail on the sub commands by using the help option for the individual commands.
-
-```shell
-twin-identity identity-create --help
-```
-
-Output
+## identity-create --help
 
 ```shell
 🌍 TWIN Identity v1.0.0
@@ -75,13 +71,19 @@ Options:
   -h, --help                 display help for command
 ```
 
+## Example
+
+```shell
+twin-identity identity-resolve --load-env config.env identity.env --did !DID --json did-document.json
+```
+
 The commands `mnemonic`, `address`, `faucet` and `transfer` are described in more detail in the examples for `crypto-cli` and `wallet-cli`.
 
 ## Command
 
 ### identity-create
 
-Use this command to create a new DID, the wallet address must have sufficient funds to store the identity. The seed and the funds can be generated using the `mnemonic` and `faucet` commands.
+Use this command to create a new DID. The wallet address must have sufficient funds to store the identity. The seed and the funds can be generated using the `mnemonic` and `faucet` commands.
 
 ```shell
 # Generate a seed and mnemonic and store it in the env file
@@ -90,7 +92,7 @@ twin-identity mnemonic --env wallet.env
 twin-identity address --load-env wallet.env --hrp tst --seed !SEED --count 4 --env wallet.env --merge-env
 ```
 
-To run this on the IOTA testnet you will need an env file with the following settings. Store the following config as config.env
+To run this on the IOTA testnet you will need an env file with the following settings. Store the following config as config.env.
 
 ```shell
 NODE_URL="https://api.devnet.iota.cafe"
@@ -111,7 +113,7 @@ twin-identity identity-create --load-env config.env wallet.env --seed !SEED --en
 
 ### identity-resolve
 
-The identity resolve will lookup and identity by DID to check it exists and return the DID document.
+The identity resolve command looks up an identity by DID to check it exists and return the DID document.
 
 ```shell
 twin-identity identity-resolve --load-env config.env identity.env --did !DID --json did-document.json
@@ -119,7 +121,7 @@ twin-identity identity-resolve --load-env config.env identity.env --did !DID --j
 
 ### verification-method-add
 
-This command will add a verification method to a DID document.
+This command adds a verification method to a DID document.
 
 ```shell
 twin-identity verification-method-add --load-env config.env wallet.env identity.env --seed !SEED --did !DID --type verificationMethod --env verification-method.env
@@ -127,7 +129,7 @@ twin-identity verification-method-add --load-env config.env wallet.env identity.
 
 ### verification-method-remove
 
-This command will remove a verification method from a DID document.
+This command removes a verification method from a DID document.
 
 ```shell
 twin-identity verification-method-remove --load-env config.env wallet.env identity.env verification-method.env --seed !SEED  --id !DID_VERIFICATION_METHOD_ID
@@ -135,15 +137,15 @@ twin-identity verification-method-remove --load-env config.env wallet.env identi
 
 ### service-add
 
-This command will add a service to a DID document.
+This command adds a service to a DID document.
 
 ```shell
-twin-identity service-add --load-env config.env wallet.env identity.env --seed !SEED --did !DID --id linked-domain --type LinkedDomains --endpoint https://www.twindev.org --env service.env
+twin-identity service-add --load-env config.env wallet.env identity.env --seed !SEED --did !DID --id linked-domain --type LinkedDomains --endpoint https://example.org --env service.env
 ```
 
 ### service-remove
 
-This command will remove a service from the DID document.
+This command removes a service from the DID document.
 
 ```shell
 twin-identity service-remove --load-env config.env wallet.env identity.env service.env --seed !SEED --did !DID --id !DID_SERVICE_ID
@@ -151,7 +153,7 @@ twin-identity service-remove --load-env config.env wallet.env identity.env servi
 
 ## verifiable-credential-create
 
-This command will generate a verifiable credential using the specified verification method. You will need to supply the data as a json file
+This command generates a verifiable credential using the specified verification method. You will need to supply the data as a json file.
 
 ```json
 {
@@ -164,11 +166,7 @@ This command will generate a verifiable credential using the specified verificat
 twin-identity verifiable-credential-create --load-env config.env verification-method.env --id !DID_VERIFICATION_METHOD_ID --private-key !DID_VERIFICATION_METHOD_PRIVATE_KEY --credential-id https://example.edu/credentials/3732 --types UniversityDegreeCredential --subject-json subject.json --env vc.env --revocation-index 0
 ```
 
-This will output the verifiable credential as a JSON Web Token e.g.
-
-```shell
-eyJraWQiOiJkaWQ6aW90YTp0c3Q6MHgxZTQ3YWQ0MjY4YWI5ZWNhNTFkYTkwNmRkNzE4MDIxZmJkNGYyZGUxYmU5NjA4NmRjMTMzZDQ0MmIwYjk3MzIyI2V5em9GMHFEUmtSQ0FlU1Rmdjd6WWFQNU00U2c2TkJLQUZ6eElhQVBTQzAiLCJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJkaWQ6aW90YTp0c3Q6MHgxZTQ3YWQ0MjY4YWI5ZWNhNTFkYTkwNmRkNzE4MDIxZmJkNGYyZGUxYmU5NjA4NmRjMTMzZDQ0MmIwYjk3MzIyIiwibmJmIjoxNzE4MTk3NDA5LCJqdGkiOiJodHRwczovL2V4YW1wbGUuZWR1L2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6Imh0dHBzOi8vd3d3LnczLm9yZy8yMDE4L2NyZWRlbnRpYWxzL3YxIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlVuaXZlcnNpdHlEZWdyZWVDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImRlZ3JlZU5hbWUiOiJCYWNoZWxvciBvZiBTY2llbmNlIGFuZCBBcnRzIiwibmFtZSI6IkFsaWNlIn0sImNyZWRlbnRpYWxTdGF0dXMiOnsiaWQiOiJkaWQ6aW90YTp0c3Q6MHgxZTQ3YWQ0MjY4YWI5ZWNhNTFkYTkwNmRkNzE4MDIxZmJkNGYyZGUxYmU5NjA4NmRjMTMzZDQ0MmIwYjk3MzIyI3Jldm9jYXRpb24iLCJ0eXBlIjoiUmV2b2NhdGlvbkJpdG1hcDIwMjIiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiIwIn19fQ.O3tMQ1UdGSI2qv9ia3xiT1yTmvpnJKd749POMSy42-SWTWN99HyYr5SEVIDj5cLdCORRP3Se4O7wxPe7_tfmCw
-```
+This command outputs the verifiable credential as a JSON Web Token.
 
 ## verifiable-credential-verify
 
@@ -196,17 +194,15 @@ twin-identity verifiable-credential-unrevoke --load-env config.env wallet.env id
 
 ## proof-create
 
-This command will generate a proof using the specified verification method.
+This command generates a proof using the specified verification method.
 
 ```shell
 twin-identity proof-create --load-env config.env verification-method.env --id !DID_VERIFICATION_METHOD_ID --private-key !DID_VERIFICATION_METHOD_PRIVATE_KEY --document-filename unsecured.json --json data-proof.json
 ```
 
-This will output the proof.
-
 ## proof-verify
 
-This command will verify a proof for a document.
+This command verifies a proof for a document.
 
 ```shell
 twin-identity proof-verify --load-env config.env verification-method.env --id !DID_VERIFICATION_METHOD_ID --document-filename unsecured.json --proof-filename data-proof.json

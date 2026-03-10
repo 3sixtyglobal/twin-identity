@@ -1,7 +1,7 @@
 {
 	"name": "@twin.org/identity-connector-entity-storage",
 	"version": "0.0.3-next.18",
-	"description": "Identity connector implementation using entity storage",
+	"description": "Entity storage connector for persisting and retrieving identity records through a consistent data layer.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/twinfoundation/identity.git",

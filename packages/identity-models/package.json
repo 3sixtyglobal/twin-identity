@@ -1,7 +1,7 @@
 {
 	"name": "@twin.org/identity-models",
 	"version": "0.0.3-next.18",
-	"description": "Models which define the structure of the contracts and connectors",
+	"description": "Shared identity models and contracts for consistent data structures across services, connectors, and clients.",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/twinfoundation/identity.git",

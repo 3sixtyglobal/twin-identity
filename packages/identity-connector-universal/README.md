@@ -1,6 +1,6 @@
-# TWIN Identity Connector Universal
+# TWIN Identity
 
-Identity connector implementation using Universal resolver.
+The identity-connector-universal package provides DID resolution through the Universal Resolver ecosystem so applications can work with multiple DID methods in a consistent way. It is designed for interoperability-focused implementations that need standards-aligned identity resolution without coupling to a single network.
 
 ## Installation
 
@@ -8,12 +8,12 @@ Identity connector implementation using Universal resolver.
 npm install @twin.org/identity-connector-universal
 ```
 
-## Testing
+## Docker
 
-To test the universal resolver you will need to run the docker image.
+To perform testing of this component it may be necessary to launch a local instance to communicate with.
 
 ```shell
-docker run -d --name twin-identity-universal -e NETWORK=testnet -p 8180:8080 iotaledger/uni-resolver-driver-iota:v0.2.0-alpha
+docker run -d --name twin-identity-universal -p 8180:8080 -e NETWORK=testnet iotaledger/uni-resolver-driver-iota:v0.2.0-alpha
 ```
 
 ## Examples
