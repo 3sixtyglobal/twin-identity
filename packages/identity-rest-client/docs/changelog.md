@@ -1,4 +1,4 @@
-# @twin.org/identity-rest-client - Changelog
+# Changelog
 
 ## [0.0.3-next.18](https://github.com/twinfoundation/identity/compare/identity-rest-client-v0.0.3-next.17...identity-rest-client-v0.0.3-next.18) (2026-02-27)
 

@@ -1,4 +1,4 @@
-# @twin.org/identity-connector-iota - Changelog
+# Changelog
 
 ## [0.0.3-next.18](https://github.com/twinfoundation/identity/compare/identity-connector-iota-v0.0.3-next.17...identity-connector-iota-v0.0.3-next.18) (2026-02-27)
 

@@ -1,4 +1,4 @@
-# @twin.org/identity-service-models - Changelog
+# Changelog
 
 ## [0.0.3-next.18](https://github.com/twinfoundation/identity/compare/identity-models-v0.0.3-next.17...identity-models-v0.0.3-next.18) (2026-02-27)
 
