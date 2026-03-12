@@ -4,7 +4,7 @@ Get the profile for an identity.
 
 ## Properties
 
-### query?
+### query? {#query}
 
 > `optional` **query**: `object`
 

@@ -4,7 +4,7 @@ Request to verify a verifiable presentation.
 
 ## Properties
 
-### query
+### query {#query}
 
 > **query**: `object`
 

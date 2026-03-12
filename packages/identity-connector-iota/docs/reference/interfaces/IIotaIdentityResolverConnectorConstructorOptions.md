@@ -4,7 +4,7 @@ Options for the IOTA Identity Resolver Connector constructor.
 
 ## Properties
 
-### config
+### config {#config}
 
 > **config**: [`IIotaIdentityResolverConnectorConfig`](IIotaIdentityResolverConnectorConfig.md)
 

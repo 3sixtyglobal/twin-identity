@@ -4,7 +4,7 @@ Request to create an identity.
 
 ## Properties
 
-### body?
+### body? {#body}
 
 > `optional` **body**: `object`
 

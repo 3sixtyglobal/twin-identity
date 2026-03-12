@@ -4,7 +4,7 @@ Response to get a list of identities.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

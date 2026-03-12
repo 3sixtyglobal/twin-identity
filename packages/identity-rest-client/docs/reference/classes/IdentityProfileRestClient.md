@@ -46,7 +46,7 @@ The configuration for the client.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -54,7 +54,7 @@ Runtime name for the class.
 
 ## Methods
 
-### className()
+### className() {#classname}
 
 > **className**(): `string`
 
@@ -72,7 +72,7 @@ The class name of the component.
 
 ***
 
-### create()
+### create() {#create}
 
 > **create**(`publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -104,7 +104,7 @@ Nothing.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`publicPropertyNames?`, `privatePropertyNames?`): `Promise`\<\{ `identity`: `string`; `publicProfile?`: `Partial`\<`T`\>; `privateProfile?`: `Partial`\<`U`\>; \}\>
 
@@ -136,7 +136,7 @@ The identity and the items properties.
 
 ***
 
-### getPublic()
+### getPublic() {#getpublic}
 
 > **getPublic**(`identity`, `propertyNames?`): `Promise`\<`Partial`\<`T`\>\>
 
@@ -168,7 +168,7 @@ The items properties.
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -200,7 +200,7 @@ Nothing.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(): `Promise`\<`void`\>
 
@@ -218,7 +218,7 @@ Nothing.
 
 ***
 
-### list()
+### list() {#list}
 
 > **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 

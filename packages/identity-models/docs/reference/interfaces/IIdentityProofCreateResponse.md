@@ -4,7 +4,7 @@ Response to creating a proof.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `IProof`
 

@@ -4,7 +4,7 @@ Configuration for the Identity Resolver Service.
 
 ## Properties
 
-### defaultNamespace?
+### defaultNamespace? {#defaultnamespace}
 
 > `optional` **defaultNamespace**: `string`
 

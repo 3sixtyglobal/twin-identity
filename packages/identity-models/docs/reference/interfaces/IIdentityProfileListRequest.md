@@ -4,7 +4,7 @@ Request to get a list of identities.
 
 ## Properties
 
-### query?
+### query? {#query}
 
 > `optional` **query**: `object`
 

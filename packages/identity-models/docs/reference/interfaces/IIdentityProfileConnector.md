@@ -18,7 +18,7 @@ Interface describing a contract which provides profile operations.
 
 ## Methods
 
-### create()
+### create() {#create}
 
 > **create**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -52,7 +52,7 @@ Nothing.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`identity`, `publicPropertyNames?`, `privatePropertyNames?`): `Promise`\<\{ `publicProfile`: `Partial`\<`T`\>; `privateProfile`: `Partial`\<`U`\>; \}\>
 
@@ -86,7 +86,7 @@ The identity profile, will only return private data if you have correct permissi
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -120,7 +120,7 @@ Nothing.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(`identity`): `Promise`\<`void`\>
 
@@ -142,7 +142,7 @@ Nothing.
 
 ***
 
-### list()
+### list() {#list}
 
 > **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 

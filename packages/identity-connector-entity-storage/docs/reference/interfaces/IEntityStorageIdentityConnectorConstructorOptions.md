@@ -8,17 +8,11 @@ Options for the entity storage identity connector constructor.
 
 ## Properties
 
-### didDocumentEntityStorageType?
+### didDocumentEntityStorageType? {#diddocumententitystoragetype}
 
 > `optional` **didDocumentEntityStorageType**: `string`
 
 The entity storage for the did documents.
-
-#### Default
-
-```ts
-identity-document
-```
 
 #### Inherited from
 
@@ -26,17 +20,11 @@ identity-document
 
 ***
 
-### vaultConnectorType?
+### vaultConnectorType? {#vaultconnectortype}
 
 > `optional` **vaultConnectorType**: `string`
 
 The vault for the private keys.
-
-#### Default
-
-```ts
-vault
-```
 
 #### Inherited from
 

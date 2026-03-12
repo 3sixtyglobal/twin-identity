@@ -4,7 +4,7 @@ Request to revoke a verifiable credential.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 

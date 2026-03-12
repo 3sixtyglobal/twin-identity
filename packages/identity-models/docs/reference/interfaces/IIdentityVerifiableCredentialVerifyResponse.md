@@ -4,7 +4,7 @@ Response to verifying a verifiable credential.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

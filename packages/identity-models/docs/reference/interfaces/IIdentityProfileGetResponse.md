@@ -4,7 +4,7 @@ Response to get an identity details.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

@@ -4,7 +4,7 @@ Options for the identity service constructor.
 
 ## Properties
 
-### config?
+### config? {#config}
 
 > `optional` **config**: [`IIdentityServiceConfig`](IIdentityServiceConfig.md)
 

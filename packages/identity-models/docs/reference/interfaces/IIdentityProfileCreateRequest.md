@@ -4,7 +4,7 @@ Request to create an identity profile.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

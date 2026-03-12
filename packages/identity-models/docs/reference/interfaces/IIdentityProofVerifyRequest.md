@@ -4,7 +4,7 @@ Request to verify a proof.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

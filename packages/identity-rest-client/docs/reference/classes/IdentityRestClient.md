@@ -36,7 +36,7 @@ The configuration for the client.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -44,7 +44,7 @@ Runtime name for the class.
 
 ## Methods
 
-### className()
+### className() {#classname}
 
 > **className**(): `string`
 
@@ -62,7 +62,7 @@ The class name of the component.
 
 ***
 
-### identityCreate()
+### identityCreate() {#identitycreate}
 
 > **identityCreate**(`namespace?`): `Promise`\<`IDidDocument`\>
 
@@ -88,7 +88,7 @@ The created identity document.
 
 ***
 
-### identityRemove()
+### identityRemove() {#identityremove}
 
 > **identityRemove**(`identity`): `Promise`\<`void`\>
 
@@ -114,7 +114,7 @@ Nothing.
 
 ***
 
-### verificationMethodCreate()
+### verificationMethodCreate() {#verificationmethodcreate}
 
 > **verificationMethodCreate**(`identity`, `verificationMethodType`, `verificationMethodId?`): `Promise`\<`IDidDocumentVerificationMethod`\>
 
@@ -160,7 +160,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ***
 
-### verificationMethodRemove()
+### verificationMethodRemove() {#verificationmethodremove}
 
 > **verificationMethodRemove**(`verificationMethodId`): `Promise`\<`void`\>
 
@@ -194,7 +194,7 @@ NotSupportedError if the platform does not support multiple revocable keys.
 
 ***
 
-### serviceCreate()
+### serviceCreate() {#servicecreate}
 
 > **serviceCreate**(`identity`, `serviceId`, `serviceType`, `serviceEndpoint`): `Promise`\<`IDidService`\>
 
@@ -242,7 +242,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### serviceRemove()
+### serviceRemove() {#serviceremove}
 
 > **serviceRemove**(`serviceId`): `Promise`\<`void`\>
 
@@ -272,7 +272,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### verifiableCredentialCreate()
+### verifiableCredentialCreate() {#verifiablecredentialcreate}
 
 > **verifiableCredentialCreate**(`verificationMethodId`, `id`, `subject`, `options?`): `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredential`; `jwt`: `string`; \}\>
 
@@ -330,7 +330,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### verifiableCredentialVerify()
+### verifiableCredentialVerify() {#verifiablecredentialverify}
 
 > **verifiableCredentialVerify**(`credential`): `Promise`\<\{ `revoked`: `boolean`; `verifiableCredential?`: `IDidVerifiableCredential`; \}\>
 
@@ -356,7 +356,7 @@ The credential stored in the jwt and the revocation status.
 
 ***
 
-### verifiableCredentialRevoke()
+### verifiableCredentialRevoke() {#verifiablecredentialrevoke}
 
 > **verifiableCredentialRevoke**(`issuerId`, `credentialIndex`): `Promise`\<`void`\>
 
@@ -388,7 +388,7 @@ Nothing.
 
 ***
 
-### verifiableCredentialUnrevoke()
+### verifiableCredentialUnrevoke() {#verifiablecredentialunrevoke}
 
 > **verifiableCredentialUnrevoke**(`issuerId`, `credentialIndex`): `Promise`\<`void`\>
 
@@ -420,7 +420,7 @@ Nothing.
 
 ***
 
-### verifiablePresentationCreate()
+### verifiablePresentationCreate() {#verifiablepresentationcreate}
 
 > **verifiablePresentationCreate**(`verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `options?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentation`; `jwt`: `string`; \}\>
 
@@ -484,7 +484,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### verifiablePresentationVerify()
+### verifiablePresentationVerify() {#verifiablepresentationverify}
 
 > **verifiablePresentationVerify**(`presentationJwt`): `Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentation`; `issuers?`: `IDidDocument`[]; \}\>
 
@@ -510,7 +510,7 @@ The presentation stored in the jwt and the revocation status.
 
 ***
 
-### proofCreate()
+### proofCreate() {#proofcreate}
 
 > **proofCreate**(`verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
 
@@ -548,7 +548,7 @@ The proof.
 
 ***
 
-### proofVerify()
+### proofVerify() {#proofverify}
 
 > **proofVerify**(`document`, `proof`): `Promise`\<`boolean`\>
 

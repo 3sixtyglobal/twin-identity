@@ -14,7 +14,7 @@ Helper methods for Ids.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -22,7 +22,7 @@ Runtime name for the class.
 
 ## Methods
 
-### parse()
+### parse() {#parse}
 
 > `static` **parse**(`id`): `object`
 
@@ -60,7 +60,7 @@ GeneralError if the id is not valid.
 
 ***
 
-### guard()
+### guard() {#guard}
 
 > `static` **guard**(`source`, `property`, `value`): `asserts value is string`
 

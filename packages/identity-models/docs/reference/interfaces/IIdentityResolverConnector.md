@@ -8,7 +8,7 @@ Interface describing an identity connector.
 
 ## Methods
 
-### resolveDocument()
+### resolveDocument() {#resolvedocument}
 
 > **resolveDocument**(`documentId`): `Promise`\<`IDidDocument`\>
 

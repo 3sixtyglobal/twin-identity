@@ -14,7 +14,7 @@ Helper methods for verification.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -22,7 +22,7 @@ Runtime name for the class.
 
 ## Methods
 
-### verifyJwt()
+### verifyJwt() {#verifyjwt}
 
 > `static` **verifyJwt**\<`T`, `U`\>(`resolver`, `jwt`): `Promise`\<\{ `header`: `T`; `payload`: `U`; \}\>
 
@@ -60,7 +60,7 @@ The decoded payload.
 
 ***
 
-### verifyProof()
+### verifyProof() {#verifyproof}
 
 > `static` **verifyProof**(`resolver`, `secureDocument`): `Promise`\<`boolean`\>
 

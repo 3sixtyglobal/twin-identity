@@ -4,7 +4,7 @@ Request to update an identity profile.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

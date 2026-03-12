@@ -4,7 +4,7 @@ Response to creating a verification method.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `IDidDocumentVerificationMethod`
 

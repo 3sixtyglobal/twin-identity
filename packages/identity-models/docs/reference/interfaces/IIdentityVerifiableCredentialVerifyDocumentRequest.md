@@ -4,7 +4,7 @@ Request to verify a verifiable credential.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `IDidVerifiableCredential`
 

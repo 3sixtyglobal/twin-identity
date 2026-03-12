@@ -28,7 +28,7 @@ The options for the identity connector.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -36,7 +36,7 @@ Runtime name for the class.
 
 ***
 
-### NAMESPACE
+### NAMESPACE {#namespace}
 
 > `readonly` `static` **NAMESPACE**: `string` = `"entity-storage"`
 
@@ -44,7 +44,7 @@ The namespace supported by the identity connector.
 
 ## Methods
 
-### className()
+### className() {#classname}
 
 > **className**(): `string`
 
@@ -62,7 +62,7 @@ The class name of the component.
 
 ***
 
-### createDocument()
+### createDocument() {#createdocument}
 
 > **createDocument**(`controller`): `Promise`\<`IDidDocument`\>
 
@@ -88,7 +88,7 @@ The created document.
 
 ***
 
-### removeDocument()
+### removeDocument() {#removedocument}
 
 > **removeDocument**(`controller`, `documentId`): `Promise`\<`void`\>
 
@@ -120,7 +120,7 @@ Nothing.
 
 ***
 
-### addVerificationMethod()
+### addVerificationMethod() {#addverificationmethod}
 
 > **addVerificationMethod**(`controller`, `documentId`, `verificationMethodType`, `verificationMethodId?`): `Promise`\<`IDidDocumentVerificationMethod`\>
 
@@ -172,7 +172,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ***
 
-### removeVerificationMethod()
+### removeVerificationMethod() {#removeverificationmethod}
 
 > **removeVerificationMethod**(`controller`, `verificationMethodId`): `Promise`\<`void`\>
 
@@ -212,7 +212,7 @@ NotSupportedError if the platform does not support multiple revocable keys.
 
 ***
 
-### addService()
+### addService() {#addservice}
 
 > **addService**(`controller`, `documentId`, `serviceId`, `serviceType`, `serviceEndpoint`): `Promise`\<`IDidService`\>
 
@@ -266,7 +266,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### removeService()
+### removeService() {#removeservice}
 
 > **removeService**(`controller`, `serviceId`): `Promise`\<`void`\>
 
@@ -302,7 +302,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### createVerifiableCredential()
+### createVerifiableCredential() {#createverifiablecredential}
 
 > **createVerifiableCredential**(`controller`, `verificationMethodId`, `id`, `subject`, `options?`): `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredentialV1`; `jwt`: `string`; \}\>
 
@@ -366,7 +366,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### checkVerifiableCredential()
+### checkVerifiableCredential() {#checkverifiablecredential}
 
 > **checkVerifiableCredential**(`credential`): `Promise`\<\{ `revoked`: `boolean`; `verifiableCredential?`: `IDidVerifiableCredential`; \}\>
 
@@ -392,7 +392,7 @@ The credential stored in the jwt and the revocation status.
 
 ***
 
-### revokeVerifiableCredentials()
+### revokeVerifiableCredentials() {#revokeverifiablecredentials}
 
 > **revokeVerifiableCredentials**(`controller`, `issuerDocumentId`, `credentialIndices`): `Promise`\<`void`\>
 
@@ -430,7 +430,7 @@ Nothing.
 
 ***
 
-### unrevokeVerifiableCredentials()
+### unrevokeVerifiableCredentials() {#unrevokeverifiablecredentials}
 
 > **unrevokeVerifiableCredentials**(`controller`, `issuerDocumentId`, `credentialIndices`): `Promise`\<`void`\>
 
@@ -468,7 +468,7 @@ Nothing.
 
 ***
 
-### createVerifiablePresentation()
+### createVerifiablePresentation() {#createverifiablepresentation}
 
 > **createVerifiablePresentation**(`controller`, `verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `options?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentationV1`; `jwt`: `string`; \}\>
 
@@ -538,7 +538,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### checkVerifiablePresentation()
+### checkVerifiablePresentation() {#checkverifiablepresentation}
 
 > **checkVerifiablePresentation**(`presentationJwt`): `Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentationV1`; `issuers?`: `IDidDocument`[]; \}\>
 
@@ -564,7 +564,7 @@ The presentation stored in the jwt and the revocation status.
 
 ***
 
-### createProof()
+### createProof() {#createproof}
 
 > **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
 
@@ -618,7 +618,7 @@ GeneralError if algorithm doesn't match key type or proof creation fails.
 
 ***
 
-### verifyProof()
+### verifyProof() {#verifyproof}
 
 > **verifyProof**(`document`, `proof`): `Promise`\<`boolean`\>
 

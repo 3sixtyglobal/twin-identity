@@ -14,7 +14,7 @@ Class representing profile details for the identity.
 
 ## Properties
 
-### identity
+### identity {#identity}
 
 > **identity**: `string`
 
@@ -22,7 +22,7 @@ The id for the identity.
 
 ***
 
-### publicProfile?
+### publicProfile? {#publicprofile}
 
 > `optional` **publicProfile**: `unknown`
 
@@ -30,7 +30,7 @@ The public profile data.
 
 ***
 
-### privateProfile?
+### privateProfile? {#privateprofile}
 
 > `optional` **privateProfile**: `unknown`
 

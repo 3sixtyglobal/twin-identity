@@ -4,7 +4,7 @@ Response to verifying a verifiable presentation.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 

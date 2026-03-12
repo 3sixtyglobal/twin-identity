@@ -4,7 +4,7 @@ Request to create a verifiable presentation.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -24,7 +24,7 @@ The verification method id to use.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 

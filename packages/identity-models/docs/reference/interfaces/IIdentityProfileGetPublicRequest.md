@@ -4,7 +4,7 @@ Get the public profile for an identity.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -18,7 +18,7 @@ The identity to get the profile for.
 
 ***
 
-### query?
+### query? {#query}
 
 > `optional` **query**: `object`
 

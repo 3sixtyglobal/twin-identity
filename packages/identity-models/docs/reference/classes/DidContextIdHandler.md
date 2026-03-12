@@ -18,7 +18,7 @@ Context Id handler for testing as a DID.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -26,7 +26,7 @@ Runtime name for the class.
 
 ## Methods
 
-### className()
+### className() {#classname}
 
 > **className**(): `string`
 
@@ -44,7 +44,7 @@ The class name.
 
 ***
 
-### short()
+### short() {#short}
 
 > **short**(`value`): `string`
 
@@ -70,7 +70,7 @@ Short form string.
 
 ***
 
-### guard()
+### guard() {#guard}
 
 > **guard**(`value`): `void`
 

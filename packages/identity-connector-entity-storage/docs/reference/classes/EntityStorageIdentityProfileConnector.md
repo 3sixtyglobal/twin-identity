@@ -38,7 +38,7 @@ The options for the identity service.
 
 ## Properties
 
-### NAMESPACE
+### NAMESPACE {#namespace}
 
 > `readonly` `static` **NAMESPACE**: `string` = `"entity-storage"`
 
@@ -46,7 +46,7 @@ The namespace supported by the identity profile connector.
 
 ***
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -54,7 +54,7 @@ Runtime name for the class.
 
 ## Methods
 
-### className()
+### className() {#classname}
 
 > **className**(): `string`
 
@@ -72,7 +72,7 @@ The class name of the component.
 
 ***
 
-### create()
+### create() {#create}
 
 > **create**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -110,7 +110,7 @@ Nothing.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`identity`, `publicPropertyNames?`, `privatePropertyNames?`): `Promise`\<\{ `publicProfile`: `Partial`\<`T`\>; `privateProfile`: `Partial`\<`U`\>; \}\>
 
@@ -148,7 +148,7 @@ The items properties.
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -186,7 +186,7 @@ Nothing.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(`identity`): `Promise`\<`void`\>
 
@@ -212,7 +212,7 @@ Nothing.
 
 ***
 
-### list()
+### list() {#list}
 
 > **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
