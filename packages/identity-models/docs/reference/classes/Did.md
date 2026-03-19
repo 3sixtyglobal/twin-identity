@@ -48,7 +48,7 @@ The parsed id.
 
 ##### network?
 
-> `optional` **network**: `string`
+> `optional` **network?**: `string`
 
 ##### id
 

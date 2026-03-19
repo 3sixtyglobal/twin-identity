@@ -6,6 +6,12 @@ Options for the identity profile service constructor.
 
 ### profileEntityConnectorType? {#profileentityconnectortype}
 
-> `optional` **profileEntityConnectorType**: `string`
+> `optional` **profileEntityConnectorType?**: `string`
 
 The storage connector for the profiles.
+
+#### Default
+
+```ts
+identity-profile
+```

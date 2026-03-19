@@ -18,6 +18,6 @@ Has the credential been revoked.
 
 #### verifiableCredential?
 
-> `optional` **verifiableCredential**: `IDidVerifiableCredential`
+> `optional` **verifiableCredential?**: `IDidVerifiableCredential`
 
 The verifiable credential that was verified.

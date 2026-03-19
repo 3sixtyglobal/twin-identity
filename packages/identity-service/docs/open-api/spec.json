@@ -2388,7 +2388,7 @@
 						"content": {
 							"application/ld+json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdDocument"
+									"$ref": "#/components/schemas/IdentityProfileGetPublicResponse"
 								},
 								"examples": {
 									"identityGetPublicResponseExample": {
@@ -2625,40 +2625,20 @@
 							"type": "string"
 						},
 						"description": "The conflicting items."
-					},
-					"name": {
-						"type": "string",
-						"description": "The name for the error."
-					},
-					"message": {
-						"type": "string",
-						"description": "The message for the error."
-					},
-					"source": {
-						"type": "string",
-						"description": "The source of the error."
-					},
-					"properties": {
-						"type": "object",
-						"additionalProperties": {},
-						"description": "Any additional information for the error."
-					},
-					"stack": {
-						"type": "string",
-						"description": "The stack trace for the error."
-					},
-					"cause": {
-						"$ref": "#/components/schemas/Error"
 					}
 				},
 				"required": [
-					"conflicts",
-					"message",
-					"name"
+					"conflicts"
+				],
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Error"
+					}
 				],
 				"description": "The body which contains the error."
 			},
 			"Error": {
+				"description": "Model to describe serialized error.",
 				"type": "object",
 				"properties": {
 					"name": {
@@ -2689,8 +2669,7 @@
 				"required": [
 					"name",
 					"message"
-				],
-				"description": "Model to describe serialized error."
+				]
 			},
 			"IdentityCreateRequest": {
 				"type": "object",
@@ -2714,18 +2693,13 @@
 				},
 				"description": "The data for the request."
 			},
+			"IdentityProfileGetPublicResponse": {},
 			"IdentityProfileGetResponse": {
 				"type": "object",
 				"properties": {
 					"identity": {
 						"type": "string",
 						"description": "The identity of the profile, this is the authenticated user identity."
-					},
-					"publicProfile": {
-						"$ref": "https://schema.twindev.org/json-ld/JsonLdDocument"
-					},
-					"privateProfile": {
-						"$ref": "https://schema.twindev.org/json-ld/JsonLdDocument"
 					}
 				},
 				"required": [
@@ -2744,15 +2718,11 @@
 								"identity": {
 									"type": "string",
 									"description": "The identity."
-								},
-								"publicProfile": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdDocument"
 								}
 							},
 							"required": [
 								"identity"
-							],
-							"additionalProperties": false
+							]
 						},
 						"description": "The identities."
 					},
@@ -3026,292 +2996,18 @@
 				],
 				"description": "The data for the request."
 			},
-			"JsonLdDocument": {
-				"type": "object",
-				"properties": {
-					"@context": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdContextDefinitionRoot"
-							}
-						]
-					},
-					"@id": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							}
-						]
-					},
-					"@included": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							}
-						]
-					},
-					"@graph": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdValueObject"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
-							},
-							{
-								"type": "array",
-								"items": {
-									"anyOf": [
-										{
-											"$ref": "https://schema.twindev.org/json-ld/JsonLdValueObject"
-										},
-										{
-											"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
-										}
-									]
-								}
-							}
-						]
-					},
-					"@nest": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							}
-						]
-					},
-					"@type": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							}
-						]
-					},
-					"@reverse": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							}
-						]
-					},
-					"@index": {
-						"anyOf": [
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-							},
-							{
-								"type": "array",
-								"items": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodePrimitive"
-								}
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdLanguageMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIndexMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIncludedBlock"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdIdMap"
-							},
-							{
-								"$ref": "https://schema.twindev.org/json-ld/JsonLdTypeMap"
-							}
-						]
-					}
-				}
-			},
 			"NotFoundResponse": {
 				"type": "object",
 				"properties": {
 					"notFoundId": {
 						"type": "string",
 						"description": "The id if the item that was not found."
-					},
-					"name": {
-						"type": "string",
-						"description": "The name for the error."
-					},
-					"message": {
-						"type": "string",
-						"description": "The message for the error."
-					},
-					"source": {
-						"type": "string",
-						"description": "The source of the error."
-					},
-					"properties": {
-						"type": "object",
-						"additionalProperties": {},
-						"description": "Any additional information for the error."
-					},
-					"stack": {
-						"type": "string",
-						"description": "The stack trace for the error."
-					},
-					"cause": {
-						"$ref": "#/components/schemas/Error"
 					}
 				},
-				"required": [
-					"message",
-					"name"
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Error"
+					}
 				],
 				"description": "The body which contains the error."
 			}

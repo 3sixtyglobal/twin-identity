@@ -6,9 +6,15 @@ Options for the IOTA Identity Connector constructor.
 
 ### vaultConnectorType? {#vaultconnectortype}
 
-> `optional` **vaultConnectorType**: `string`
+> `optional` **vaultConnectorType?**: `string`
 
 The vault connector type for the private keys.
+
+#### Default
+
+```ts
+vault
+```
 
 ***
 

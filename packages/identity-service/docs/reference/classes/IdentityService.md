@@ -232,15 +232,15 @@ The id of the service.
 
 ##### serviceType
 
-The type of the service.
+`string` \| `string`[]
 
-`string` | `string`[]
+The type of the service.
 
 ##### serviceEndpoint
 
-The endpoint for the service.
+`string` \| `string`[]
 
-`string` | `string`[]
+The endpoint for the service.
 
 ##### controller?
 
@@ -316,9 +316,9 @@ The verification method id to use.
 
 ##### id
 
-The id of the credential.
+`string` \| `undefined`
 
-`string` | `undefined`
+The id of the credential.
 
 ##### subject
 
@@ -374,9 +374,9 @@ Verify a verifiable credential is valid.
 
 ##### credential
 
-The credential to verify.
+`string` \| `IDidVerifiableCredential`
 
-`string` | `IDidVerifiableCredential`
+The credential to verify.
 
 #### Returns
 
@@ -482,21 +482,21 @@ The method to associate with the presentation.
 
 ##### presentationId
 
-The id of the presentation.
+`string` \| `undefined`
 
-`string` | `undefined`
+The id of the presentation.
 
 ##### contexts
 
-The contexts for the data stored in the verifiable credential.
+`IJsonLdContextDefinitionRoot` \| `undefined`
 
-`IJsonLdContextDefinitionRoot` | `undefined`
+The contexts for the data stored in the verifiable credential.
 
 ##### types
 
-The types for the data stored in the verifiable credential.
+`string` \| `string`[] \| `undefined`
 
-`string` | `string`[] | `undefined`
+The types for the data stored in the verifiable credential.
 
 ##### verifiableCredentials
 

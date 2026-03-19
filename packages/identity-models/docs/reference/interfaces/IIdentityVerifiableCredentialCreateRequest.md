@@ -32,7 +32,7 @@ The data for the request.
 
 #### credentialId?
 
-> `optional` **credentialId**: `string`
+> `optional` **credentialId?**: `string`
 
 The id of the credential.
 
@@ -44,12 +44,12 @@ The credential subject to store in the verifiable credential.
 
 #### revocationIndex?
 
-> `optional` **revocationIndex**: `number`
+> `optional` **revocationIndex?**: `number`
 
 The bitmap revocation index of the credential, if undefined will not have revocation status.
 
 #### expirationDate?
 
-> `optional` **expirationDate**: `string`
+> `optional` **expirationDate?**: `string`
 
 The date the verifiable credential is valid until.

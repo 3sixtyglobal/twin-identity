@@ -24,7 +24,7 @@ The id for the identity.
 
 ### publicProfile? {#publicprofile}
 
-> `optional` **publicProfile**: `unknown`
+> `optional` **publicProfile?**: `unknown`
 
 The public profile data.
 
@@ -32,6 +32,6 @@ The public profile data.
 
 ### privateProfile? {#privateprofile}
 
-> `optional` **privateProfile**: `unknown`
+> `optional` **privateProfile?**: `unknown`
 
 The private profile data.

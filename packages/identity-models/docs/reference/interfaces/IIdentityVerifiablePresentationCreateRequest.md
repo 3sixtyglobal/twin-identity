@@ -32,19 +32,19 @@ The data for the request.
 
 #### presentationId?
 
-> `optional` **presentationId**: `string`
+> `optional` **presentationId?**: `string`
 
 The id of the presentation.
 
 #### contexts?
 
-> `optional` **contexts**: `IJsonLdContextDefinitionRoot`
+> `optional` **contexts?**: `IJsonLdContextDefinitionRoot`
 
 The context to use for the presentation.
 
 #### types?
 
-> `optional` **types**: `string` \| `string`[]
+> `optional` **types?**: `string` \| `string`[]
 
 The types of the presentation.
 
@@ -56,6 +56,6 @@ The verifiable credentials to include in the presentation.
 
 #### expirationDate?
 
-> `optional` **expirationDate**: `string`
+> `optional` **expirationDate?**: `string`
 
 The expiration date/time for the presentation.

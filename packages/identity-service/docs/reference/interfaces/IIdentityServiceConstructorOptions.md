@@ -6,6 +6,6 @@ Options for the identity service constructor.
 
 ### config? {#config}
 
-> `optional` **config**: [`IIdentityServiceConfig`](IIdentityServiceConfig.md)
+> `optional` **config?**: [`IIdentityServiceConfig`](IIdentityServiceConfig.md)
 
 The configuration for the identity service.

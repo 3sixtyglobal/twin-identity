@@ -6,6 +6,12 @@ Options for the entity storage identity profile connector constructor.
 
 ### profileEntityStorageType? {#profileentitystoragetype}
 
-> `optional` **profileEntityStorageType**: `string`
+> `optional` **profileEntityStorageType?**: `string`
 
 The storage connector for the profiles.
+
+#### Default
+
+```ts
+identity-profile
+```

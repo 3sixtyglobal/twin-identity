@@ -18,12 +18,12 @@ Has the presentation been revoked.
 
 #### verifiablePresentation?
 
-> `optional` **verifiablePresentation**: `IDidVerifiablePresentation`
+> `optional` **verifiablePresentation?**: `IDidVerifiablePresentation`
 
 The verifiable presentation that was verified.
 
 #### issuers?
 
-> `optional` **issuers**: `IDidDocument`[]
+> `optional` **issuers?**: `IDidDocument`[]
 
 The issuers of the presentation.
