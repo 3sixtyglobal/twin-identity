@@ -596,6 +596,130 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Add an alias to the alsoKnownAs property on the document.
+	 * If the alias is already present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async addAlsoKnownAs(
+		controller: string,
+		documentId: string,
+		alias: string
+	): Promise<void> {
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(alias), alias);
+		if (!Url.tryParseExact(alias) && !Urn.tryParseExact(alias)) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "invalidAlias", { alias });
+		}
+
+		try {
+			const identityClient = await this.getIdentityClient(controller);
+			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
+			if (Is.undefined(document)) {
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
+			}
+
+			const existing = document.alsoKnownAs();
+			if (existing.includes(alias)) {
+				return;
+			}
+
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+			const identityOnChain = identity.toFullFledged();
+			if (Is.undefined(identityOnChain)) {
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					identityOnChain
+				);
+			}
+
+			document.setAlsoKnownAs([...existing, alias]);
+
+			const controllerToken = await identityOnChain.getControllerToken(identityClient);
+			if (Is.empty(controllerToken)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
+			}
+
+			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+		} catch (error) {
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"addAlsoKnownAsFailed",
+				undefined,
+				Iota.extractPayloadError(error)
+			);
+		}
+	}
+
+	/**
+	 * Remove an alias from the alsoKnownAs property on the document.
+	 * If the alias is not present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to remove. Must be a Url or Urn.
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async removeAlsoKnownAs(
+		controller: string,
+		documentId: string,
+		alias: string
+	): Promise<void> {
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(alias), alias);
+		if (!Url.tryParseExact(alias) && !Urn.tryParseExact(alias)) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "invalidAlias", { alias });
+		}
+
+		try {
+			const identityClient = await this.getIdentityClient(controller);
+			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
+			if (Is.undefined(document)) {
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
+			}
+
+			const existing = document.alsoKnownAs();
+			if (!existing.includes(alias)) {
+				return;
+			}
+
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+			const identityOnChain = identity.toFullFledged();
+			if (Is.undefined(identityOnChain)) {
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					identityOnChain
+				);
+			}
+
+			document.setAlsoKnownAs(existing.filter(a => a !== alias));
+
+			const controllerToken = await identityOnChain.getControllerToken(identityClient);
+			if (Is.empty(controllerToken)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
+			}
+
+			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+		} catch (error) {
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"removeAlsoKnownAsFailed",
+				undefined,
+				Iota.extractPayloadError(error)
+			);
+		}
+	}
+
+	/**
 	 * Create a verifiable credential for a verification method.
 	 * The credential is signed using the vault connector to ensure the private key
 	 * never leaves the secure vault environment.

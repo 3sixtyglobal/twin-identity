@@ -539,6 +539,98 @@ describe("IotaIdentityConnector", () => {
 		);
 	});
 
+	test("can fail to add alsoKnownAs with no alias", async () => {
+		await expect(
+			identityConnector.addAlsoKnownAs(
+				TEST_IDENTITY_ID,
+				testDocumentId,
+				undefined as unknown as string
+			)
+		).rejects.toMatchObject({
+			name: "GuardError",
+			message: "guard.string",
+			properties: {
+				property: "alias",
+				value: "undefined"
+			}
+		});
+	});
+
+	test("can fail to add alsoKnownAs when alias is not a Url or Urn", async () => {
+		await expect(
+			identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "not a uri")
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "iotaIdentityConnector.invalidAlias",
+			properties: { alias: "not a uri" }
+		});
+	});
+
+	test("can add an alias to alsoKnownAs", async () => {
+		await identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "did:example:linked");
+
+		const resolvedDocument = await identityResolverConnector.resolveDocument(testDocumentId);
+		expect(resolvedDocument.alsoKnownAs).toContain("did:example:linked");
+	});
+
+	test("addAlsoKnownAs is idempotent for duplicates", async () => {
+		await identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "did:example:linked");
+
+		const resolvedDocument = await identityResolverConnector.resolveDocument(testDocumentId);
+		const aliases = Is.array(resolvedDocument.alsoKnownAs) ? resolvedDocument.alsoKnownAs : [];
+		const occurrences = aliases.filter(a => a === "did:example:linked").length;
+		expect(occurrences).toBe(1);
+	});
+
+	test("can fail to remove alsoKnownAs with no alias", async () => {
+		await expect(
+			identityConnector.removeAlsoKnownAs(
+				TEST_IDENTITY_ID,
+				testDocumentId,
+				undefined as unknown as string
+			)
+		).rejects.toMatchObject({
+			name: "GuardError",
+			message: "guard.string",
+			properties: {
+				property: "alias",
+				value: "undefined"
+			}
+		});
+	});
+
+	test("can fail to remove alsoKnownAs when alias is not a Url or Urn", async () => {
+		await expect(
+			identityConnector.removeAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "not a uri")
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "iotaIdentityConnector.invalidAlias",
+			properties: { alias: "not a uri" }
+		});
+	});
+
+	test("removeAlsoKnownAs is a no-op when alias is not present", async () => {
+		await identityConnector.removeAlsoKnownAs(
+			TEST_IDENTITY_ID,
+			testDocumentId,
+			"did:example:missing"
+		);
+
+		const resolvedDocument = await identityResolverConnector.resolveDocument(testDocumentId);
+		expect(resolvedDocument.alsoKnownAs).toContain("did:example:linked");
+	});
+
+	test("can remove an alias from alsoKnownAs", async () => {
+		await identityConnector.removeAlsoKnownAs(
+			TEST_IDENTITY_ID,
+			testDocumentId,
+			"did:example:linked"
+		);
+
+		const resolvedDocument = await identityResolverConnector.resolveDocument(testDocumentId);
+		expect(resolvedDocument.alsoKnownAs ?? []).not.toContain("did:example:linked");
+	});
+
 	test("can fail to create a verifiable credential with no verification method id", async () => {
 		await expect(
 			identityConnector.createVerifiableCredential(

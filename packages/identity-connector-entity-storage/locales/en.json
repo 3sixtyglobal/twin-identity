@@ -5,6 +5,7 @@
 			"resolveDocumentFailed": "Resolving the document failed"
 		},
 		"entityStorageIdentityConnector": {
+			"addAlsoKnownAsFailed": "Adding to the alsoKnownAs property failed",
 			"addServiceFailed": "Adding the service failed",
 			"addVerificationMethodFailed": "Adding the verification method failed",
 			"algorithmKeyTypeMismatch": "Algorithm \"{algorithm}\" requires key type \"{expectedKeyType}\", but key \"{keyId}\" has type \"{actualKeyType}\"",
@@ -15,11 +16,13 @@
 			"createVerifiableCredentialFailed": "Creating the verifiable credential failed",
 			"createVerifiablePresentationFailed": "Creating the verifiable presentation failed",
 			"documentNotFound": "The document could not be found \"{notFoundId}\"",
+			"invalidAlias": "The alias is invalid it must be a Url or Urn, it is \"{alias}\"",
 			"jwkSignatureFailed": "The signature on the JWK failed verification",
 			"methodMissing": "The verification method specified does not exist \"{method}\"",
 			"missingDid": "The full id including DID is required",
 			"privateKeyMissing": "The private key could not be found for key \"{keyId}\"",
 			"publicKeyJwkMissing": "The verification method contains no publicKeyJwk in method \"{method}\"",
+			"removeAlsoKnownAsFailed": "Removing from the alsoKnownAs property failed",
 			"removeDocumentFailed": "Removing the document failed",
 			"removeServiceFailed": "Removing the service failed",
 			"removeVerificationMethodFailed": "Removing the verification method failed",

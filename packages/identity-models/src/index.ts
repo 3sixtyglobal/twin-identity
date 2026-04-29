@@ -4,6 +4,8 @@ export * from "./contextIdHandlers/didContextIdHandler.js";
 export * from "./factories/identityConnectorFactory.js";
 export * from "./factories/identityProfileConnectorFactory.js";
 export * from "./factories/identityResolverConnectorFactory.js";
+export * from "./models/api/identity/IIdentityAlsoKnownAsCreateRequest.js";
+export * from "./models/api/identity/IIdentityAlsoKnownAsRemoveRequest.js";
 export * from "./models/api/identity/IIdentityCreateRequest.js";
 export * from "./models/api/identity/IIdentityCreateResponse.js";
 export * from "./models/api/identity/IIdentityProofCreateRequest.js";

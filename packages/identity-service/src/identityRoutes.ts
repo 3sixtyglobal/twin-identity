@@ -10,6 +10,8 @@ import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/contex
 import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import {
 	DocumentHelper,
+	type IIdentityAlsoKnownAsCreateRequest,
+	type IIdentityAlsoKnownAsRemoveRequest,
 	type IIdentityComponent,
 	type IIdentityCreateRequest,
 	type IIdentityCreateResponse,
@@ -320,6 +322,82 @@ export function generateRestRoutesIdentity(
 				}
 			]
 		};
+
+	const identityAlsoKnownAsCreateRoute: IRestRoute<
+		IIdentityAlsoKnownAsCreateRequest,
+		INoContentResponse
+	> = {
+		operationId: "identityAlsoKnownAsCreate",
+		summary: "Add an alias to the alsoKnownAs property on the document",
+		tag: tagsIdentity[0].name,
+		method: "POST",
+		path: `${baseRouteName}/:identity/alias`,
+		handler: async (httpRequestContext, request) =>
+			identityAlsoKnownAsCreate(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityAlsoKnownAsCreateRequest>(),
+			examples: [
+				{
+					id: "identityAlsoKnownAsCreateRequestExample",
+					request: {
+						pathParams: {
+							identity:
+								"did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a"
+						},
+						body: {
+							alias: "did:example:123"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>()
+			}
+		]
+	};
+
+	const identityAlsoKnownAsRemoveRoute: IRestRoute<
+		IIdentityAlsoKnownAsRemoveRequest,
+		INoContentResponse
+	> = {
+		operationId: "identityAlsoKnownAsRemove",
+		summary: "Remove an alias from the alsoKnownAs property on the document",
+		tag: tagsIdentity[0].name,
+		method: "DELETE",
+		path: `${baseRouteName}/:identity/alias/:alias`,
+		handler: async (httpRequestContext, request) =>
+			identityAlsoKnownAsRemove(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityAlsoKnownAsRemoveRequest>(),
+			examples: [
+				{
+					id: "identityAlsoKnownAsRemoveRequestExample",
+					request: {
+						pathParams: {
+							identity:
+								"did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a",
+							alias: "did:example:123"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>(),
+				examples: [
+					{
+						id: "identityAlsoKnownAsRemoveResponseExample",
+						response: {
+							statusCode: HttpStatusCode.noContent
+						}
+					}
+				]
+			}
+		]
+	};
 
 	const identityVerifiableCredentialCreateRoute: IRestRoute<
 		IIdentityVerifiableCredentialCreateRequest,
@@ -858,6 +936,8 @@ export function generateRestRoutesIdentity(
 		identityVerificationMethodRemoveRoute,
 		identityServiceCreateRoute,
 		identityServiceRemoveRoute,
+		identityAlsoKnownAsCreateRoute,
+		identityAlsoKnownAsRemoveRoute,
 		identityVerifiableCredentialCreateRoute,
 		identityVerifiableCredentialVerifyDocumentRoute,
 		identityVerifiableCredentialVerifyRoute,
@@ -1095,6 +1175,86 @@ export async function identityServiceRemove(
 
 	await component.serviceRemove(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.serviceId),
+		contextIds[ContextIdKeys.Organization]
+	);
+
+	return {
+		statusCode: HttpStatusCode.noContent
+	};
+}
+
+/**
+ * Create an identity alias.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityAlsoKnownAsCreate(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityAlsoKnownAsCreateRequest
+): Promise<INoContentResponse> {
+	Guards.object<IIdentityAlsoKnownAsCreateRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.object<IIdentityAlsoKnownAsCreateRequest["pathParams"]>(
+		ROUTES_SOURCE,
+		nameof(request.pathParams),
+		request.pathParams
+	);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams.identity),
+		request.pathParams.identity
+	);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	await component.alsoKnownAsAdd(
+		request.pathParams.identity,
+		request.body.alias,
+		contextIds[ContextIdKeys.Organization]
+	);
+
+	return {
+		statusCode: HttpStatusCode.noContent
+	};
+}
+
+/**
+ * Remove an identity alias.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityAlsoKnownAsRemove(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityAlsoKnownAsRemoveRequest
+): Promise<INoContentResponse> {
+	Guards.object<IIdentityAlsoKnownAsRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.object<IIdentityAlsoKnownAsRemoveRequest["pathParams"]>(
+		ROUTES_SOURCE,
+		nameof(request.pathParams),
+		request.pathParams
+	);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams.identity),
+		request.pathParams.identity
+	);
+	Guards.stringValue(ROUTES_SOURCE, nameof(request.pathParams.alias), request.pathParams.alias);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	await component.alsoKnownAsRemove(
+		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.alias),
 		contextIds[ContextIdKeys.Organization]
 	);
 

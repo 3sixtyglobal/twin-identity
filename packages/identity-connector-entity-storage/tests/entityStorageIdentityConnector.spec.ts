@@ -357,6 +357,130 @@ describe("EntityStorageIdentityConnector", () => {
 		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
 	});
 
+	test("can fail to add alsoKnownAs with no alias", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+		await expect(
+			identityConnector.addAlsoKnownAs(
+				TEST_IDENTITY_ID,
+				testIdentityDocument.id,
+				undefined as unknown as string
+			)
+		).rejects.toMatchObject({
+			name: "GuardError",
+			message: "guard.string",
+			properties: {
+				property: "alias",
+				value: "undefined"
+			}
+		});
+	});
+
+	test("can fail to add alsoKnownAs when alias is not a Url or Urn", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+		await expect(
+			identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testIdentityDocument.id, "not a uri")
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "entityStorageIdentityConnector.invalidAlias",
+			properties: { alias: "not a uri" }
+		});
+	});
+
+	test("can add an alias to alsoKnownAs", async () => {
+		await didDocumentEntityStorage.set(testIdentityDocument);
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		await identityConnector.addAlsoKnownAs(
+			TEST_IDENTITY_ID,
+			testIdentityDocument.id,
+			"did:example:linked"
+		);
+
+		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		expect(testDocument.alsoKnownAs).toContain("did:example:linked");
+		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+	});
+
+	test("addAlsoKnownAs is idempotent for duplicates", async () => {
+		await didDocumentEntityStorage.set(testIdentityDocument);
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		await identityConnector.addAlsoKnownAs(
+			TEST_IDENTITY_ID,
+			testIdentityDocument.id,
+			"did:example:linked"
+		);
+
+		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		const aliases = Is.array(testDocument.alsoKnownAs) ? testDocument.alsoKnownAs : [];
+		const occurrences = aliases.filter(a => a === "did:example:linked").length;
+		expect(occurrences).toBe(1);
+		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+	});
+
+	test("can fail to remove alsoKnownAs with no alias", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+		await expect(
+			identityConnector.removeAlsoKnownAs(
+				TEST_IDENTITY_ID,
+				testIdentityDocument.id,
+				undefined as unknown as string
+			)
+		).rejects.toMatchObject({
+			name: "GuardError",
+			message: "guard.string",
+			properties: {
+				property: "alias",
+				value: "undefined"
+			}
+		});
+	});
+
+	test("can fail to remove alsoKnownAs when alias is not a Url or Urn", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+		await expect(
+			identityConnector.removeAlsoKnownAs(TEST_IDENTITY_ID, testIdentityDocument.id, "not a uri")
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "entityStorageIdentityConnector.invalidAlias",
+			properties: { alias: "not a uri" }
+		});
+	});
+
+	test("can remove an alias from alsoKnownAs", async () => {
+		await didDocumentEntityStorage.set(testIdentityDocument);
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		await identityConnector.removeAlsoKnownAs(
+			TEST_IDENTITY_ID,
+			testIdentityDocument.id,
+			"did:example:linked"
+		);
+
+		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		expect(testDocument.alsoKnownAs).toBeUndefined();
+		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+	});
+
+	test("removeAlsoKnownAs is a no-op when alias is not present", async () => {
+		await didDocumentEntityStorage.set(testIdentityDocument);
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		await identityConnector.removeAlsoKnownAs(
+			TEST_IDENTITY_ID,
+			testIdentityDocument.id,
+			"did:example:missing"
+		);
+
+		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		expect(testDocument.alsoKnownAs).toBeUndefined();
+		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+	});
+
 	test("can fail to create a verifiable credential with no verification method id", async () => {
 		const identityConnector = new EntityStorageIdentityConnector();
 

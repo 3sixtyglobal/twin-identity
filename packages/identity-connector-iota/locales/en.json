@@ -5,6 +5,7 @@
 			"resolveDocumentFailed": "Resolving the document failed \"{documentId}\""
 		},
 		"iotaIdentityConnector": {
+			"addAlsoKnownAsFailed": "Adding to the alsoKnownAs property failed",
 			"addServiceFailed": "Adding the service failed",
 			"addVerificationMethodFailed": "Adding the verification method failed",
 			"algorithmKeyTypeMismatch": "Algorithm \"{algorithm}\" requires key type \"{expectedKeyType}\", but key \"{keyId}\" has type \"{actualKeyType}\"",
@@ -18,6 +19,7 @@
 			"documentNotFound": "The document could not be found",
 			"gasStationTransactionBuildFailed": "Building the gas station transaction failed",
 			"identityNotFound": "The identity could not be found \"{notFoundId}\"",
+			"invalidAlias": "The alias is invalid it must be a Url or Urn, it is \"{alias}\"",
 			"invalidSubjectId": "The subject id format is invalid it must be a Url or Urn, it is \"{subjectId}\"",
 			"methodMissing": "The verification method specified does not exist \"{method}\"",
 			"missingControllerToken": "The controller token is missing",
@@ -25,6 +27,7 @@
 			"privateKeyMissing": "The verification method contains no privateKey \"{keyId}\"",
 			"publicKeyJwkMethodMissing": "The verification method contains no publicKeyJwk in method \"{method}\"",
 			"publicKeyJwkMissing": "The verification method contains no publicKeyJwk in JWK \"{jwk}\"",
+			"removeAlsoKnownAsFailed": "Removing from the alsoKnownAs property failed",
 			"removeDocumentFailed": "Removing the document failed",
 			"removeServiceFailed": "Removing the service failed",
 			"removeVerificationMethodFailed": "Removing the verification method failed",

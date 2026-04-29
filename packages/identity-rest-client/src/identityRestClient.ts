@@ -6,7 +6,8 @@ import { Guards, Is } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
-	type IIdentityVerifiableCredentialVerifyDocumentRequest,
+	type IIdentityAlsoKnownAsCreateRequest,
+	type IIdentityAlsoKnownAsRemoveRequest,
 	type IIdentityComponent,
 	type IIdentityCreateRequest,
 	type IIdentityCreateResponse,
@@ -22,6 +23,7 @@ import {
 	type IIdentityVerifiableCredentialCreateResponse,
 	type IIdentityVerifiableCredentialRevokeRequest,
 	type IIdentityVerifiableCredentialUnrevokeRequest,
+	type IIdentityVerifiableCredentialVerifyDocumentRequest,
 	type IIdentityVerifiableCredentialVerifyRequest,
 	type IIdentityVerifiableCredentialVerifyResponse,
 	type IIdentityVerifiablePresentationCreateRequest,
@@ -234,6 +236,58 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 				pathParams: {
 					identity: idParts.id,
 					serviceId: idParts.fragment ?? ""
+				}
+			}
+		);
+	}
+
+	/**
+	 * Add an alias to the alsoKnownAs property on the document.
+	 * If the alias is already present the operation is a no-op.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async alsoKnownAsAdd(documentId: string, alias: string): Promise<void> {
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(alias), alias);
+
+		await this.fetch<IIdentityAlsoKnownAsCreateRequest, INoContentResponse>(
+			"/:identity/alias",
+			"POST",
+			{
+				pathParams: {
+					identity: documentId
+				},
+				body: {
+					alias
+				}
+			}
+		);
+	}
+
+	/**
+	 * Remove an alias from the alsoKnownAs property on the document.
+	 * If the alias is not present the operation is a no-op.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to remove. Must be a Url or Urn.
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async alsoKnownAsRemove(documentId: string, alias: string): Promise<void> {
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(alias), alias);
+
+		await this.fetch<IIdentityAlsoKnownAsRemoveRequest, INoContentResponse>(
+			"/:identity/alias/:alias",
+			"DELETE",
+			{
+				pathParams: {
+					identity: documentId,
+					alias
 				}
 			}
 		);

@@ -87,6 +87,30 @@ export interface IIdentityConnector extends IComponent {
 	removeService(controller: string, serviceId: string): Promise<void>;
 
 	/**
+	 * Add an alias to the alsoKnownAs property on the document.
+	 * If the alias is already present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	addAlsoKnownAs(controller: string, documentId: string, alias: string): Promise<void>;
+
+	/**
+	 * Remove an alias from the alsoKnownAs property on the document.
+	 * If the alias is not present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to remove. Must be a Url or Urn.
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	removeAlsoKnownAs(controller: string, documentId: string, alias: string): Promise<void>;
+
+	/**
 	 * Create a verifiable credential for a verification method.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The verification method id to use.

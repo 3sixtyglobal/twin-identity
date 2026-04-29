@@ -14,7 +14,9 @@ import {
 	JsonHelper,
 	NotFoundError,
 	ObjectHelper,
-	RandomHelper
+	RandomHelper,
+	Url,
+	Urn
 } from "@twin.org/core";
 import {
 	JsonLdHelper,
@@ -573,6 +575,120 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
 				"removeServiceFailed",
+				undefined,
+				error
+			);
+		}
+	}
+
+	/**
+	 * Add an alias to the alsoKnownAs property on the document.
+	 * If the alias is already present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async addAlsoKnownAs(
+		controller: string,
+		documentId: string,
+		alias: string
+	): Promise<void> {
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(alias), alias);
+		if (!Url.tryParseExact(alias) && !Urn.tryParseExact(alias)) {
+			throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "invalidAlias", { alias });
+		}
+
+		try {
+			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
+			if (Is.undefined(didIdentityDocument)) {
+				throw new NotFoundError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"documentNotFound",
+					documentId
+				);
+			}
+			await EntityStorageIdentityConnector.verifyDocument(
+				didIdentityDocument,
+				this._vaultConnector
+			);
+			const didDocument = didIdentityDocument.document;
+
+			const existing = Is.array(didDocument.alsoKnownAs) ? didDocument.alsoKnownAs : [];
+			if (existing.includes(alias)) {
+				return;
+			}
+
+			didDocument.alsoKnownAs = [...existing, alias];
+
+			await this.updateDocument(controller, didDocument);
+		} catch (error) {
+			throw new GeneralError(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				"addAlsoKnownAsFailed",
+				undefined,
+				error
+			);
+		}
+	}
+
+	/**
+	 * Remove an alias from the alsoKnownAs property on the document.
+	 * If the alias is not present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to remove. Must be a Url or Urn.
+	 * @returns Nothing.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async removeAlsoKnownAs(
+		controller: string,
+		documentId: string,
+		alias: string
+	): Promise<void> {
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(alias), alias);
+		if (!Url.tryParseExact(alias) && !Urn.tryParseExact(alias)) {
+			throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "invalidAlias", { alias });
+		}
+
+		try {
+			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
+			if (Is.undefined(didIdentityDocument)) {
+				throw new NotFoundError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"documentNotFound",
+					documentId
+				);
+			}
+			await EntityStorageIdentityConnector.verifyDocument(
+				didIdentityDocument,
+				this._vaultConnector
+			);
+			const didDocument = didIdentityDocument.document;
+
+			if (!Is.array(didDocument.alsoKnownAs) || !didDocument.alsoKnownAs.includes(alias)) {
+				return;
+			}
+
+			const filtered = didDocument.alsoKnownAs.filter(a => a !== alias);
+			if (filtered.length === 0) {
+				delete didDocument.alsoKnownAs;
+			} else {
+				didDocument.alsoKnownAs = filtered;
+			}
+
+			await this.updateDocument(controller, didDocument);
+		} catch (error) {
+			throw new GeneralError(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				"removeAlsoKnownAsFailed",
 				undefined,
 				error
 			);
