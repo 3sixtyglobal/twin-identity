@@ -6,6 +6,7 @@ import { Guards, Is } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
+	type IIdentityVerifiablePresentationVerifyDocumentRequest,
 	type IIdentityAlsoKnownAsCreateRequest,
 	type IIdentityAlsoKnownAsRemoveRequest,
 	type IIdentityComponent,
@@ -503,22 +504,38 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 	/**
 	 * Verify a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	public async verifiablePresentationVerify(presentationJwt: string): Promise<{
+	public async verifiablePresentationVerify(
+		presentation: string | IDidVerifiablePresentation
+	): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
-		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(presentationJwt), presentationJwt);
+		if (Is.object(presentation)) {
+			Guards.object<IDidVerifiablePresentation>(
+				IdentityRestClient.CLASS_NAME,
+				nameof(presentation),
+				presentation
+			);
+			const response = await this.fetch<
+				IIdentityVerifiablePresentationVerifyDocumentRequest,
+				IIdentityVerifiablePresentationVerifyResponse
+			>("/verifiable-presentation/verify/document", "POST", { body: presentation });
+
+			return response.body;
+		}
+
+		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(presentation), presentation);
 
 		const response = await this.fetch<
 			IIdentityVerifiablePresentationVerifyRequest,
 			IIdentityVerifiablePresentationVerifyResponse
 		>("/verifiable-presentation/verify", "POST", {
 			query: {
-				jwt: presentationJwt
+				jwt: presentation
 			}
 		});
 

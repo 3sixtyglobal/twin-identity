@@ -589,35 +589,45 @@ export class IdentityService implements IIdentityComponent {
 
 	/**
 	 * Verify a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	public async verifiablePresentationVerify(presentationJwt: string): Promise<{
+	public async verifiablePresentationVerify(
+		presentation: string | IDidVerifiablePresentation
+	): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
-		Guards.stringValue(IdentityService.CLASS_NAME, nameof(presentationJwt), presentationJwt);
+		let holder;
+		if (Is.stringValue(presentation)) {
+			Guards.stringValue(IdentityService.CLASS_NAME, nameof(presentation), presentation);
 
-		const jwtDecoded = await Jwt.decode(presentationJwt);
+			const jwtDecoded = await Jwt.decode(presentation);
 
-		const jwtHeader = jwtDecoded.header;
-		const jwtPayload = jwtDecoded.payload;
-		const jwtSignature = jwtDecoded.signature;
+			const jwtHeader = jwtDecoded.header;
+			const jwtPayload = jwtDecoded.payload;
+			const jwtSignature = jwtDecoded.signature;
 
-		if (
-			Is.undefined(jwtHeader) ||
-			Is.undefined(jwtPayload) ||
-			Is.undefined(jwtPayload.iss) ||
-			Is.undefined(jwtSignature)
-		) {
-			throw new GeneralError(IdentityService.CLASS_NAME, "jwtDecodeFailed");
+			if (
+				Is.undefined(jwtHeader) ||
+				Is.undefined(jwtPayload) ||
+				Is.undefined(jwtPayload.iss) ||
+				Is.undefined(jwtSignature)
+			) {
+				throw new GeneralError(IdentityService.CLASS_NAME, "jwtDecodeFailed");
+			}
+
+			holder = jwtPayload.iss;
+		} else {
+			holder = presentation.holder;
 		}
+		Guards.stringValue(IdentityService.CLASS_NAME, nameof(holder), holder);
 
 		try {
-			const identityConnector = this.getConnectorByUri(jwtPayload.iss);
+			const identityConnector = this.getConnectorByUri(holder);
 
-			const service = await identityConnector.checkVerifiablePresentation(presentationJwt);
+			const service = await identityConnector.checkVerifiablePresentation(presentation);
 
 			return service;
 		} catch (error) {

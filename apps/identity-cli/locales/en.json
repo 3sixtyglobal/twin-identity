@@ -1,6 +1,18 @@
 {
 	"error": {
 		"commands": {
+			"verifiable-presentation-create": {
+				"noCredentialsProvided": "Either --jwt or --json-ld must be provided with at least one credential.",
+				"jsonLdFileNotFound": "The JSON-LD credential file was not found."
+			},
+			"verifiable-credential-verify": {
+				"noCredentialProvided": "Either --jwt or --json-ld must be provided.",
+				"jsonLdFileNotFound": "The JSON-LD file was not found."
+			},
+			"verifiable-presentation-verify": {
+				"noPresentationProvided": "Either --jwt or --json-ld must be provided.",
+				"jsonLdFileNotFound": "The JSON-LD file was not found."
+			},
 			"verifiable-credential-create": {
 				"subjectJsonFileNotFound": "The subject JSON file was not found."
 			},
@@ -185,12 +197,77 @@
 				"addressIndex": "Address Index"
 			}
 		},
+		"verifiable-presentation-create": {
+			"summary": "Create a verifiable presentation.",
+			"description": "Create a verifiable presentation.",
+			"options": {
+				"verification-method-id": {
+					"param": "--verification-method-id '<'verification-method-id'>'",
+					"description": "The full verification method id including did, or start with ! to read environment variable."
+				},
+				"private-key": {
+					"param": "--private-key '<'private-key'>'",
+					"description": "The private key for the verification method id, in either hex or base64 form, or start with ! to read environment variable."
+				},
+				"presentation-id": {
+					"param": "--presentation-id '<'presentation-id'>'",
+					"description": "The presentation id which uniquely identifies the presentation."
+				},
+				"jwt": {
+					"param": "--jwt '<'jwt'>'",
+					"description": "Comma-separated list of verifiable credential JWTs to include in the presentation, or start with ! to read environment variable."
+				},
+				"json-ld": {
+					"param": "--json-ld '<'json-ld'>'",
+					"description": "Comma-separated list of JSON-LD filenames containing verifiable credentials to include in the presentation."
+				},
+				"expiration-date": {
+					"param": "--expiration-date '<'ISO Date'>'",
+					"description": "The expiration date for the presentation."
+				}
+			},
+			"progress": {
+				"creatingVerifiablePresentation": "Creating Verifiable Presentation",
+				"loadingCredentialData": "Loading Credential Data"
+			},
+			"labels": {
+				"verificationMethodId": "Verification Method Id",
+				"presentationId": "Presentation Id",
+				"jwt": "JWT Credentials",
+				"jsonLd": "JSON-LD Credentials",
+				"verifiablePresentation": "Verifiable Presentation",
+				"expirationDate": "Expiration Date"
+			}
+		},
+		"verifiable-presentation-verify": {
+			"summary": "Verify a verifiable presentation.",
+			"description": "Verify a verifiable presentation.",
+			"options": {
+				"jwt": {
+					"param": "--jwt '<'jwt'>'",
+					"description": "The verifiable presentation as a JSON web token to verify, or start with ! to read environment variable."
+				},
+				"json-ld": {
+					"param": "--json-ld '<'json-ld'>'",
+					"description": "A JSON-LD file containing the verifiable presentation to verify."
+				}
+			},
+			"progress": {
+				"verifyingPresentation": "Verifying Presentation"
+			},
+			"labels": {
+				"jwt": "JWT",
+				"jsonLd": "JSON-LD",
+				"isVerified": "Is Verified",
+				"isRevoked": "Is Revoked"
+			}
+		},
 		"verifiable-credential-create": {
 			"summary": "Create a verifiable credential.",
 			"description": "Create a verifiable credential.",
 			"options": {
-				"id": {
-					"param": "--id '<'id'>'",
+				"verification-method-id": {
+					"param": "--verification-method-id '<'verification-method-id'>'",
 					"description": "The full verification method id including did, or start with ! to read environment variable."
 				},
 				"private-key": {
@@ -234,6 +311,10 @@
 				"jwt": {
 					"param": "--jwt '<'jwt'>'",
 					"description": "The verifiable credential as a JSON web token to verify, or start with ! to read environment variable."
+				},
+				"json-ld": {
+					"param": "--json-ld '<'json-ld'>'",
+					"description": "A JSON-LD file containing the verifiable credential to verify."
 				}
 			},
 			"progress": {
@@ -241,6 +322,7 @@
 			},
 			"labels": {
 				"jwt": "JWT",
+				"jsonLd": "JSON-LD",
 				"isVerified": "Is Verified",
 				"isRevoked": "Is Revoked"
 			}
@@ -348,6 +430,64 @@
 				"documentFilename": "Document Filename",
 				"proofFilename": "Proof Filename",
 				"isVerified": "Is Verified"
+			}
+		},
+		"also-known-as-add": {
+			"summary": "Add an alias (alsoKnownAs) to a DID.",
+			"description": "Add an alias (alsoKnownAs) to a DID.",
+			"options": {
+				"seed": {
+					"param": "--seed '<'seed'>'",
+					"description": "The seed for the private key for the controller address of the document in hex or base64, or start with ! to read environment variable."
+				},
+				"did": {
+					"param": "--did '<'did'>'",
+					"description": "The identifier to add the alias to, or start with ! to read environment variable."
+				},
+				"alias": {
+					"param": "--alias '<'alias'>'",
+					"description": "The alias (alsoKnownAs) value to add."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
+				}
+			},
+			"progress": {
+				"addingAlsoKnownAs": "Adding Alias (alsoKnownAs)"
+			},
+			"labels": {
+				"alias": "Alias (alsoKnownAs)",
+				"addressIndex": "Address Index"
+			}
+		},
+		"also-known-as-remove": {
+			"summary": "Remove an alias (alsoKnownAs) from a DID.",
+			"description": "Remove an alias (alsoKnownAs) from a DID.",
+			"options": {
+				"seed": {
+					"param": "--seed '<'seed'>'",
+					"description": "The seed for the private key for the controller address of the document in hex or base64, or start with ! to read environment variable."
+				},
+				"did": {
+					"param": "--did '<'did'>'",
+					"description": "The identifier to remove the alias from, or start with ! to read environment variable."
+				},
+				"alias": {
+					"param": "--alias '<'alias'>'",
+					"description": "The alias (alsoKnownAs) value to remove."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
+				}
+			},
+			"progress": {
+				"removingAlsoKnownAs": "Removing Alias (alsoKnownAs)"
+			},
+			"labels": {
+				"alias": "Alias (alsoKnownAs)",
+				"addressIndex": "Address Index"
 			}
 		},
 		"common": {

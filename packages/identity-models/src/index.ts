@@ -25,6 +25,7 @@ export * from "./models/api/identity/IIdentityVerifiableCredentialVerifyRequest.
 export * from "./models/api/identity/IIdentityVerifiableCredentialVerifyResponse.js";
 export * from "./models/api/identity/IIdentityVerifiablePresentationCreateRequest.js";
 export * from "./models/api/identity/IIdentityVerifiablePresentationCreateResponse.js";
+export * from "./models/api/identity/IIdentityVerifiablePresentationVerifyDocumentRequest.js";
 export * from "./models/api/identity/IIdentityVerifiablePresentationVerifyRequest.js";
 export * from "./models/api/identity/IIdentityVerifiablePresentationVerifyResponse.js";
 export * from "./models/api/identity/IIdentityVerificationMethodCreateRequest.js";

@@ -9,6 +9,8 @@ export * from "./commands/serviceAdd.js";
 export * from "./commands/serviceRemove.js";
 export * from "./commands/setupCommands.js";
 export * from "./commands/verifiableCredentialCreate.js";
+export * from "./commands/verifiablePresentationCreate.js";
+export * from "./commands/verifiablePresentationVerify.js";
 export * from "./commands/verifiableCredentialRevoke.js";
 export * from "./commands/verifiableCredentialUnrevoke.js";
 export * from "./commands/verifiableCredentialVerify.js";

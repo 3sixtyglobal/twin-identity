@@ -200,10 +200,10 @@ export interface IIdentityConnector extends IComponent {
 
 	/**
 	 * Check a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	checkVerifiablePresentation(presentationJwt: string): Promise<{
+	checkVerifiablePresentation(presentation: string | IDidVerifiablePresentation): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];

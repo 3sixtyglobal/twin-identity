@@ -36,10 +36,15 @@ import {
 	type IIdentityVerifiablePresentationVerifyResponse,
 	type IIdentityVerificationMethodCreateRequest,
 	type IIdentityVerificationMethodCreateResponse,
-	type IIdentityVerificationMethodRemoveRequest
+	type IIdentityVerificationMethodRemoveRequest,
+	type IIdentityVerifiablePresentationVerifyDocumentRequest
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import { DidContexts, type IDidVerifiableCredential } from "@twin.org/standards-w3c-did";
+import {
+	DidContexts,
+	type IDidVerifiablePresentation,
+	type IDidVerifiableCredential
+} from "@twin.org/standards-w3c-did";
 import { HttpStatusCode } from "@twin.org/web";
 
 /**
@@ -788,6 +793,77 @@ export function generateRestRoutesIdentity(
 		skipAuth: true
 	};
 
+	const identityVerifiablePresentationVerifyDocumentRoute: IRestRoute<
+		IIdentityVerifiablePresentationVerifyDocumentRequest,
+		IIdentityVerifiablePresentationVerifyResponse
+	> = {
+		operationId: "identityVerifiablePresentationVerifyDocument",
+		summary: "Verify an identity verifiable presentation document",
+		tag: tagsIdentity[0].name,
+		method: "POST",
+		path: `${baseRouteName}/verifiable-presentation/verify/document`,
+		handler: async (httpRequestContext, request) =>
+			identityVerifiablePresentationVerifyDocument(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityVerifiablePresentationVerifyDocumentRequest>(),
+			examples: [
+				{
+					id: "identityVerifiablePresentationVerifyDocumentRequestExample",
+					request: {
+						body: {
+							"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+							id: "https://example.com/credentials/3732",
+							type: ["VerifiableCredential", "Person"],
+							verifiableCredential: [
+								{
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+									id: "https://example.com/credentials/3732",
+									type: ["VerifiableCredential", "Person"],
+									credentialSubject: {
+										id: "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+										name: "Jane Doe"
+									},
+									issuer:
+										"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+									issuanceDate: "2025-01-24T09:21:51.500Z",
+									credentialStatus: {
+										id: "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+										type: "BitstringStatusList",
+										revocationBitmapIndex: "5"
+									}
+								}
+							]
+						} as IDidVerifiablePresentation
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<IIdentityVerifiablePresentationVerifyResponse>(),
+				examples: [
+					{
+						id: "identityVerifiablePresentationVerifyResponseExample",
+						response: {
+							body: {
+								revoked: false,
+								verifiablePresentation: {
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+									id: "presentationId",
+									type: ["VerifiablePresentation", "Person"],
+									verifiableCredential: ["eyJraWQiOi...D1Z3AQ"],
+									holder:
+										"did:entity-storage:0xcea318e06e89f3fb4048160770effd84d0cfa5801fee13dfa6f9413a00429cec"
+								}
+							}
+						}
+					}
+				]
+			}
+		],
+		skipAuth: true
+	};
+
 	const identityProofCreateRoute: IRestRoute<
 		IIdentityProofCreateRequest,
 		IIdentityProofCreateResponse
@@ -944,6 +1020,7 @@ export function generateRestRoutesIdentity(
 		identityVerifiableCredentialRevokeRoute,
 		identityVerifiableCredentialUnrevokeRoute,
 		identityVerifiablePresentationCreateRoute,
+		identityVerifiablePresentationVerifyDocumentRoute,
 		identityVerifiablePresentationVerifyRoute,
 		identityProofCreateRoute,
 		identityProofVerifyRoute
@@ -1558,6 +1635,34 @@ export async function identityVerifiablePresentationVerify(
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verifiablePresentationVerify(request.query.jwt);
+
+	return {
+		body: result
+	};
+}
+
+/**
+ * Verify a verifiable presentation document.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityVerifiablePresentationVerifyDocument(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityVerifiablePresentationVerifyDocumentRequest
+): Promise<IIdentityVerifiablePresentationVerifyResponse> {
+	Guards.object<IIdentityVerifiablePresentationVerifyDocumentRequest>(
+		ROUTES_SOURCE,
+		nameof(request),
+		request
+	);
+	Guards.object<IDidVerifiablePresentation>(ROUTES_SOURCE, nameof(request.body), request.body);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	const result = await component.verifiablePresentationVerify(request.body);
 
 	return {
 		body: result

@@ -919,7 +919,7 @@ describe("EntityStorageIdentityConnector", () => {
 			name: "GuardError",
 			message: "guard.stringEmpty",
 			properties: {
-				property: "presentationJwt",
+				property: "presentation",
 				value: ""
 			}
 		});
@@ -928,24 +928,44 @@ describe("EntityStorageIdentityConnector", () => {
 	test("can validate a verifiable presentation", async () => {
 		await didDocumentEntityStorage.set(testIdentityDocument);
 		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
 
 		const identityConnector = new EntityStorageIdentityConnector();
-		const result = await identityConnector.checkVerifiablePresentation(testVpJwt);
 
-		expect(result.revoked).toBeFalsy();
-		expect(result.verifiablePresentation?.["@context"]).toEqual([
+		const jwtResult = await identityConnector.checkVerifiablePresentation(testVpJwt);
+
+		expect(jwtResult.revoked).toBeFalsy();
+		expect(jwtResult.verifiablePresentation?.["@context"]).toEqual([
 			DidContexts.ContextVCv1,
 			"https://schema.org"
 		]);
-		expect(result.verifiablePresentation?.type).toEqual([
+		expect(jwtResult.verifiablePresentation?.type).toEqual([
 			DidTypes.VerifiablePresentation,
 			"Person"
 		]);
-		expect(result.verifiablePresentation?.verifiableCredential).toBeDefined();
-		expect(result.verifiablePresentation?.holder?.startsWith("did:entity-storage")).toBeTruthy();
-		expect(result.issuers).toBeDefined();
-		expect(result.issuers?.length).toEqual(1);
-		expect(result.issuers?.[0].id).toEqual(testIdentityDocument.id);
+		expect(jwtResult.verifiablePresentation?.verifiableCredential).toBeDefined();
+		expect(jwtResult.verifiablePresentation?.holder?.startsWith("did:entity-storage")).toBeTruthy();
+		expect(jwtResult.issuers).toBeDefined();
+		expect(jwtResult.issuers?.length).toEqual(1);
+		expect(jwtResult.issuers?.[0].id).toEqual(testIdentityDocument.id);
+
+		const createResult = await identityConnector.createVerifiablePresentation(
+			TEST_IDENTITY_ID,
+			testDocumentVerificationMethodId,
+			"presentationId",
+			"https://schema.org",
+			["Person"],
+			[testVcJwt],
+			{ expirationDate: new Date(Date.now() + 14400000) }
+		);
+
+		const objectResult = await identityConnector.checkVerifiablePresentation(
+			createResult.verifiablePresentation
+		);
+
+		expect(objectResult.revoked).toBeFalsy();
+		expect(objectResult.verifiablePresentation?.["@context"]).toBeDefined();
+		expect(objectResult.verifiablePresentation?.type).toContain(DidTypes.VerifiablePresentation);
 	});
 
 	test("can fail to create a proof with no verificationMethodId", async () => {

@@ -1028,7 +1028,10 @@ describe("IotaIdentityConnector", () => {
 			{ expirationDate: new Date(Date.now() + 14400000) }
 		);
 
-		expect(result.verifiablePresentation["@context"]).toEqual(DidContexts.ContextVCv1);
+		expect(result.verifiablePresentation["@context"]).toEqual([
+			DidContexts.ContextVCv1,
+			DidContexts.ContextDataIntegrity
+		]);
 		expect(result.verifiablePresentation.type).toEqual([DidTypes.VerifiablePresentation, "Person"]);
 		expect(result.verifiablePresentation.verifiableCredential).toBeDefined();
 		expect((result.verifiablePresentation.verifiableCredential as string[])[0]).toEqual(testVcJwt);
@@ -1041,7 +1044,7 @@ describe("IotaIdentityConnector", () => {
 			name: "GuardError",
 			message: "guard.stringEmpty",
 			properties: {
-				property: "presentationJwt",
+				property: "presentation",
 				value: ""
 			}
 		});
@@ -1059,16 +1062,24 @@ describe("IotaIdentityConnector", () => {
 		);
 
 		const vpJwt = createResult.jwt;
-		const result = await identityConnector.checkVerifiablePresentation(vpJwt);
+		const jwtResult = await identityConnector.checkVerifiablePresentation(vpJwt);
 
-		expect(result.revoked).toBeFalsy();
-		expect(result.verifiablePresentation).toBeDefined();
-		expect(result.verifiablePresentation?.["@context"]).toBeDefined();
-		expect(result.verifiablePresentation?.type).toBeDefined();
-		expect(result.verifiablePresentation?.verifiableCredential).toBeDefined();
-		expect(result.verifiablePresentation?.holder).toBeDefined();
-		expect(result.issuers).toBeDefined();
-		expect(result.issuers?.length).toBeGreaterThan(0);
+		expect(jwtResult.revoked).toBeFalsy();
+		expect(jwtResult.verifiablePresentation).toBeDefined();
+		expect(jwtResult.verifiablePresentation?.["@context"]).toBeDefined();
+		expect(jwtResult.verifiablePresentation?.type).toBeDefined();
+		expect(jwtResult.verifiablePresentation?.verifiableCredential).toBeDefined();
+		expect(jwtResult.verifiablePresentation?.holder).toBeDefined();
+		expect(jwtResult.issuers).toBeDefined();
+		expect(jwtResult.issuers?.length).toBeGreaterThan(0);
+
+		const vpObject = createResult.verifiablePresentation;
+		const objectResult = await identityConnector.checkVerifiablePresentation(vpObject);
+
+		expect(objectResult.revoked).toBeFalsy();
+		expect(objectResult.verifiablePresentation).toBeDefined();
+		expect(objectResult.verifiablePresentation?.["@context"]).toBeDefined();
+		expect(objectResult.verifiablePresentation?.type).toBeDefined();
 	});
 
 	it("should create a proof for a document", async () => {

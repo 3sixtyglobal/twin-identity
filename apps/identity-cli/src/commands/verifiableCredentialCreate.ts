@@ -29,8 +29,12 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 		.summary(I18n.formatMessage("commands.verifiable-credential-create.summary"))
 		.description(I18n.formatMessage("commands.verifiable-credential-create.description"))
 		.requiredOption(
-			I18n.formatMessage("commands.verifiable-credential-create.options.id.param"),
-			I18n.formatMessage("commands.verifiable-credential-create.options.id.description")
+			I18n.formatMessage(
+				"commands.verifiable-credential-create.options.verification-method-id.param"
+			),
+			I18n.formatMessage(
+				"commands.verifiable-credential-create.options.verification-method-id.description"
+			)
 		)
 		.requiredOption(
 			I18n.formatMessage("commands.verifiable-credential-create.options.private-key.param"),
@@ -91,7 +95,7 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 /**
  * Action the verifiable credential create command.
  * @param opts The options for the command.
- * @param opts.id The id of the verification method to use for the credential.
+ * @param opts.verificationMethodId The id of the verification method to use for the credential.
  * @param opts.privateKey The private key for the verification method.
  * @param opts.credentialId The id of the credential.
  * @param opts.subjectJson The JSON data for the subject.
@@ -102,7 +106,7 @@ export function buildCommandVerifiableCredentialCreate(): Command {
  */
 export async function actionCommandVerifiableCredentialCreate(
 	opts: {
-		id: string;
+		verificationMethodId: string;
 		privateKey: string;
 		credentialId?: string;
 		subjectJson: string;
@@ -113,7 +117,10 @@ export async function actionCommandVerifiableCredentialCreate(
 		network?: string;
 	} & CliOutputOptions
 ): Promise<void> {
-	const id: string = CLIParam.stringValue("id", opts.id);
+	const verificationMethodId: string = CLIParam.stringValue(
+		"verification-method-id",
+		opts.verificationMethodId
+	);
 	const privateKey: Uint8Array = CLIParam.hexBase64("private-key", opts.privateKey);
 	const credentialId: string = CLIParam.stringValue("credential-id", opts.credentialId);
 	const subjectJson: string = path.resolve(CLIParam.stringValue("subject-json", opts.subjectJson));
@@ -126,7 +133,7 @@ export async function actionCommandVerifiableCredentialCreate(
 
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.verificationMethodId"),
-		id
+		verificationMethodId
 	);
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.credentialId"),
@@ -152,7 +159,7 @@ export async function actionCommandVerifiableCredentialCreate(
 
 	setupVault();
 
-	const vmParts = DocumentHelper.parseId(id);
+	const vmParts = DocumentHelper.parseId(verificationMethodId);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
 	await vaultConnector.addKey(
@@ -191,7 +198,7 @@ export async function actionCommandVerifiableCredentialCreate(
 
 	const verifiableCredential = await identityConnector.createVerifiableCredential(
 		vmParts.id,
-		id,
+		verificationMethodId,
 		credentialId,
 		jsonData,
 		{
@@ -215,7 +222,10 @@ export async function actionCommandVerifiableCredentialCreate(
 	if (Is.stringValue(opts?.json)) {
 		await CLIUtils.writeJsonFile(
 			opts.json,
-			{ verifiableCredentialJwt: verifiableCredential.jwt },
+			{
+				verifiableCredentialJwt: verifiableCredential.jwt,
+				verifiableCredential: verifiableCredential.verifiableCredential
+			},
 			opts.mergeJson
 		);
 	}

@@ -1290,6 +1290,23 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				new JwtPresentationValidationOptions()
 			);
 
+			verifiablePresentation.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(verifiablePresentation)
+			);
+
+			// Promote the proof's @context to the VP root so JSON-LD processors can resolve DataIntegrity terms
+			const proofContext = verifiablePresentation.proof["@context"];
+			if (!Is.empty(proofContext)) {
+				verifiablePresentation["@context"] = (JsonLdProcessor.combineContexts(
+					verifiablePresentation["@context"],
+					proofContext
+				) ?? verifiablePresentation["@context"]) as IDidVerifiablePresentationV1["@context"];
+				delete verifiablePresentation.proof["@context"];
+			}
+
 			return {
 				verifiablePresentation,
 				jwt: presentationJwt
@@ -1306,15 +1323,38 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation JWT or JSON-LD object to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	public async checkVerifiablePresentation(presentationJwt: string): Promise<{
+	public async checkVerifiablePresentation(
+		presentation: string | IDidVerifiablePresentation
+	): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
-		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(presentationJwt), presentationJwt);
+		if (Is.object(presentation)) {
+			Guards.objectValue<IDidVerifiablePresentation>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(presentation),
+				presentation
+			);
+			Guards.objectValue(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(presentation.proof),
+				presentation.proof
+			);
+			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
+			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
+			Guards.objectValue(IotaIdentityConnector.CLASS_NAME, nameof(proof), proofEntry);
+			await this.verifyProof(JsonLdHelper.toNodeObject(doc), proofEntry);
+			return {
+				revoked: false,
+				verifiablePresentation: doc
+			};
+		}
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(presentation), presentation);
+		const presentationJwt = presentation;
 
 		try {
 			const iotaClient = Iota.createClient(this._config);
@@ -1336,7 +1376,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				holderDocument,
 				new JwtPresentationValidationOptions()
 			);
-			const presentation = decoded.presentation();
+			const decodedPresentation = decoded.presentation();
 
 			const credentialValidator = new JwtCredentialValidator(new EdDSAJwsVerifier());
 			const validationOptions = new JwtCredentialValidationOptions({
@@ -1384,7 +1424,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			return {
 				revoked: false,
-				verifiablePresentation: presentation.toJSON() as IDidVerifiablePresentation,
+				verifiablePresentation: decodedPresentation.toJSON() as IDidVerifiablePresentation,
 				issuers: jsonIssuers as IDidDocument[]
 			};
 		} catch (error) {

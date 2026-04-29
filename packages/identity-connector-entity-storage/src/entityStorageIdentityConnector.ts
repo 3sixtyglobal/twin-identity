@@ -43,7 +43,8 @@ import {
 	type IDidService,
 	type IDidVerifiableCredentialV1,
 	type IDidVerifiablePresentationV1,
-	type IProof
+	type IProof,
+	type IDidVerifiablePresentation
 } from "@twin.org/standards-w3c-did";
 import {
 	VaultConnectorFactory,
@@ -1325,6 +1326,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				"verifiableCredential"
 			]);
 
+			// Add the proof to the VP after extracting the jwt data
+			// as the jwt does not include the proof
+			verifiablePresentation.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(verifiablePresentation)
+			);
+
 			const jwtPayload: IJwtPayload = {
 				iss: verifiablePresentation.holder,
 				nbf: Math.floor(Date.now() / 1000),
@@ -1360,19 +1370,31 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	public async checkVerifiablePresentation(presentationJwt: string): Promise<{
+	public async checkVerifiablePresentation(
+		presentation: string | IDidVerifiablePresentation
+	): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentationV1;
 		issuers?: IDidDocument[];
 	}> {
+		if (Is.object(presentation)) {
+			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
+			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
+			Guards.objectValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(proofEntry), proofEntry);
+			await this.verifyProof(JsonLdHelper.toNodeObject(doc), proofEntry);
+			return { revoked: false, verifiablePresentation: doc };
+		}
+
 		Guards.stringValue(
 			EntityStorageIdentityConnector.CLASS_NAME,
-			nameof(presentationJwt),
-			presentationJwt
+			nameof(presentation),
+			presentation
 		);
+
+		const presentationJwt = presentation;
 
 		try {
 			const jwtDecoded = await Jwt.decode(presentationJwt);

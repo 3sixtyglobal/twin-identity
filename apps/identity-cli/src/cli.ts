@@ -6,6 +6,8 @@ import { CLIBase } from "@twin.org/cli-core";
 import { buildCommandAddress, buildCommandMnemonic } from "@twin.org/crypto-cli";
 import { buildCommandFaucet, buildCommandTransfer } from "@twin.org/wallet-cli";
 import type { Command } from "commander";
+import { buildCommandAlsoKnownAsAdd } from "./commands/alsoKnownAsAdd.js";
+import { buildCommandAlsoKnownAsRemove } from "./commands/alsoKnownAsRemove.js";
 import { buildCommandIdentityCreate } from "./commands/identityCreate.js";
 import { buildCommandIdentityResolve } from "./commands/identityResolve.js";
 import { buildCommandProofCreate } from "./commands/proofCreate.js";
@@ -16,6 +18,8 @@ import { buildCommandVerifiableCredentialCreate } from "./commands/verifiableCre
 import { buildCommandVerifiableCredentialRevoke } from "./commands/verifiableCredentialRevoke.js";
 import { buildCommandVerifiableCredentialUnrevoke } from "./commands/verifiableCredentialUnrevoke.js";
 import { buildCommandVerifiableCredentialVerify } from "./commands/verifiableCredentialVerify.js";
+import { buildCommandVerifiablePresentationCreate } from "./commands/verifiablePresentationCreate.js";
+import { buildCommandVerifiablePresentationVerify } from "./commands/verifiablePresentationVerify.js";
 import { buildCommandVerificationMethodAdd } from "./commands/verificationMethodAdd.js";
 import { buildCommandVerificationMethodRemove } from "./commands/verificationMethodRemove.js";
 
@@ -68,7 +72,11 @@ export class CLI extends CLIBase {
 			buildCommandVerificationMethodRemove(),
 			buildCommandServiceAdd(),
 			buildCommandServiceRemove(),
+			buildCommandAlsoKnownAsAdd(),
+			buildCommandAlsoKnownAsRemove(),
 			buildCommandVerifiableCredentialCreate(),
+			buildCommandVerifiablePresentationCreate(),
+			buildCommandVerifiablePresentationVerify(),
 			buildCommandVerifiableCredentialVerify(),
 			buildCommandVerifiableCredentialRevoke(),
 			buildCommandVerifiableCredentialUnrevoke(),
