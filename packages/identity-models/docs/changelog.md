@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3-next.19](https://github.com/twinfoundation/twin-identity/compare/identity-models-v0.0.3-next.18...identity-models-v0.0.3-next.19) (2026-04-29)
+
+
+### Features
+
+* add addAlsoKnownAs to identity connector ([#117](https://github.com/twinfoundation/twin-identity/issues/117)) ([aa27cff](https://github.com/twinfoundation/twin-identity/commit/aa27cff88e61e7c8c6e32aeb437fb01c6ee9f57a))
+
 ## [0.0.3-next.18](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.0.3-next.17...identity-models-v0.0.3-next.18) (2026-02-27)
 
 
