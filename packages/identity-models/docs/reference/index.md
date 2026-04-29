@@ -15,6 +15,8 @@
 - [IIdentityProfileConnector](interfaces/IIdentityProfileConnector.md)
 - [IIdentityResolverComponent](interfaces/IIdentityResolverComponent.md)
 - [IIdentityResolverConnector](interfaces/IIdentityResolverConnector.md)
+- [IIdentityAlsoKnownAsCreateRequest](interfaces/IIdentityAlsoKnownAsCreateRequest.md)
+- [IIdentityAlsoKnownAsRemoveRequest](interfaces/IIdentityAlsoKnownAsRemoveRequest.md)
 - [IIdentityCreateRequest](interfaces/IIdentityCreateRequest.md)
 - [IIdentityCreateResponse](interfaces/IIdentityCreateResponse.md)
 - [IIdentityProofCreateRequest](interfaces/IIdentityProofCreateRequest.md)

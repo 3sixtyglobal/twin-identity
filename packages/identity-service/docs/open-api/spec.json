@@ -765,6 +765,213 @@
 				}
 			}
 		},
+		"/identity/{identity}/alias": {
+			"post": {
+				"operationId": "identityAlsoKnownAsCreate",
+				"summary": "Add an alias to the alsoKnownAs property on the document",
+				"tags": [
+					"Identity"
+				],
+				"parameters": [
+					{
+						"name": "identity",
+						"description": "The identity to create the alias for.",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple",
+						"example": "did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
+				"requestBody": {
+					"description": "Request to create an alias for an identity.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/IdentityAlsoKnownAsCreateRequest"
+							},
+							"examples": {
+								"identityAlsoKnownAsCreateRequestExample": {
+									"value": {
+										"alias": "did:example:123"
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"204": {
+						"description": "The rest request ended in success with no data."
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/identity/{identity}/alias/{alias}": {
+			"delete": {
+				"operationId": "identityAlsoKnownAsRemove",
+				"summary": "Remove an alias from the alsoKnownAs property on the document",
+				"tags": [
+					"Identity"
+				],
+				"parameters": [
+					{
+						"name": "identity",
+						"description": "The identity to remove the alias from.",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple",
+						"example": "did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a"
+					},
+					{
+						"name": "alias",
+						"description": "The alias to remove.",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple",
+						"example": "did:example:123"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "The rest request ended in success with no data."
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/identity/{identity}/verifiable-credential/{verificationMethodId}": {
 			"post": {
 				"operationId": "identityVerifiableCredentialCreate",
@@ -1958,7 +2165,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ConflictResponse"
+									"$ref": "#/components/schemas/Error"
 								},
 								"examples": {
 									"exampleResponse": {
@@ -2616,27 +2823,6 @@
 	},
 	"components": {
 		"schemas": {
-			"ConflictResponse": {
-				"type": "object",
-				"properties": {
-					"conflicts": {
-						"type": "array",
-						"items": {
-							"type": "string"
-						},
-						"description": "The conflicting items."
-					}
-				},
-				"required": [
-					"conflicts"
-				],
-				"allOf": [
-					{
-						"$ref": "#/components/schemas/Error"
-					}
-				],
-				"description": "The body which contains the error."
-			},
 			"Error": {
 				"description": "Model to describe serialized error.",
 				"type": "object",
@@ -2670,6 +2856,19 @@
 					"name",
 					"message"
 				]
+			},
+			"IdentityAlsoKnownAsCreateRequest": {
+				"type": "object",
+				"properties": {
+					"alias": {
+						"type": "string",
+						"description": "The alias to create for the identity."
+					}
+				},
+				"required": [
+					"alias"
+				],
+				"description": "The data for the request."
 			},
 			"IdentityCreateRequest": {
 				"type": "object",

@@ -39,6 +39,8 @@
 - [identityVerificationMethodRemove](functions/identityVerificationMethodRemove.md)
 - [identityServiceCreate](functions/identityServiceCreate.md)
 - [identityServiceRemove](functions/identityServiceRemove.md)
+- [identityAlsoKnownAsCreate](functions/identityAlsoKnownAsCreate.md)
+- [identityAlsoKnownAsRemove](functions/identityAlsoKnownAsRemove.md)
 - [identityVerifiableCredentialCreate](functions/identityVerifiableCredentialCreate.md)
 - [identityVerifiableCredentialVerify](functions/identityVerifiableCredentialVerify.md)
 - [identityVerifiableCredentialVerifyDocument](functions/identityVerifiableCredentialVerifyDocument.md)

@@ -230,6 +230,92 @@ NotFoundError if the id can not be resolved.
 
 ***
 
+### alsoKnownAsAdd() {#alsoknownasadd}
+
+> **alsoKnownAsAdd**(`documentId`, `alias`, `controller?`): `Promise`\<`void`\>
+
+Add an alias to the alsoKnownAs property on the document.
+If the alias is already present the operation is a no-op.
+
+#### Parameters
+
+##### documentId
+
+`string`
+
+The id of the document to update.
+
+##### alias
+
+`string`
+
+The alias to add. Must be a Url or Urn (typically another DID).
+
+##### controller?
+
+`string`
+
+The controller of the identity who can make changes.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+Nothing.
+
+#### Throws
+
+GeneralError if the alias is not a Url or Urn.
+
+#### Throws
+
+NotFoundError if the id can not be resolved.
+
+***
+
+### alsoKnownAsRemove() {#alsoknownasremove}
+
+> **alsoKnownAsRemove**(`documentId`, `alias`, `controller?`): `Promise`\<`void`\>
+
+Remove an alias from the alsoKnownAs property on the document.
+If the alias is not present the operation is a no-op.
+
+#### Parameters
+
+##### documentId
+
+`string`
+
+The id of the document to update.
+
+##### alias
+
+`string`
+
+The alias to remove. Must be a Url or Urn.
+
+##### controller?
+
+`string`
+
+The controller of the identity who can make changes.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+Nothing.
+
+#### Throws
+
+GeneralError if the alias is not a Url or Urn.
+
+#### Throws
+
+NotFoundError if the id can not be resolved.
+
+***
+
 ### verifiableCredentialCreate() {#verifiablecredentialcreate}
 
 > **verifiableCredentialCreate**(`verificationMethodId`, `id`, `subject`, `options?`, `controller?`): `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredential`; `jwt`: `string`; \}\>
