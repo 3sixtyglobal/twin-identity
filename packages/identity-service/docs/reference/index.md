@@ -48,5 +48,6 @@
 - [identityVerifiableCredentialUnrevoke](functions/identityVerifiableCredentialUnrevoke.md)
 - [identityVerifiablePresentationCreate](functions/identityVerifiablePresentationCreate.md)
 - [identityVerifiablePresentationVerify](functions/identityVerifiablePresentationVerify.md)
+- [identityVerifiablePresentationVerifyDocument](functions/identityVerifiablePresentationVerifyDocument.md)
 - [identityProofCreate](functions/identityProofCreate.md)
 - [identityProofVerify](functions/identityProofVerify.md)

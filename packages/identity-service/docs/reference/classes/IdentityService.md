@@ -632,15 +632,15 @@ NotFoundError if the id can not be resolved.
 
 ### verifiablePresentationVerify() {#verifiablepresentationverify}
 
-> **verifiablePresentationVerify**(`presentationJwt`): `Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentation`; `issuers?`: `IDidDocument`[]; \}\>
+> **verifiablePresentationVerify**(`presentation`): `Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentation`; `issuers?`: `IDidDocument`[]; \}\>
 
 Verify a verifiable presentation is valid.
 
 #### Parameters
 
-##### presentationJwt
+##### presentation
 
-`string`
+`string` \| `IDidVerifiablePresentation`
 
 The presentation to verify.
 

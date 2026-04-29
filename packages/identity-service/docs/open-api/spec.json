@@ -1710,6 +1710,138 @@
 				}
 			}
 		},
+		"/identity/verifiable-presentation/verify/document": {
+			"post": {
+				"operationId": "identityVerifiablePresentationVerifyDocument",
+				"summary": "Verify an identity verifiable presentation document",
+				"tags": [
+					"Identity"
+				],
+				"requestBody": {
+					"description": "Request to verify a verifiable presentation.",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "https://schema.twindev.org/w3c-did/DidVerifiablePresentation"
+							},
+							"examples": {
+								"identityVerifiablePresentationVerifyDocumentRequestExample": {
+									"value": {
+										"@context": [
+											"https://www.w3.org/2018/credentials/v1",
+											"https://schema.org"
+										],
+										"id": "https://example.com/credentials/3732",
+										"type": [
+											"VerifiableCredential",
+											"Person"
+										],
+										"verifiableCredential": [
+											{
+												"@context": [
+													"https://www.w3.org/2018/credentials/v1",
+													"https://schema.org"
+												],
+												"id": "https://example.com/credentials/3732",
+												"type": [
+													"VerifiableCredential",
+													"Person"
+												],
+												"credentialSubject": {
+													"id": "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+													"name": "Jane Doe"
+												},
+												"issuer": "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+												"issuanceDate": "2025-01-24T09:21:51.500Z",
+												"credentialStatus": {
+													"id": "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+													"type": "BitstringStatusList",
+													"revocationBitmapIndex": "5"
+												}
+											}
+										]
+									}
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Response to verifying a verifiable presentation.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IdentityVerifiablePresentationVerifyResponse"
+								},
+								"examples": {
+									"identityVerifiablePresentationVerifyResponseExample": {
+										"value": {
+											"revoked": false,
+											"verifiablePresentation": {
+												"@context": [
+													"https://www.w3.org/2018/credentials/v1",
+													"https://schema.org"
+												],
+												"id": "presentationId",
+												"type": [
+													"VerifiablePresentation",
+													"Person"
+												],
+												"verifiableCredential": [
+													"eyJraWQiOi...D1Z3AQ"
+												],
+												"holder": "did:entity-storage:0xcea318e06e89f3fb4048160770effd84d0cfa5801fee13dfa6f9413a00429cec"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
 		"/identity/verifiable-presentation/verify": {
 			"get": {
 				"operationId": "identityVerifiablePresentationVerify",

@@ -36,6 +36,7 @@
 - [IIdentityVerifiableCredentialVerifyResponse](interfaces/IIdentityVerifiableCredentialVerifyResponse.md)
 - [IIdentityVerifiablePresentationCreateRequest](interfaces/IIdentityVerifiablePresentationCreateRequest.md)
 - [IIdentityVerifiablePresentationCreateResponse](interfaces/IIdentityVerifiablePresentationCreateResponse.md)
+- [IIdentityVerifiablePresentationVerifyDocumentRequest](interfaces/IIdentityVerifiablePresentationVerifyDocumentRequest.md)
 - [IIdentityVerifiablePresentationVerifyRequest](interfaces/IIdentityVerifiablePresentationVerifyRequest.md)
 - [IIdentityVerifiablePresentationVerifyResponse](interfaces/IIdentityVerifiablePresentationVerifyResponse.md)
 - [IIdentityVerificationMethodCreateRequest](interfaces/IIdentityVerificationMethodCreateRequest.md)
