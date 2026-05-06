@@ -4,7 +4,7 @@
 	"description": "Connector for running identity and DID workflows against IOTA network infrastructure.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/twinfoundation/identity.git",
+		"url": "git+https://github.com/iotaledger/identity.git",
 		"directory": "packages/identity-connector-iota"
 	},
 	"author": "martyn.janes@iota.org",
@@ -95,7 +95,7 @@
 		"integration"
 	],
 	"bugs": {
-		"url": "git+https://github.com/twinfoundation/identity/issues"
+		"url": "git+https://github.com/iotaledger/identity/issues"
 	},
 	"homepage": "https://twindev.org"
 }

@@ -4,7 +4,7 @@
 	"description": "Repository of identity models, connectors, service contracts, and tooling for decentralised identifier workflows.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/twinfoundation/identity.git"
+		"url": "git+https://github.com/iotaledger/identity.git"
 	},
 	"author": "martyn.janes@iota.org",
 	"license": "Apache-2.0",
@@ -64,7 +64,7 @@
 	],
 	"type": "module",
 	"bugs": {
-		"url": "git+https://github.com/twinfoundation/identity/issues"
+		"url": "git+https://github.com/iotaledger/identity/issues"
 	},
 	"homepage": "https://twindev.org"
 }

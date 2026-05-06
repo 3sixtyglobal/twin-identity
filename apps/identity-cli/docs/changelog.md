@@ -1,11 +1,11 @@
 # Changelog
 
-## [0.0.3-next.20](https://github.com/twinfoundation/twin-identity/compare/identity-cli-v0.0.3-next.19...identity-cli-v0.0.3-next.20) (2026-04-29)
+## [0.0.3-next.20](https://github.com/iotaledger/twin-identity/compare/identity-cli-v0.0.3-next.19...identity-cli-v0.0.3-next.20) (2026-04-29)
 
 
 ### Features
 
-* expanded cli methods ([#121](https://github.com/twinfoundation/twin-identity/issues/121)) ([80a52b7](https://github.com/twinfoundation/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
+* expanded cli methods ([#121](https://github.com/iotaledger/twin-identity/issues/121)) ([80a52b7](https://github.com/iotaledger/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
 
 
 ### Dependencies
@@ -15,7 +15,7 @@
     * @twin.org/identity-models bumped from 0.0.3-next.19 to 0.0.3-next.20
     * @twin.org/identity-connector-iota bumped from 0.0.3-next.19 to 0.0.3-next.20
 
-## [0.0.3-next.19](https://github.com/twinfoundation/twin-identity/compare/identity-cli-v0.0.3-next.18...identity-cli-v0.0.3-next.19) (2026-04-29)
+## [0.0.3-next.19](https://github.com/iotaledger/twin-identity/compare/identity-cli-v0.0.3-next.18...identity-cli-v0.0.3-next.19) (2026-04-29)
 
 
 ### Miscellaneous Chores

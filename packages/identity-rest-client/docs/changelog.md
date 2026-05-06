@@ -1,11 +1,11 @@
 # Changelog
 
-## [0.0.3-next.20](https://github.com/twinfoundation/twin-identity/compare/identity-rest-client-v0.0.3-next.19...identity-rest-client-v0.0.3-next.20) (2026-04-29)
+## [0.0.3-next.20](https://github.com/iotaledger/twin-identity/compare/identity-rest-client-v0.0.3-next.19...identity-rest-client-v0.0.3-next.20) (2026-04-29)
 
 
 ### Features
 
-* expanded cli methods ([#121](https://github.com/twinfoundation/twin-identity/issues/121)) ([80a52b7](https://github.com/twinfoundation/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
+* expanded cli methods ([#121](https://github.com/iotaledger/twin-identity/issues/121)) ([80a52b7](https://github.com/iotaledger/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
 
 
 ### Dependencies
@@ -14,12 +14,12 @@
   * dependencies
     * @twin.org/identity-models bumped from 0.0.3-next.19 to 0.0.3-next.20
 
-## [0.0.3-next.19](https://github.com/twinfoundation/twin-identity/compare/identity-rest-client-v0.0.3-next.18...identity-rest-client-v0.0.3-next.19) (2026-04-29)
+## [0.0.3-next.19](https://github.com/iotaledger/twin-identity/compare/identity-rest-client-v0.0.3-next.18...identity-rest-client-v0.0.3-next.19) (2026-04-29)
 
 
 ### Features
 
-* add addAlsoKnownAs to identity connector ([#117](https://github.com/twinfoundation/twin-identity/issues/117)) ([aa27cff](https://github.com/twinfoundation/twin-identity/commit/aa27cff88e61e7c8c6e32aeb437fb01c6ee9f57a))
+* add addAlsoKnownAs to identity connector ([#117](https://github.com/iotaledger/twin-identity/issues/117)) ([aa27cff](https://github.com/iotaledger/twin-identity/commit/aa27cff88e61e7c8c6e32aeb437fb01c6ee9f57a))
 
 
 ### Dependencies
