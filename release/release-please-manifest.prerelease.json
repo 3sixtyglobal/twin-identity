@@ -1,9 +1,9 @@
 {
-	"packages/identity-models": "0.0.3-next.21",
-	"packages/identity-connector-entity-storage": "0.0.3-next.21",
-	"packages/identity-service": "0.0.3-next.21",
-	"packages/identity-rest-client": "0.0.3-next.21",
-	"packages/identity-connector-iota": "0.0.3-next.21",
-	"packages/identity-connector-universal": "0.0.3-next.21",
-	"apps/identity-cli": "0.0.3-next.21"
+	"packages/identity-models": "0.0.3-next.22",
+	"packages/identity-connector-entity-storage": "0.0.3-next.22",
+	"packages/identity-service": "0.0.3-next.22",
+	"packages/identity-rest-client": "0.0.3-next.22",
+	"packages/identity-connector-iota": "0.0.3-next.22",
+	"packages/identity-connector-universal": "0.0.3-next.22",
+	"apps/identity-cli": "0.0.3-next.22"
 }

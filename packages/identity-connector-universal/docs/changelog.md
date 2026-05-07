@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.22](https://github.com/iotaledger/twin-identity/compare/identity-connector-universal-v0.0.3-next.21...identity-connector-universal-v0.0.3-next.22) (2026-05-07)
+
+
+### Features
+
+* additional information in health ([03d6190](https://github.com/iotaledger/twin-identity/commit/03d61900358513a5881b2363b0582e1e4ca06e6e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.21 to 0.0.3-next.22
+
 ## [0.0.3-next.21](https://github.com/iotaledger/twin-identity/compare/identity-connector-universal-v0.0.3-next.20...identity-connector-universal-v0.0.3-next.21) (2026-05-07)
 
 
