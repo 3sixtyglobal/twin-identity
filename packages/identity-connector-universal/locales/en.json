@@ -1,8 +1,8 @@
 {
 	"health": {
 		"universalResolverConnector": {
-			"healthDescription": "Connectivity and availability of the universal resolver",
-			"resolverHealthCheckFailed": "Failed to check universal resolver health status"
+			"healthDescription": "Connectivity and availability of the universal resolver \"{endpoint}\"",
+			"resolverHealthCheckFailed": "Failed to check universal resolver health status \"{endpoint}\""
 		}
 	},
 	"error": {

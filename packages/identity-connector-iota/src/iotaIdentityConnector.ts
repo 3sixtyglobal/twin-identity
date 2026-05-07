@@ -193,6 +193,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	public async health(): Promise<IHealth[]> {
 		const results: IHealth[] = [];
+		const nodeEndpoint = (this._config.clientOptions as { url?: string }).url;
 
 		try {
 			const iotaClient = Iota.createClient(this._config);
@@ -202,22 +203,25 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				source: IotaIdentityConnector.CLASS_NAME,
 				status: Is.stringValue(version) ? HealthStatus.Ok : HealthStatus.Error,
 				description: "healthDescription",
-				message: Is.stringValue(version) ? undefined : "nodeHealthCheckFailed"
+				message: Is.stringValue(version) ? undefined : "nodeHealthCheckFailed",
+				data: { endpoint: nodeEndpoint }
 			});
 		} catch {
 			results.push({
 				source: IotaIdentityConnector.CLASS_NAME,
 				status: HealthStatus.Error,
 				description: "healthDescription",
-				message: "nodeHealthCheckFailed"
+				message: "nodeHealthCheckFailed",
+				data: { endpoint: nodeEndpoint }
 			});
 		}
 
 		if (Is.stringValue(this._config.gasStation?.gasStationUrl)) {
+			const gasStationEndpoint = this._config.gasStation.gasStationUrl;
 			try {
 				const response = await FetchHelper.fetch(
 					IotaIdentityConnector.CLASS_NAME,
-					this._config.gasStation.gasStationUrl,
+					gasStationEndpoint,
 					HttpMethod.GET
 				);
 
@@ -228,14 +232,16 @@ export class IotaIdentityConnector implements IIdentityConnector {
 					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
 					status: isHealthy ? HealthStatus.Ok : HealthStatus.Error,
 					description: "healthDescription",
-					message: isHealthy ? undefined : "healthCheckFailed"
+					message: isHealthy ? undefined : "healthCheckFailed",
+					data: { endpoint: gasStationEndpoint }
 				});
 			} catch {
 				results.push({
 					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
 					status: HealthStatus.Error,
 					description: "healthDescription",
-					message: "healthCheckFailed"
+					message: "healthCheckFailed",
+					data: { endpoint: gasStationEndpoint }
 				});
 			}
 		}

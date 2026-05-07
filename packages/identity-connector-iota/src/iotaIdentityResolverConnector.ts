@@ -74,6 +74,8 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	 * @returns The health status of the component.
 	 */
 	public async health(): Promise<IHealth[]> {
+		const nodeEndpoint = (this._config.clientOptions as { url?: string }).url;
+
 		try {
 			const iotaClient = Iota.createClient(this._config);
 			const version = await iotaClient.getRpcApiVersion();
@@ -84,7 +86,8 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 						source: IotaIdentityResolverConnector.CLASS_NAME,
 						status: HealthStatus.Error,
 						description: "healthDescription",
-						message: "nodeHealthCheckFailed"
+						message: "nodeHealthCheckFailed",
+						data: { endpoint: nodeEndpoint }
 					}
 				];
 			}
@@ -93,7 +96,8 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 				{
 					source: IotaIdentityResolverConnector.CLASS_NAME,
 					status: HealthStatus.Ok,
-					description: "healthDescription"
+					description: "healthDescription",
+					data: { endpoint: nodeEndpoint }
 				}
 			];
 		} catch {
@@ -102,7 +106,8 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 					source: IotaIdentityResolverConnector.CLASS_NAME,
 					status: HealthStatus.Error,
 					description: "healthDescription",
-					message: "nodeHealthCheckFailed"
+					message: "nodeHealthCheckFailed",
+					data: { endpoint: nodeEndpoint }
 				}
 			];
 		}

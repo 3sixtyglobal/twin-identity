@@ -77,7 +77,8 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 						source: UniversalResolverConnector.CLASS_NAME,
 						status: HealthStatus.Error,
 						description: "healthDescription",
-						message: "resolverHealthCheckFailed"
+						message: "resolverHealthCheckFailed",
+						data: { endpoint: this._resolverEndpoint }
 					}
 				];
 			}
@@ -86,7 +87,8 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 				{
 					source: UniversalResolverConnector.CLASS_NAME,
 					status: HealthStatus.Ok,
-					description: "healthDescription"
+					description: "healthDescription",
+					data: { endpoint: this._resolverEndpoint }
 				}
 			];
 		} catch {
@@ -95,7 +97,8 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 					source: UniversalResolverConnector.CLASS_NAME,
 					status: HealthStatus.Error,
 					description: "healthDescription",
-					message: "resolverHealthCheckFailed"
+					message: "resolverHealthCheckFailed",
+					data: { endpoint: this._resolverEndpoint }
 				}
 			];
 		}
