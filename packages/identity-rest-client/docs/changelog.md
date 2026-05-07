@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.21](https://github.com/iotaledger/twin-identity/compare/identity-rest-client-v0.0.3-next.20...identity-rest-client-v0.0.3-next.21) (2026-05-07)
+
+
+### Miscellaneous Chores
+
+* **identity-rest-client:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.20 to 0.0.3-next.21
+
 ## [0.0.3-next.20](https://github.com/iotaledger/twin-identity/compare/identity-rest-client-v0.0.3-next.19...identity-rest-client-v0.0.3-next.20) (2026-04-29)
 
 

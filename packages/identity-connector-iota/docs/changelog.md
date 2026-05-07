@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.21](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.20...identity-connector-iota-v0.0.3-next.21) (2026-05-07)
+
+
+### Features
+
+* health check ([#124](https://github.com/iotaledger/twin-identity/issues/124)) ([5a55bef](https://github.com/iotaledger/twin-identity/commit/5a55bef0c455f7a305822c96de6ffa19699edc6f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.20 to 0.0.3-next.21
+
 ## [0.0.3-next.20](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.19...identity-connector-iota-v0.0.3-next.20) (2026-04-29)
 
 
