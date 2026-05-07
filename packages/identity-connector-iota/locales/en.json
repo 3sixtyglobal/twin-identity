@@ -1,4 +1,18 @@
 {
+	"health": {
+		"iotaIdentityConnector": {
+			"healthDescription": "Connectivity and availability of the IOTA node",
+			"nodeHealthCheckFailed": "Failed to check IOTA node health status"
+		},
+		"iotaIdentityConnectorGasStation": {
+			"healthDescription": "Connectivity and availability of the IOTA gas station",
+			"healthCheckFailed": "Failed to check gas station health status"
+		},
+		"iotaIdentityResolverConnector": {
+			"healthDescription": "Connectivity and availability of the IOTA resolver node",
+			"nodeHealthCheckFailed": "Failed to check IOTA node health status"
+		}
+	},
 	"error": {
 		"iotaIdentityResolverConnector": {
 			"documentNotFound": "The document could not be found",

@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { Is } from "@twin.org/core";
+import { HealthStatus, Is } from "@twin.org/core";
 import { DidVerificationMethodType, type IDidDocument } from "@twin.org/standards-w3c-did";
 import { describe, expect, test, beforeAll } from "vitest";
 import {
@@ -87,6 +87,46 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			await expect(fetch(TEST_GAS_STATION_URL, { method: "GET" })).resolves.toMatchObject({
 				ok: true
 			});
+		}, 10000);
+
+		test("can get health status with gas station ok", async () => {
+			const connector = new IotaIdentityConnector({
+				config: gasStationConfig
+			});
+
+			const health = await connector.health();
+
+			expect(health).toBeDefined();
+			expect(health).toHaveLength(2);
+
+			expect(health[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+			expect(health[0].status).toEqual(HealthStatus.Ok);
+
+			expect(health[1].source).toEqual(`${IotaIdentityConnector.CLASS_NAME}GasStation`);
+			expect(health[1].status).toEqual(HealthStatus.Ok);
+		}, 10000);
+
+		test("can get health status with gas station error when url is unreachable", async () => {
+			const connector = new IotaIdentityConnector({
+				config: {
+					...gasStationConfig,
+					gasStation: {
+						gasStationUrl: "http://localhost:1",
+						gasStationAuthToken: TEST_GAS_STATION_AUTH_TOKEN
+					}
+				}
+			});
+
+			const health = await connector.health();
+
+			expect(health).toBeDefined();
+			expect(health).toHaveLength(2);
+
+			expect(health[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+			expect(health[0].status).toEqual(HealthStatus.Ok);
+
+			expect(health[1].source).toEqual(`${IotaIdentityConnector.CLASS_NAME}GasStation`);
+			expect(health[1].status).toEqual(HealthStatus.Error);
 		}, 10000);
 
 		test("Should create identity document using gas station", async () => {

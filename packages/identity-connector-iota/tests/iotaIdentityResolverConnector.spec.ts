@@ -1,5 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import { HealthStatus } from "@twin.org/core";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
@@ -84,6 +85,38 @@ describe("IotaIdentityResolverConnector", () => {
 				}
 			})
 		);
+	});
+
+	test("can get health status", async () => {
+		const identityResolverConnector = new IotaIdentityResolverConnector({
+			config: {
+				clientOptions: TEST_CLIENT_OPTIONS,
+				network: TEST_NETWORK
+			}
+		});
+
+		const health = await identityResolverConnector.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(IotaIdentityResolverConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Ok);
+	});
+
+	test("can get health status error when node is unreachable", async () => {
+		const identityResolverConnector = new IotaIdentityResolverConnector({
+			config: {
+				clientOptions: { url: "http://localhost:1" },
+				network: TEST_NETWORK
+			}
+		});
+
+		const health = await identityResolverConnector.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(IotaIdentityResolverConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Error);
 	});
 
 	test("can fail to resolve a document with no id", async () => {

@@ -1,8 +1,35 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import { HealthStatus } from "@twin.org/core";
 import { UniversalResolverConnector } from "../src/universalResolverConnector.js";
 
 describe("UniversalResolverConnector", () => {
+	test("can get health status", async () => {
+		const resolver = new UniversalResolverConnector({
+			config: { endpoint: "http://localhost:8180" }
+		});
+
+		const health = await resolver.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(UniversalResolverConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Ok);
+	});
+
+	test("can get health status error when resolver is unreachable", async () => {
+		const resolver = new UniversalResolverConnector({
+			config: { endpoint: "http://localhost:1" }
+		});
+
+		const health = await resolver.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(UniversalResolverConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Error);
+	});
+
 	test("can construct and resolve an identity", async () => {
 		const resolver = new UniversalResolverConnector({
 			config: { endpoint: "http://localhost:8180" }

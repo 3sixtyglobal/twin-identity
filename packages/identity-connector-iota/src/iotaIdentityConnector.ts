@@ -43,12 +43,14 @@ import {
 	Converter,
 	GeneralError,
 	Guards,
+	HealthStatus,
 	Is,
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
 	Url,
-	Urn
+	Urn,
+	type IHealth
 } from "@twin.org/core";
 import {
 	JsonLdHelper,
@@ -82,6 +84,8 @@ import {
 	type IVaultConnector
 } from "@twin.org/vault-models";
 import {
+	FetchHelper,
+	HttpMethod,
 	Jwk as JwkHelper,
 	Jwt as JwtHelper,
 	type IJwtHeader,
@@ -181,6 +185,62 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	public className(): string {
 		return IotaIdentityConnector.CLASS_NAME;
+	}
+
+	/**
+	 * Returns the health status of the component.
+	 * @returns The health status of the component.
+	 */
+	public async health(): Promise<IHealth[]> {
+		const results: IHealth[] = [];
+
+		try {
+			const iotaClient = Iota.createClient(this._config);
+			const version = await iotaClient.getRpcApiVersion();
+
+			results.push({
+				source: IotaIdentityConnector.CLASS_NAME,
+				status: Is.stringValue(version) ? HealthStatus.Ok : HealthStatus.Error,
+				description: "healthDescription",
+				message: Is.stringValue(version) ? undefined : "nodeHealthCheckFailed"
+			});
+		} catch {
+			results.push({
+				source: IotaIdentityConnector.CLASS_NAME,
+				status: HealthStatus.Error,
+				description: "healthDescription",
+				message: "nodeHealthCheckFailed"
+			});
+		}
+
+		if (Is.stringValue(this._config.gasStation?.gasStationUrl)) {
+			try {
+				const response = await FetchHelper.fetch(
+					IotaIdentityConnector.CLASS_NAME,
+					this._config.gasStation.gasStationUrl,
+					HttpMethod.GET
+				);
+
+				const body = await response.text();
+				const isHealthy = response.ok && body.trim() === "OK";
+
+				results.push({
+					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
+					status: isHealthy ? HealthStatus.Ok : HealthStatus.Error,
+					description: "healthDescription",
+					message: isHealthy ? undefined : "healthCheckFailed"
+				});
+			} catch {
+				results.push({
+					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "healthCheckFailed"
+				});
+			}
+		}
+
+		return results;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { Is, Urn } from "@twin.org/core";
+import { HealthStatus, Is, Urn } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import type { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -112,6 +112,32 @@ describe("IotaIdentityConnector", () => {
 				}
 			})
 		);
+	});
+
+	test("can get health status", async () => {
+		const health = await identityConnector.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Ok);
+	});
+
+	test("can get health status error when node is unreachable", async () => {
+		const badConnector = new IotaIdentityConnector({
+			config: {
+				clientOptions: { url: "http://localhost:1" },
+				vaultMnemonicId: TEST_MNEMONIC_NAME,
+				network: TEST_NETWORK
+			}
+		});
+
+		const health = await badConnector.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Error);
 	});
 
 	test("can create a document", async () => {

@@ -5,7 +5,14 @@ import {
 	type IotaDocument,
 	Resolver
 } from "@iota/identity-wasm/node/index.js";
-import { GeneralError, Guards, Is, NotFoundError } from "@twin.org/core";
+import {
+	GeneralError,
+	Guards,
+	HealthStatus,
+	Is,
+	NotFoundError,
+	type IHealth
+} from "@twin.org/core";
 import { Iota } from "@twin.org/dlt-iota";
 import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
@@ -60,6 +67,45 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	 */
 	public className(): string {
 		return IotaIdentityResolverConnector.CLASS_NAME;
+	}
+
+	/**
+	 * Returns the health status of the component.
+	 * @returns The health status of the component.
+	 */
+	public async health(): Promise<IHealth[]> {
+		try {
+			const iotaClient = Iota.createClient(this._config);
+			const version = await iotaClient.getRpcApiVersion();
+
+			if (!Is.stringValue(version)) {
+				return [
+					{
+						source: IotaIdentityResolverConnector.CLASS_NAME,
+						status: HealthStatus.Error,
+						description: "healthDescription",
+						message: "nodeHealthCheckFailed"
+					}
+				];
+			}
+
+			return [
+				{
+					source: IotaIdentityResolverConnector.CLASS_NAME,
+					status: HealthStatus.Ok,
+					description: "healthDescription"
+				}
+			];
+		} catch {
+			return [
+				{
+					source: IotaIdentityResolverConnector.CLASS_NAME,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "nodeHealthCheckFailed"
+				}
+			];
+		}
 	}
 
 	/**

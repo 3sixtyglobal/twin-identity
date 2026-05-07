@@ -1,4 +1,10 @@
 {
+	"health": {
+		"universalResolverConnector": {
+			"healthDescription": "Connectivity and availability of the universal resolver",
+			"resolverHealthCheckFailed": "Failed to check universal resolver health status"
+		}
+	},
 	"error": {
 		"universalResolverConnector": {
 			"resolveDocumentFailed": "Resolving the document failed \"{documentId}\""

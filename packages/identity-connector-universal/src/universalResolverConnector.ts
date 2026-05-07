@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { GeneralError, Guards, StringHelper } from "@twin.org/core";
+import { GeneralError, Guards, HealthStatus, StringHelper, type IHealth } from "@twin.org/core";
 import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
@@ -55,6 +55,50 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	 */
 	public className(): string {
 		return UniversalResolverConnector.CLASS_NAME;
+	}
+
+	/**
+	 * Returns the health status of the component.
+	 * @returns The health status of the component.
+	 */
+	public async health(): Promise<IHealth[]> {
+		try {
+			const response = await FetchHelper.fetch(
+				UniversalResolverConnector.CLASS_NAME,
+				`${StringHelper.trimTrailingSlashes(this._resolverEndpoint)}/1.0/identifiers/did:iota:0`,
+				HttpMethod.GET
+			);
+
+			const body = await response.text();
+
+			if (!body.includes("invalid method id")) {
+				return [
+					{
+						source: UniversalResolverConnector.CLASS_NAME,
+						status: HealthStatus.Error,
+						description: "healthDescription",
+						message: "resolverHealthCheckFailed"
+					}
+				];
+			}
+
+			return [
+				{
+					source: UniversalResolverConnector.CLASS_NAME,
+					status: HealthStatus.Ok,
+					description: "healthDescription"
+				}
+			];
+		} catch {
+			return [
+				{
+					source: UniversalResolverConnector.CLASS_NAME,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "resolverHealthCheckFailed"
+				}
+			];
+		}
 	}
 
 	/**
