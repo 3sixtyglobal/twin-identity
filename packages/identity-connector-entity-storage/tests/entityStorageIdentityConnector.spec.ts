@@ -140,7 +140,7 @@ describe("EntityStorageIdentityConnector", () => {
 				TEST_IDENTITY_ID,
 				undefined as unknown as string,
 				undefined as unknown as DidVerificationMethodType,
-				undefined as unknown as string
+				undefined
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -159,7 +159,7 @@ describe("EntityStorageIdentityConnector", () => {
 				TEST_IDENTITY_ID,
 				"aaa",
 				undefined as unknown as DidVerificationMethodType,
-				undefined as unknown as string
+				undefined
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -488,9 +488,9 @@ describe("EntityStorageIdentityConnector", () => {
 			identityConnector.createVerifiableCredential(
 				TEST_IDENTITY_ID,
 				undefined as unknown as string,
-				undefined as unknown as string,
+				undefined,
 				undefined as unknown as IJsonLdNodeObject,
-				undefined as unknown as {}
+				undefined
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -510,7 +510,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"foo",
 				"UniversityDegreeCredential",
 				undefined as unknown as IJsonLdNodeObject,
-				undefined as unknown as {}
+				undefined
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -818,9 +818,9 @@ describe("EntityStorageIdentityConnector", () => {
 			identityConnector.createVerifiablePresentation(
 				TEST_IDENTITY_ID,
 				undefined as unknown as string,
-				undefined as unknown as string,
-				undefined as unknown as string[],
-				undefined as unknown as string[],
+				undefined,
+				undefined,
+				undefined,
 				undefined as unknown as string[],
 				undefined
 			)
@@ -840,9 +840,9 @@ describe("EntityStorageIdentityConnector", () => {
 			identityConnector.createVerifiablePresentation(
 				TEST_IDENTITY_ID,
 				"verificationMethodId",
-				undefined as unknown as string,
+				undefined,
 				["vp"],
-				undefined as unknown as string[],
+				undefined,
 				undefined as unknown as string[],
 				undefined
 			)

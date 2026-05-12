@@ -833,7 +833,7 @@ export function generateRestRoutesIdentity(
 									}
 								}
 							]
-						} as IDidVerifiablePresentation
+						}
 					}
 				}
 			]

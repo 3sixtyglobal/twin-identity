@@ -4,7 +4,7 @@ import { HealthStatus } from "@twin.org/core";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
-	TEST_IDENTITY_ID,
+	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK
 } from "./setupTestEnv.js";
@@ -29,7 +29,7 @@ describe("IotaIdentityResolverConnector", () => {
 		});
 
 		// Create a test document to resolve
-		const testDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
 		testDocumentId = testDocument.id;
 	});
 

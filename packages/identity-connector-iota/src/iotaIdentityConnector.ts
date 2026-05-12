@@ -134,6 +134,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	private readonly _config: IIotaIdentityConnectorConfig;
 
 	/**
+	 * The wallet account index to use for funding.
+	 * @internal
+	 */
+	private readonly _walletAccountIndex: number;
+
+	/**
 	 * The wallet address index to use for funding.
 	 * @internal
 	 */
@@ -173,6 +179,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		this._config = options.config;
 
 		this._gasBudget = this._config.gasBudget ?? 1_000_000_000;
+		this._walletAccountIndex = options.config.walletAccountIndex ?? 0;
 		this._walletAddressIndex = options.config.walletAddressIndex ?? 0;
 		this._standardGasPrice = BigInt(this._config.standardGasPrice ?? 1000);
 
@@ -1730,12 +1737,11 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			return IdentityClient.create(identityClientReadOnly, signer);
 		}
 
-		const seed = await Iota.getSeed(this._config, this._vaultConnector, controller);
-
-		const kp = Iota.getKeyPair(
-			seed,
-			this._config.coinType ?? Iota.DEFAULT_COIN_TYPE,
-			0,
+		const keyPair = await Iota.getKeyPair(
+			this._vaultConnector,
+			this._config,
+			controller,
+			this._walletAccountIndex,
 			this._walletAddressIndex,
 			false
 		);
@@ -1748,8 +1754,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			kty: JwkType.Okp,
 			crv: "Ed25519",
 			alg: JwsAlgorithm.EdDSA,
-			x: Converter.bytesToBase64Url(kp.publicKey),
-			d: Converter.bytesToBase64Url(kp.privateKey)
+			x: Converter.bytesToBase64Url(keyPair.publicKey),
+			d: Converter.bytesToBase64Url(keyPair.privateKey)
 		};
 
 		const jwk = new Jwk(jwkParams);
@@ -1938,25 +1944,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
-	 * Get address for the given controller.
-	 * @param controller The controller to get the address for.
-	 * @returns The controller address.
-	 * @internal
-	 */
-	private async getControllerAddress(controller: string): Promise<string> {
-		const seed = await Iota.getSeed(this._config, this._vaultConnector, controller);
-		const addresses = Iota.getAddresses(
-			seed,
-			this._config.coinType ?? Iota.DEFAULT_COIN_TYPE,
-			0,
-			this._walletAddressIndex,
-			1,
-			false
-		);
-		return addresses[0];
-	}
-
-	/**
 	 * Execute document update transaction with conditional gas station support.
 	 * @param controller The controller identity.
 	 * @param identityOnChain The on-chain identity to update.
@@ -2010,7 +1997,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const identityClient = await this.getIdentityClient(controller);
 
 			// Get address for gas station, as the controller remains the sender
-			const controllerAddress = await this.getControllerAddress(controller);
+			const controllerAddress = await Iota.getAddress(
+				this._vaultConnector,
+				this._config,
+				controller,
+				this._walletAccountIndex,
+				this._walletAddressIndex
+			);
 
 			const gasReservation = await Iota.reserveGas(this._config, this._gasBudget);
 

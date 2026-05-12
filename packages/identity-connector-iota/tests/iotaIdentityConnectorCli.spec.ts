@@ -1,13 +1,12 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { DocumentHelper } from "@twin.org/identity-models";
 import type { EntityStorageVaultConnector } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory, VaultKeyType } from "@twin.org/vault-models";
 import {
 	TEST_CLIENT_OPTIONS,
-	TEST_IDENTITY_ID,
+	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK,
 	setupTestEnv
@@ -33,13 +32,13 @@ describe("IotaIdentityConnector CLI", () => {
 
 		vaultConnector = VaultConnectorFactory.get<EntityStorageVaultConnector>("vault");
 
-		const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const document = await identityConnector.createDocument(TEST_USER_IDENTITY);
 		testDocumentId = document.id;
 	});
 
 	test("key stored with 'local' prefix fails - connector expects document ID prefix", async () => {
 		const verificationMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			"assertionMethod",
 			"cliTestMethod"
@@ -76,7 +75,7 @@ describe("IotaIdentityConnector CLI", () => {
 				{
 					id: testDocumentId,
 					name: "CLI Bug Test"
-				} as IJsonLdNodeObject
+				}
 			)
 		).rejects.toMatchObject({
 			name: "GeneralError",
@@ -92,7 +91,7 @@ describe("IotaIdentityConnector CLI", () => {
 
 	test("key stored with document ID prefix works for VC creation", async () => {
 		const verificationMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			"assertionMethod",
 			"fixedCliTestMethod"
@@ -105,7 +104,7 @@ describe("IotaIdentityConnector CLI", () => {
 			{
 				id: testDocumentId,
 				name: "Fixed CLI Test"
-			} as IJsonLdNodeObject
+			}
 		);
 
 		expect(result).toBeDefined();
@@ -116,7 +115,7 @@ describe("IotaIdentityConnector CLI", () => {
 
 	test("key stored with document ID prefix is found correctly", async () => {
 		const verificationMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			"assertionMethod",
 			"cliFixVerificationTest"
@@ -136,7 +135,7 @@ describe("IotaIdentityConnector CLI", () => {
 			{
 				id: testDocumentId,
 				name: "CLI Fix Verification Test"
-			} as IJsonLdNodeObject
+			}
 		);
 
 		expect(result).toBeDefined();

@@ -15,8 +15,8 @@ import {
 	initSchema
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
-import { IdentityResolverConnectorTypes } from "../models/identityResolverConnectorTypes.js";
+import type { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
+import type { IdentityResolverConnectorTypes } from "../models/identityResolverConnectorTypes.js";
 
 /**
  * Setup the vault for use in the CLI commands.
@@ -57,8 +57,6 @@ export function setupIdentityConnector(
 	options: { nodeEndpoint: string; network?: string; addressIndex?: number; vaultSeedId?: string },
 	connector?: IdentityConnectorTypes
 ): IIdentityConnector {
-	connector ??= IdentityConnectorTypes.Iota;
-
 	return new IotaIdentityConnector({
 		config: {
 			clientOptions: {
@@ -83,8 +81,6 @@ export function setupIdentityResolverConnector(
 	options: { nodeEndpoint: string; network?: string },
 	connector?: IdentityResolverConnectorTypes
 ): IIdentityResolverConnector {
-	connector ??= IdentityResolverConnectorTypes.Iota;
-
 	return new IotaIdentityResolverConnector({
 		config: {
 			clientOptions: {

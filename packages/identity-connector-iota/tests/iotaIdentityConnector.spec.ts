@@ -13,15 +13,13 @@ import {
 	type IDataIntegrityProof,
 	type IDidService,
 	type IDidVerifiableCredential,
-	type IJsonWebSignature2020Proof,
 	type IProof
 } from "@twin.org/standards-w3c-did";
 import type { VaultSecret } from "@twin.org/vault-connector-entity-storage";
-import { vi } from "vitest";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
-	TEST_IDENTITY_ID,
+	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK
 } from "./setupTestEnv.js";
@@ -58,7 +56,7 @@ describe("IotaIdentityConnector", () => {
 			});
 
 			// Create a document
-			const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+			const document = await identityConnector.createDocument(TEST_USER_IDENTITY);
 			testDocumentId = document.id;
 		} catch (error) {
 			console.error("Error in beforeAll:", error);
@@ -141,7 +139,7 @@ describe("IotaIdentityConnector", () => {
 	});
 
 	test("can create a document", async () => {
-		const testDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
 		testDocumentId = testDocument.id;
 
 		// Check that the document ID starts with did:iota
@@ -163,7 +161,7 @@ describe("IotaIdentityConnector", () => {
 	});
 
 	test("can delete a document", async () => {
-		const testDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
 
 		// Check that the document ID starts with did:iota
 		expect(testDocument.id.startsWith("did:iota")).toBeTruthy();
@@ -177,7 +175,7 @@ describe("IotaIdentityConnector", () => {
 			`${process.env.TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`
 		);
 
-		await identityConnector.removeDocument(TEST_IDENTITY_ID, testDocument.id);
+		await identityConnector.removeDocument(TEST_USER_IDENTITY, testDocument.id);
 
 		await expect(identityResolverConnector.resolveDocument(testDocument.id)).rejects.toMatchObject({
 			name: "GeneralError",
@@ -189,7 +187,7 @@ describe("IotaIdentityConnector", () => {
 	});
 
 	test("should follow IOTA DID Method Specification v2.0 format", async () => {
-		const testDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
 
 		// Check DID format based on network
 		const didParts = testDocument.id.split(":");
@@ -239,10 +237,10 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add a verification method with no document id", async () => {
 		await expect(
 			identityConnector.addVerificationMethod(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				undefined as unknown as string,
 				undefined as unknown as DidVerificationMethodType,
-				undefined as unknown as string
+				undefined
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -257,10 +255,10 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add a verification method with no document verification method type", async () => {
 		await expect(
 			identityConnector.addVerificationMethod(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"foo",
 				undefined as unknown as DidVerificationMethodType,
-				undefined as unknown as string
+				undefined
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -277,7 +275,7 @@ describe("IotaIdentityConnector", () => {
 		const verificationMethodId = "testVerificationMethod";
 
 		const addedMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			verificationMethodType,
 			verificationMethodId
@@ -303,7 +301,7 @@ describe("IotaIdentityConnector", () => {
 		const verificationMethodId = "testVerificationMethod";
 
 		await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			documentId,
 			verificationMethodType,
 			verificationMethodId
@@ -356,7 +354,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can fail to remove a verification method with no verification method id", async () => {
 		await expect(
-			identityConnector.removeVerificationMethod(TEST_IDENTITY_ID, undefined as unknown as string)
+			identityConnector.removeVerificationMethod(TEST_USER_IDENTITY, undefined as unknown as string)
 		).rejects.toMatchObject({
 			name: "GuardError",
 			message: "guard.string",
@@ -372,7 +370,7 @@ describe("IotaIdentityConnector", () => {
 		const verificationMethodId = "methodToRemove";
 
 		const addedMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			verificationMethodType,
 			verificationMethodId
@@ -382,7 +380,7 @@ describe("IotaIdentityConnector", () => {
 		expect(addedMethod.id).toEqual(`${testDocumentId}#${verificationMethodId}`);
 
 		await identityConnector.removeVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			`${testDocumentId}#${verificationMethodId}`
 		);
 
@@ -404,7 +402,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add a service with no document id", async () => {
 		await expect(
 			identityConnector.addService(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				undefined as unknown as string,
 				undefined as unknown as string,
 				undefined as unknown as string,
@@ -423,7 +421,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add a service with no service id", async () => {
 		await expect(
 			identityConnector.addService(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"foo",
 				undefined as unknown as string,
 				undefined as unknown as string,
@@ -442,7 +440,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add a service with no service type", async () => {
 		await expect(
 			identityConnector.addService(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"foo",
 				"foo",
 				undefined as unknown as string,
@@ -461,7 +459,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add a service with no service endpoint", async () => {
 		await expect(
 			identityConnector.addService(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"foo",
 				"foo",
 				"foo",
@@ -483,7 +481,7 @@ describe("IotaIdentityConnector", () => {
 		const serviceEndpoint = "https://example.com/service";
 
 		const addedService = await identityConnector.addService(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			serviceId,
 			serviceType,
@@ -515,7 +513,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can fail to remove a service with no service id", async () => {
 		await expect(
-			identityConnector.removeService(TEST_IDENTITY_ID, undefined as unknown as string)
+			identityConnector.removeService(TEST_USER_IDENTITY, undefined as unknown as string)
 		).rejects.toMatchObject({
 			name: "GuardError",
 			message: "guard.string",
@@ -534,7 +532,7 @@ describe("IotaIdentityConnector", () => {
 		const serviceEndpoint = "https://example.com/service-to-remove";
 
 		const addedService = await identityConnector.addService(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			documentId,
 			serviceId,
 			serviceType,
@@ -544,14 +542,14 @@ describe("IotaIdentityConnector", () => {
 		expect(addedService).toBeDefined();
 		expect(addedService.id).toEqual(`${documentId}#${serviceId}`);
 
-		await identityConnector.removeService(TEST_IDENTITY_ID, addedService.id);
+		await identityConnector.removeService(TEST_USER_IDENTITY, addedService.id);
 	});
 
 	test("throws error when removing non-existent service", async () => {
 		const nonExistentServiceId = `${testDocumentId}#nonExistentService`;
 
 		await expect(
-			identityConnector.removeService(TEST_IDENTITY_ID, nonExistentServiceId)
+			identityConnector.removeService(TEST_USER_IDENTITY, nonExistentServiceId)
 		).rejects.toThrow(
 			expect.objectContaining({
 				name: "GeneralError",
@@ -568,7 +566,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to add alsoKnownAs with no alias", async () => {
 		await expect(
 			identityConnector.addAlsoKnownAs(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				testDocumentId,
 				undefined as unknown as string
 			)
@@ -584,7 +582,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can fail to add alsoKnownAs when alias is not a Url or Urn", async () => {
 		await expect(
-			identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "not a uri")
+			identityConnector.addAlsoKnownAs(TEST_USER_IDENTITY, testDocumentId, "not a uri")
 		).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "iotaIdentityConnector.invalidAlias",
@@ -593,14 +591,22 @@ describe("IotaIdentityConnector", () => {
 	});
 
 	test("can add an alias to alsoKnownAs", async () => {
-		await identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "did:example:linked");
+		await identityConnector.addAlsoKnownAs(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"did:example:linked"
+		);
 
 		const resolvedDocument = await identityResolverConnector.resolveDocument(testDocumentId);
 		expect(resolvedDocument.alsoKnownAs).toContain("did:example:linked");
 	});
 
 	test("addAlsoKnownAs is idempotent for duplicates", async () => {
-		await identityConnector.addAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "did:example:linked");
+		await identityConnector.addAlsoKnownAs(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"did:example:linked"
+		);
 
 		const resolvedDocument = await identityResolverConnector.resolveDocument(testDocumentId);
 		const aliases = Is.array(resolvedDocument.alsoKnownAs) ? resolvedDocument.alsoKnownAs : [];
@@ -611,7 +617,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to remove alsoKnownAs with no alias", async () => {
 		await expect(
 			identityConnector.removeAlsoKnownAs(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				testDocumentId,
 				undefined as unknown as string
 			)
@@ -627,7 +633,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can fail to remove alsoKnownAs when alias is not a Url or Urn", async () => {
 		await expect(
-			identityConnector.removeAlsoKnownAs(TEST_IDENTITY_ID, testDocumentId, "not a uri")
+			identityConnector.removeAlsoKnownAs(TEST_USER_IDENTITY, testDocumentId, "not a uri")
 		).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "iotaIdentityConnector.invalidAlias",
@@ -637,7 +643,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("removeAlsoKnownAs is a no-op when alias is not present", async () => {
 		await identityConnector.removeAlsoKnownAs(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			"did:example:missing"
 		);
@@ -648,7 +654,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can remove an alias from alsoKnownAs", async () => {
 		await identityConnector.removeAlsoKnownAs(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId,
 			"did:example:linked"
 		);
@@ -660,10 +666,10 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a verifiable credential with no verification method id", async () => {
 		await expect(
 			identityConnector.createVerifiableCredential(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				undefined as unknown as string,
 				undefined,
-				{} as IJsonLdNodeObject,
+				{},
 				undefined
 			)
 		).rejects.toThrow(
@@ -681,7 +687,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a verifiable credential with no subject", async () => {
 		await expect(
 			identityConnector.createVerifiableCredential(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"did:iota:test#key-1",
 				undefined,
 				undefined as unknown as IJsonLdNodeObject,
@@ -703,7 +709,7 @@ describe("IotaIdentityConnector", () => {
 		const did = testDocumentId;
 
 		const verificationMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			did,
 			"assertionMethod",
 			"testVerificationMethod"
@@ -712,7 +718,7 @@ describe("IotaIdentityConnector", () => {
 		expect(verificationMethod.id).toBeDefined();
 
 		const result = await identityConnector.createVerifiableCredential(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			verificationMethod.id,
 			"https://example.edu/credentials/3732",
 			{
@@ -856,7 +862,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to revoke a verifiable credential with no documentId", async () => {
 		await expect(
 			identityConnector.revokeVerifiableCredentials(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				undefined as unknown as string,
 				[123]
 			)
@@ -873,7 +879,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to revoke a verifiable credential with no credentialIndices", async () => {
 		await expect(
 			identityConnector.revokeVerifiableCredentials(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"did:iota:test",
 				undefined as unknown as number[]
 			)
@@ -891,7 +897,7 @@ describe("IotaIdentityConnector", () => {
 		const didId = testDocumentId;
 
 		const verificationMethod = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			didId,
 			"assertionMethod",
 			"unrevocation-test-key"
@@ -901,7 +907,7 @@ describe("IotaIdentityConnector", () => {
 
 		const revocationIndex = 789;
 		const result = await identityConnector.createVerifiableCredential(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			verificationMethod.id,
 			"https://example.edu/credentials/unrevocation-test",
 			{
@@ -923,13 +929,15 @@ describe("IotaIdentityConnector", () => {
 		expect(initialCheck.revoked).toBeFalsy();
 
 		// Perform revocation operation
-		await identityConnector.revokeVerifiableCredentials(TEST_IDENTITY_ID, didId, [revocationIndex]);
+		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, didId, [
+			revocationIndex
+		]);
 
 		// Wait for blockchain to process the operation
 		await new Promise(resolve => setTimeout(resolve, 5000));
 
 		// Perform unrevocation operation
-		await identityConnector.unrevokeVerifiableCredentials(TEST_IDENTITY_ID, didId, [
+		await identityConnector.unrevokeVerifiableCredentials(TEST_USER_IDENTITY, didId, [
 			revocationIndex
 		]);
 
@@ -940,7 +948,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to unrevoke a verifiable credential with no documentId", async () => {
 		await expect(
 			identityConnector.unrevokeVerifiableCredentials(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				undefined as unknown as string,
 				[123]
 			)
@@ -957,7 +965,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to unrevoke a verifiable credential with no credentialIndices", async () => {
 		await expect(
 			identityConnector.unrevokeVerifiableCredentials(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"did:iota:test",
 				undefined as unknown as number[]
 			)
@@ -979,7 +987,7 @@ describe("IotaIdentityConnector", () => {
 		// Attempt to unrevoke the credential and expect an error
 		await expect(
 			identityConnector.unrevokeVerifiableCredentials(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				nonExistentDocumentId,
 				[123]
 			)
@@ -989,7 +997,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a verifiable presentation with no verification method id", async () => {
 		await expect(
 			identityConnector.createVerifiablePresentation(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"",
 				"http://example.com/12345",
 				"https://schema.org",
@@ -1010,7 +1018,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a verifiable presentation with no verifiable credentials", async () => {
 		await expect(
 			identityConnector.createVerifiablePresentation(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				testVerificationMethodId,
 				"http://example.com/12345",
 				"https://schema.org",
@@ -1030,7 +1038,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a verifiable presentation with invalid expiry", async () => {
 		await expect(
 			identityConnector.createVerifiablePresentation(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				testVerificationMethodId,
 				"http://example.com/12345",
 				"https://schema.org",
@@ -1045,7 +1053,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can create a verifiable presentation", async () => {
 		const result = await identityConnector.createVerifiablePresentation(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testVerificationMethodId,
 			"http://example.com/12345",
 			DidContexts.ContextVCv1,
@@ -1078,7 +1086,7 @@ describe("IotaIdentityConnector", () => {
 
 	test("can validate a verifiable presentation", async () => {
 		const createResult = await identityConnector.createVerifiablePresentation(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testVerificationMethodId,
 			"http://example.com/12345",
 			"https://schema.org",
@@ -1116,7 +1124,7 @@ describe("IotaIdentityConnector", () => {
 			description: "This is a test document for proof creation and verification"
 		};
 		const proof = await identityConnector.createProof(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testVerificationMethodId,
 			ProofTypes.DataIntegrityProof,
 			testDocument
@@ -1141,7 +1149,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a proof with no verificationMethodId", async () => {
 		await expect(
 			identityConnector.createProof(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				undefined as unknown as string,
 				ProofTypes.DataIntegrityProof,
 				undefined as unknown as IJsonLdNodeObject
@@ -1159,7 +1167,7 @@ describe("IotaIdentityConnector", () => {
 	test("can fail to create a proof with no document", async () => {
 		await expect(
 			identityConnector.createProof(
-				TEST_IDENTITY_ID,
+				TEST_USER_IDENTITY,
 				"foo",
 				ProofTypes.DataIntegrityProof,
 				undefined as unknown as IJsonLdNodeObject
@@ -1207,11 +1215,11 @@ describe("IotaIdentityConnector", () => {
 		const verificationMethodType = "assertionMethod";
 		const verificationMethodId = "proofTestMethod";
 
-		const document = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const document = await identityConnector.createDocument(TEST_USER_IDENTITY);
 		const testDocumentId2 = document.id;
 
 		const method = await identityConnector.addVerificationMethod(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testDocumentId2,
 			verificationMethodType,
 			verificationMethodId
@@ -1238,7 +1246,7 @@ describe("IotaIdentityConnector", () => {
 		};
 
 		const proof = await identityConnector.createProof(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			method.id,
 			ProofTypes.DataIntegrityProof,
 			unsecuredDocument
@@ -1267,7 +1275,7 @@ describe("IotaIdentityConnector", () => {
 		};
 
 		const proof = await identityConnector.createProof(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testVerificationMethodId,
 			ProofTypes.DataIntegrityProof,
 			unsecuredDocument
@@ -1299,7 +1307,7 @@ describe("IotaIdentityConnector", () => {
 		};
 
 		const proof = await identityConnector.createProof(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testVerificationMethodId,
 			ProofTypes.DataIntegrityProof,
 			unsecuredDocument
@@ -1307,9 +1315,9 @@ describe("IotaIdentityConnector", () => {
 
 		const tamperedProof = { ...proof };
 		if (tamperedProof.type === "JsonWebSignature2020") {
-			(tamperedProof as IJsonWebSignature2020Proof).jws += "tampered";
+			tamperedProof.jws += "tampered";
 		} else if (tamperedProof.type === "DataIntegrityProof") {
-			(tamperedProof as IDataIntegrityProof).proofValue += "tampered";
+			tamperedProof.proofValue += "tampered";
 		}
 
 		const isValid = await identityConnector.verifyProof(unsecuredDocument, tamperedProof);
@@ -1334,7 +1342,7 @@ describe("IotaIdentityConnector", () => {
 		};
 
 		const proof = await identityConnector.createProof(
-			TEST_IDENTITY_ID,
+			TEST_USER_IDENTITY,
 			testVerificationMethodId,
 			ProofTypes.DataIntegrityProof,
 			testDocument

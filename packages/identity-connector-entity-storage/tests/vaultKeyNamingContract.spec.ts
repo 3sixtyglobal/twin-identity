@@ -1,7 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 import { DocumentHelper } from "@twin.org/identity-models";
@@ -102,7 +101,7 @@ describe("Vault Key Naming Contract", () => {
 					"@type": "Person",
 					id: document.id,
 					name: "Test Subject"
-				} as IJsonLdNodeObject
+				}
 			)
 		).rejects.toMatchObject({
 			name: "GeneralError",
@@ -131,7 +130,7 @@ describe("Vault Key Naming Contract", () => {
 				"@type": "Person",
 				id: document.id,
 				name: "Test Subject"
-			} as IJsonLdNodeObject
+			}
 		);
 
 		expect(result).toBeDefined();
@@ -161,7 +160,7 @@ describe("Vault Key Naming Contract", () => {
 				"@type": "Person",
 				id: document.id,
 				name: "Test Subject"
-			} as IJsonLdNodeObject
+			}
 		);
 
 		expect(proof).toBeDefined();
