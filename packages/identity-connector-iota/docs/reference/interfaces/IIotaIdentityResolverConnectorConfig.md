@@ -8,6 +8,24 @@ Configuration for the IOTA Identity Resolver Connector.
 
 ## Properties
 
+### walletAccountIndex? {#walletaccountindex}
+
+> `optional` **walletAccountIndex?**: `number`
+
+The wallet account index to use for funding and controlling the identity.
+
+#### Default
+
+```ts
+0
+```
+
+#### Inherited from
+
+[`IIotaIdentityConnectorConfig`](IIotaIdentityConnectorConfig.md).[`walletAccountIndex`](IIotaIdentityConnectorConfig.md#walletaccountindex)
+
+***
+
 ### walletAddressIndex? {#walletaddressindex}
 
 > `optional` **walletAddressIndex?**: `number`
