@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.23](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.22...identity-connector-iota-v0.0.3-next.23) (2026-05-12)
+
+
+### Features
+
+* typescript 6 update ([e8806ad](https://github.com/iotaledger/twin-identity/commit/e8806ad6858c37be3c0f54c41cf654023773bef3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.22 to 0.0.3-next.23
+
 ## [0.0.3-next.22](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.21...identity-connector-iota-v0.0.3-next.22) (2026-05-07)
 
 
