@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.24](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.23...identity-connector-iota-v0.0.3-next.24) (2026-05-13)
+
+
+### Bug Fixes
+
+* simplified reserve gas params ([b3a82e9](https://github.com/iotaledger/twin-identity/commit/b3a82e9b5e065e11f1adfd83d21ea8e99af88ade))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.23 to 0.0.3-next.24
+
 ## [0.0.3-next.23](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.22...identity-connector-iota-v0.0.3-next.23) (2026-05-12)
 
 
