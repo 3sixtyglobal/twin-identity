@@ -335,10 +335,10 @@ export class EntityStorageIdentityProfileConnector<
 	} {
 		return {
 			publicProfile: Is.array(publicPropertyNames)
-				? ObjectHelper.pick<T>(profile.publicProfile as T, publicPropertyNames)
+				? ObjectHelper.pick(profile.publicProfile as T, publicPropertyNames)
 				: (profile.publicProfile as T),
 			privateProfile: Is.array(privatePropertyNames)
-				? ObjectHelper.pick<U>(profile.privateProfile as U, privatePropertyNames)
+				? ObjectHelper.pick(profile.privateProfile as U, privatePropertyNames)
 				: (profile.privateProfile as U)
 		};
 	}
