@@ -2005,7 +2005,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				this._walletAddressIndex
 			);
 
-			const gasReservation = await Iota.reserveGas(this._config, this._gasBudget);
+			const gasReservation = await Iota.reserveGas(this._config);
 
 			const gasCoinsWithStringVersions = gasReservation.gasCoins.map(coin => ({
 				objectId: coin.objectId,
