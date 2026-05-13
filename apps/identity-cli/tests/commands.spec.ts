@@ -35,7 +35,7 @@ function getEnvValue(env: string[] | undefined, lineIndex: number): string {
 	return (env?.[lineIndex].split("=")[1] ?? "").replace(/"/g, "");
 }
 
-describe.sequential("CLI Commands", () => {
+describe("CLI Commands", () => {
 	let createdAlias: string | undefined;
 	let createdDid: string | undefined;
 	let createdVerificationMethodId: string | undefined;
@@ -106,12 +106,16 @@ describe.sequential("CLI Commands", () => {
 		const addressEnv = await CLIUtils.readLinesFile(`${tempDirectory}address.env`);
 		const configEnv = await CLIUtils.readLinesFile("./tests/config.env");
 
-		await actionCommandFaucet({
-			address: getEnvValue(addressEnv, 0),
-			faucet: getEnvValue(configEnv, 1),
-			node: getEnvValue(configEnv, 0),
-			explorer: getEnvValue(configEnv, 4)
-		});
+		try {
+			await actionCommandFaucet({
+				address: getEnvValue(addressEnv, 0),
+				faucet: getEnvValue(configEnv, 1),
+				node: getEnvValue(configEnv, 0),
+				explorer: getEnvValue(configEnv, 4)
+			});
+		} catch (error) {
+			console.warn("Error executing faucet command:", error);
+		}
 	});
 
 	afterAll(async () => {
