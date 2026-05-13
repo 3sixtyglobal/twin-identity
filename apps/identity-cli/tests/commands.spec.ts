@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { CLIUtils } from "@twin.org/cli-core";
-import { I18n } from "@twin.org/core";
-import { actionCommandAddress, actionCommandMnemonic } from "@twin.org/crypto-cli";
+import { Converter, I18n } from "@twin.org/core";
+import { Bip39 } from "@twin.org/crypto";
+import { actionCommandAddress } from "@twin.org/crypto-cli";
 import {
 	DidVerificationMethodType,
 	type IDidVerifiableCredential,
 	type IDidVerifiablePresentation
 } from "@twin.org/standards-w3c-did";
 import { actionCommandFaucet } from "@twin.org/wallet-cli";
+import { TEST_MNEMONIC } from "./setupTestEnv.js";
 import locales from "../dist/locales/en.json" with { type: "json" };
 import { actionCommandAlsoKnownAsAdd } from "../src/commands/alsoKnownAsAdd.js";
 import { actionCommandAlsoKnownAsRemove } from "../src/commands/alsoKnownAsRemove.js";
@@ -76,15 +78,13 @@ describe("CLI Commands", () => {
 		await mkdir(tempDirectory, { recursive: true });
 
 		I18n.addDictionary("en", locales);
-		await actionCommandMnemonic({
-			strength: "256",
-			seedFormat: "hex",
-			console: false,
-			env: `${tempDirectory}wallet.env`,
-			json: `${tempDirectory}wallet.json`,
-			mergeEnv: true,
-			mergeJson: true
-		});
+		const seed = Bip39.mnemonicToSeed(TEST_MNEMONIC);
+		const seedHex = Converter.bytesToHex(seed, true);
+		await CLIUtils.writeEnvFile(
+			`${tempDirectory}wallet.env`,
+			[`MNEMONIC="${TEST_MNEMONIC}"`, `SEED="${seedHex}"`],
+			true
+		);
 
 		const walletEnv = await CLIUtils.readLinesFile(`${tempDirectory}wallet.env`);
 
