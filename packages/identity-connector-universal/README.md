@@ -13,7 +13,7 @@ npm install @twin.org/identity-connector-universal
 To perform testing of this component it may be necessary to launch a local instance to communicate with.
 
 ```shell
-docker run -d --name twin-identity-universal -p 8180:8080 -e NETWORK=testnet iotaledger/uni-resolver-driver-iota:v0.2.0-alpha
+docker run -d --name twin-identity-universal -p 18180:8080 -e NETWORK=testnet iotaledger/uni-resolver-driver-iota:v0.2.0-alpha
 ```
 
 ## Examples
