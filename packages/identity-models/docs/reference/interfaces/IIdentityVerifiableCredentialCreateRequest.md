@@ -53,3 +53,23 @@ The bitmap revocation index of the credential, if undefined will not have revoca
 > `optional` **expirationDate?**: `string`
 
 The date the verifiable credential is valid until.
+
+#### jwtHeaderFields?
+
+> `optional` **jwtHeaderFields?**: `object`
+
+Additional fields to include in the JWT when creating the verifiable credential in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`
+
+#### jwtPayloadFields?
+
+> `optional` **jwtPayloadFields?**: `object`
+
+Additional fields to include in the JWT payload when creating the verifiable credential in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`

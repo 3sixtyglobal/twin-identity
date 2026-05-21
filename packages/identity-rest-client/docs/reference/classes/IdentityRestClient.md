@@ -396,6 +396,18 @@ The bitmap revocation index of the credential, if undefined will not have revoca
 
 The date the verifiable credential is valid until.
 
+###### jwtHeaderFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to include in the JWT header when creating the verifiable credential in jwt format.
+
+###### jwtPayloadFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to include in the JWT payload when creating the verifiable credential in jwt format.
+
 #### Returns
 
 `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredential`; `jwt`: `string`; \}\>
@@ -549,6 +561,18 @@ Additional options for creating the verifiable presentation.
 `Date`
 
 The date the verifiable presentation is valid until.
+
+###### jwtHeaderFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to include in the JWT header when creating the verifiable presentation in jwt format.
+
+###### jwtPayloadFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format.
 
 #### Returns
 

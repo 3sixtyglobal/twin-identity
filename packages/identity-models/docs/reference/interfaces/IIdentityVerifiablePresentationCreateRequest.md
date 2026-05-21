@@ -59,3 +59,23 @@ The verifiable credentials to include in the presentation.
 > `optional` **expirationDate?**: `string`
 
 The expiration date/time for the presentation.
+
+#### jwtHeaderFields?
+
+> `optional` **jwtHeaderFields?**: `object`
+
+Additional fields to include in the JWT header when creating the verifiable presentation in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`
+
+#### jwtPayloadFields?
+
+> `optional` **jwtPayloadFields?**: `object`
+
+Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`

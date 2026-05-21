@@ -3183,6 +3183,20 @@
 					"expirationDate": {
 						"type": "string",
 						"description": "The date the verifiable credential is valid until."
+					},
+					"jwtHeaderFields": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "Additional fields to include in the JWT when creating the verifiable credential in jwt format."
+					},
+					"jwtPayloadFields": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "Additional fields to include in the JWT payload when creating the verifiable credential in jwt format."
 					}
 				},
 				"required": [
@@ -3264,6 +3278,20 @@
 					"expirationDate": {
 						"type": "string",
 						"description": "The expiration date/time for the presentation."
+					},
+					"jwtHeaderFields": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "Additional fields to include in the JWT header when creating the verifiable presentation in jwt format."
+					},
+					"jwtPayloadFields": {
+						"type": "object",
+						"additionalProperties": {
+							"type": "string"
+						},
+						"description": "Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format."
 					}
 				},
 				"required": [
