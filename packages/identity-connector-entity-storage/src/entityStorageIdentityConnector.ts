@@ -705,6 +705,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param options Additional options for creating the verifiable credential.
 	 * @param options.revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
 	 * @param options.expirationDate The date the verifiable credential is valid until.
+	 * @param options.jwtHeaderFields Additional fields to add to the JWT header.
+	 * @param options.jwtPayloadFields Additional fields to add to the JWT payload.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -716,6 +718,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		options?: {
 			revocationIndex?: number;
 			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
 		}
 	): Promise<{
 		verifiableCredential: IDidVerifiableCredentialV1;
@@ -830,6 +834,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			};
 
 			const jwtHeader: IJwtHeader = {
+				...options?.jwtHeaderFields,
 				kid: verificationDidMethod.id,
 				typ: "JWT",
 				alg: JwsAlgorithms.EdDSA
@@ -871,6 +876,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			const jwtPayload: IJwtPayload = {
+				...options?.jwtPayloadFields,
 				iss: idParts.id,
 				nbf: Math.floor(Date.now() / 1000),
 				jti: verifiableCredential.id,
@@ -1209,6 +1215,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
 	 * @param options Additional options for creating the verifiable presentation.
 	 * @param options.expirationDate The date the verifiable presentation is valid until.
+	 * @param options.jwtHeaderFields Additional fields to add to the JWT header.
+	 * @param options.jwtPayloadFields Additional fields to add to the JWT payload.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -1221,6 +1229,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		verifiableCredentials: (string | IDidVerifiableCredentialV1)[],
 		options?: {
 			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
 		}
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentationV1;
@@ -1315,6 +1325,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			};
 
 			const jwtHeader: IJwtHeader = {
+				...options?.jwtHeaderFields,
 				kid: didMethod.id,
 				typ: "JWT",
 				alg: JwsAlgorithms.EdDSA
@@ -1336,6 +1347,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			);
 
 			const jwtPayload: IJwtPayload = {
+				...options?.jwtPayloadFields,
 				iss: verifiablePresentation.holder,
 				nbf: Math.floor(Date.now() / 1000),
 				vp: jwtVp

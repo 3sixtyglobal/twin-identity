@@ -25,6 +25,7 @@ import {
 	initSchema as initSchemaVault
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
+import { Jwt } from "@twin.org/web";
 import type { IdentityDocument } from "../src/entities/identityDocument.js";
 import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector.js";
 import { EntityStorageIdentityResolverConnector } from "../src/entityStorageIdentityResolverConnector.js";
@@ -586,6 +587,147 @@ describe("EntityStorageIdentityConnector", () => {
 		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
 	});
 
+	test("can create a verifiable credential with custom jwt header fields", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const issuerDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const vm = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			issuerDocument.id,
+			"assertionMethod",
+			"my-verification-id"
+		);
+		const holderDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_IDENTITY_ID,
+			vm.id,
+			"https://example.com/credentials/3733",
+			{
+				"@context": "https://schema.org",
+				"@type": "Person",
+				id: holderDocument.id,
+				name: "Jane Doe"
+			},
+			{ jwtHeaderFields: { "x-custom": "header-value" } }
+		);
+
+		expect(result.jwt.split(".").length).toEqual(3);
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.header).toMatchObject({ "x-custom": "header-value", typ: "JWT", alg: "EdDSA" });
+		expect(decoded.header?.kid).toBeDefined();
+
+		const check = await identityConnector.checkVerifiableCredential(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiableCredential).toBeDefined();
+	});
+
+	test("can create a verifiable credential with custom jwt payload fields", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const issuerDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const vm = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			issuerDocument.id,
+			"assertionMethod",
+			"my-verification-id"
+		);
+		const holderDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_IDENTITY_ID,
+			vm.id,
+			"https://example.com/credentials/3734",
+			{
+				"@context": "https://schema.org",
+				"@type": "Person",
+				id: holderDocument.id,
+				name: "Jane Doe"
+			},
+			{ jwtPayloadFields: { "x-custom": "payload-value" } }
+		);
+
+		expect(result.jwt.split(".").length).toEqual(3);
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.payload).toMatchObject({ "x-custom": "payload-value" });
+		expect(decoded.payload?.iss).toBeDefined();
+		expect(decoded.payload?.nbf).toBeDefined();
+		expect(decoded.payload?.vc).toBeDefined();
+
+		const check = await identityConnector.checkVerifiableCredential(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiableCredential).toBeDefined();
+	});
+
+	test("standard jwt header fields take precedence over custom fields in verifiable credential", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const issuerDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const vm = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			issuerDocument.id,
+			"assertionMethod",
+			"my-verification-id"
+		);
+		const holderDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_IDENTITY_ID,
+			vm.id,
+			"https://example.com/credentials/3735",
+			{
+				"@context": "https://schema.org",
+				"@type": "Person",
+				id: holderDocument.id,
+				name: "Jane Doe"
+			},
+			{ jwtHeaderFields: { alg: "RS256", typ: "at+JWT", kid: "evil-kid" } }
+		);
+
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.header?.alg).toEqual("EdDSA");
+		expect(decoded.header?.typ).toEqual("JWT");
+		expect(decoded.header?.kid).toEqual(vm.id);
+
+		const check = await identityConnector.checkVerifiableCredential(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiableCredential).toBeDefined();
+	});
+
+	test("standard jwt payload fields take precedence over custom fields in verifiable credential", async () => {
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const issuerDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const vm = await identityConnector.addVerificationMethod(
+			TEST_IDENTITY_ID,
+			issuerDocument.id,
+			"assertionMethod",
+			"my-verification-id"
+		);
+		const holderDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_IDENTITY_ID,
+			vm.id,
+			"https://example.com/credentials/3736",
+			{
+				"@context": "https://schema.org",
+				"@type": "Person",
+				id: holderDocument.id,
+				name: "Jane Doe"
+			},
+			{ jwtPayloadFields: { iss: "evil-issuer", jti: "evil-id" } }
+		);
+
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.payload?.iss).toEqual(issuerDocument.id);
+		expect(decoded.payload?.jti).toEqual("https://example.com/credentials/3736");
+
+		const check = await identityConnector.checkVerifiableCredential(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiableCredential).toBeDefined();
+	});
+
 	test("can fail to validate a verifiable credential with no jwt", async () => {
 		const identityConnector = new EntityStorageIdentityConnector();
 
@@ -910,6 +1052,126 @@ describe("EntityStorageIdentityConnector", () => {
 		expect(result.verifiablePresentation.holder?.startsWith("did:entity-storage")).toBeTruthy();
 		expect(result.jwt.split(".").length).toEqual(3);
 		testVpJwt = result.jwt;
+	});
+
+	test("can create a verifiable presentation with custom jwt header fields", async () => {
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
+		await didDocumentEntityStorage.set(testIdentityDocument);
+
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const result = await identityConnector.createVerifiablePresentation(
+			TEST_IDENTITY_ID,
+			testDocumentVerificationMethodId,
+			"presentationId",
+			"https://schema.org",
+			["Person"],
+			[testVcJwt],
+			{
+				expirationDate: new Date(Date.now() + 14400000),
+				jwtHeaderFields: { "x-custom": "header-value" }
+			}
+		);
+
+		expect(result.jwt.split(".").length).toEqual(3);
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.header).toMatchObject({ "x-custom": "header-value", typ: "JWT", alg: "EdDSA" });
+		expect(decoded.header?.kid).toBeDefined();
+
+		const check = await identityConnector.checkVerifiablePresentation(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiablePresentation).toBeDefined();
+	});
+
+	test("can create a verifiable presentation with custom jwt payload fields", async () => {
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
+		await didDocumentEntityStorage.set(testIdentityDocument);
+
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const result = await identityConnector.createVerifiablePresentation(
+			TEST_IDENTITY_ID,
+			testDocumentVerificationMethodId,
+			"presentationId",
+			"https://schema.org",
+			["Person"],
+			[testVcJwt],
+			{
+				expirationDate: new Date(Date.now() + 14400000),
+				jwtPayloadFields: { "x-custom": "payload-value" }
+			}
+		);
+
+		expect(result.jwt.split(".").length).toEqual(3);
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.payload).toMatchObject({ "x-custom": "payload-value" });
+		expect(decoded.payload?.iss).toBeDefined();
+		expect(decoded.payload?.nbf).toBeDefined();
+		expect(decoded.payload?.vp).toBeDefined();
+
+		const check = await identityConnector.checkVerifiablePresentation(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiablePresentation).toBeDefined();
+	});
+
+	test("standard jwt header fields take precedence over custom fields in verifiable presentation", async () => {
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
+		await didDocumentEntityStorage.set(testIdentityDocument);
+
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const result = await identityConnector.createVerifiablePresentation(
+			TEST_IDENTITY_ID,
+			testDocumentVerificationMethodId,
+			"presentationId",
+			"https://schema.org",
+			["Person"],
+			[testVcJwt],
+			{
+				expirationDate: new Date(Date.now() + 14400000),
+				jwtHeaderFields: { alg: "RS256", typ: "at+JWT", kid: "evil-kid" }
+			}
+		);
+
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.header?.alg).toEqual("EdDSA");
+		expect(decoded.header?.typ).toEqual("JWT");
+		expect(decoded.header?.kid).toEqual(testDocumentVerificationMethodId);
+
+		const check = await identityConnector.checkVerifiablePresentation(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiablePresentation).toBeDefined();
+	});
+
+	test("standard jwt payload fields take precedence over custom fields in verifiable presentation", async () => {
+		await vaultKeyEntityStorageConnector.set(testDocumentKey);
+		await vaultKeyEntityStorageConnector.set(testDocumentVerificationMethodKey);
+		await didDocumentEntityStorage.set(testIdentityDocument);
+
+		const identityConnector = new EntityStorageIdentityConnector();
+
+		const result = await identityConnector.createVerifiablePresentation(
+			TEST_IDENTITY_ID,
+			testDocumentVerificationMethodId,
+			"presentationId",
+			"https://schema.org",
+			["Person"],
+			[testVcJwt],
+			{
+				expirationDate: new Date(Date.now() + 14400000),
+				jwtPayloadFields: { iss: "evil-issuer" }
+			}
+		);
+
+		const decoded = await Jwt.decode(result.jwt);
+		expect(decoded.payload?.iss).toEqual(testIdentityDocument.id);
+
+		const check = await identityConnector.checkVerifiablePresentation(result.jwt);
+		expect(check.revoked).toBeFalsy();
+		expect(check.verifiablePresentation).toBeDefined();
 	});
 
 	test("can fail to validate a verifiable presentation with no jwt", async () => {

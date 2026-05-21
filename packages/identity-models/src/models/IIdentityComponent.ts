@@ -119,6 +119,8 @@ export interface IIdentityComponent extends IComponent {
 	 * @param options Additional options for creating the verifiable credential.
 	 * @param options.revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
 	 * @param options.expirationDate The date the verifiable credential is valid until.
+	 * @param options.jwtHeaderFields Additional fields to include in the JWT header when creating the verifiable credential in jwt format.
+	 * @param options.jwtPayloadFields Additional fields to include in the JWT payload when creating the verifiable credential in jwt format.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
@@ -130,6 +132,8 @@ export interface IIdentityComponent extends IComponent {
 		options?: {
 			revocationIndex?: number;
 			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
 		},
 		controller?: string
 	): Promise<{
@@ -182,6 +186,8 @@ export interface IIdentityComponent extends IComponent {
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
 	 * @param options Additional options for creating the verifiable presentation.
 	 * @param options.expirationDate The date the verifiable presentation is valid until.
+	 * @param options.jwtHeaderFields Additional fields to include in the JWT header when creating the verifiable presentation in jwt format.
+	 * @param options.jwtPayloadFields	Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
@@ -194,6 +200,8 @@ export interface IIdentityComponent extends IComponent {
 		verifiableCredentials: (string | IDidVerifiableCredential)[],
 		options?: {
 			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
 		},
 		controller?: string
 	): Promise<{
