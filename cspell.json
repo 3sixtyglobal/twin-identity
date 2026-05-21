@@ -25,15 +25,16 @@
 		"Bitstring",
 		"cryptosuite",
 		"devnet",
+		"dids",
 		"eddsa",
 		"Faucet",
 		"Multibase",
 		"nameof",
+		"nanos",
 		"openapi",
 		"Stiftung",
 		"unrevoke",
-		"Unrevoking",
-		"nanos"
+		"Unrevoking"
 	],
 	"ignoreRegExpList": [
 		"/from\\s+(['\"]).*\\1/",

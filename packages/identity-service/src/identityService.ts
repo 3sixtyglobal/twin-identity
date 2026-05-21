@@ -1,10 +1,12 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { GeneralError, Guards, Is, Urn } from "@twin.org/core";
+import { ComponentFactory, GeneralError, Guards, Is, Urn } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
 	IdentityConnectorFactory,
+	IdentityMetricIds,
+	IdentityMetrics,
 	type IIdentityComponent,
 	type IIdentityConnector
 } from "@twin.org/identity-models";
@@ -19,6 +21,7 @@ import {
 	type IDidVerifiableCredential,
 	type IDidVerifiablePresentation
 } from "@twin.org/standards-w3c-did";
+import { MetricHelper, type ITelemetryComponent } from "@twin.org/telemetry-models";
 import { Jwt } from "@twin.org/web";
 import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServiceConstructorOptions.js";
 
@@ -38,6 +41,12 @@ export class IdentityService implements IIdentityComponent {
 	private readonly _defaultNamespace: string;
 
 	/**
+	 * The telemetry component.
+	 * @internal
+	 */
+	private readonly _telemetryComponent?: ITelemetryComponent;
+
+	/**
 	 * Create a new instance of IdentityService.
 	 * @param options The options for the service.
 	 */
@@ -48,6 +57,10 @@ export class IdentityService implements IIdentityComponent {
 		}
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
+
+		this._telemetryComponent = ComponentFactory.getIfExists<ITelemetryComponent>(
+			options?.telemetryComponentType
+		);
 	}
 
 	/**
@@ -56,6 +69,17 @@ export class IdentityService implements IIdentityComponent {
 	 */
 	public className(): string {
 		return IdentityService.CLASS_NAME;
+	}
+
+	/**
+	 * Register all identity metrics with the telemetry component.
+	 */
+	public async start(): Promise<void> {
+		if (Is.undefined(this._telemetryComponent)) {
+			return;
+		}
+
+		await MetricHelper.createMetrics(this._telemetryComponent, IdentityMetrics);
 	}
 
 	/**
@@ -70,6 +94,9 @@ export class IdentityService implements IIdentityComponent {
 		try {
 			const identityConnector = this.getConnectorByNamespace(namespace);
 			const result = await identityConnector.createDocument(controller);
+			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.DidsCreated, {
+				namespace: namespace ?? this._defaultNamespace
+			});
 			return result;
 		} catch (error) {
 			throw new GeneralError(IdentityService.CLASS_NAME, "identityCreateFailed", undefined, error);
@@ -89,6 +116,7 @@ export class IdentityService implements IIdentityComponent {
 		try {
 			const identityConnector = this.getConnectorByUri(identity);
 			const result = await identityConnector.removeDocument(controller, identity);
+			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.DidsRemoved);
 			return result;
 		} catch (error) {
 			throw new GeneralError(
@@ -374,6 +402,11 @@ export class IdentityService implements IIdentityComponent {
 				options
 			);
 
+			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsCreated, {
+				hasRevocation: Is.number(options?.revocationIndex),
+				hasExpiration: Is.date(options?.expirationDate)
+			});
+
 			return service;
 		} catch (error) {
 			throw new GeneralError(
@@ -412,6 +445,19 @@ export class IdentityService implements IIdentityComponent {
 
 				const service = await identityConnector.checkVerifiableCredential(credential);
 
+				if (service.revoked) {
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.VcsVerificationFailed,
+						{ failureReason: "revoked" }
+					);
+				} else {
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.VcsVerified
+					);
+				}
+
 				return service;
 			} catch (error) {
 				throw new GeneralError(
@@ -444,6 +490,16 @@ export class IdentityService implements IIdentityComponent {
 			const identityConnector = this.getConnectorByUri(jwtPayload.iss);
 
 			const service = await identityConnector.checkVerifiableCredential(credential);
+
+			if (service.revoked) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					IdentityMetricIds.VcsVerificationFailed,
+					{ failureReason: "revoked" }
+				);
+			} else {
+				await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsVerified);
+			}
 
 			return service;
 		} catch (error) {
@@ -482,6 +538,9 @@ export class IdentityService implements IIdentityComponent {
 				issuerIdentity,
 				[credentialIndex]
 			);
+
+			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsRevoked);
+
 			return result;
 		} catch (error) {
 			throw new GeneralError(
@@ -519,6 +578,9 @@ export class IdentityService implements IIdentityComponent {
 				issuerIdentity,
 				[credentialIndex]
 			);
+
+			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsUnrevoked);
+
 			return result;
 		} catch (error) {
 			throw new GeneralError(
@@ -576,6 +638,11 @@ export class IdentityService implements IIdentityComponent {
 				verifiableCredentials,
 				options
 			);
+
+			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VpsCreated, {
+				credentialCount: verifiableCredentials.length
+			});
+
 			return result;
 		} catch (error) {
 			throw new GeneralError(
@@ -628,6 +695,16 @@ export class IdentityService implements IIdentityComponent {
 			const identityConnector = this.getConnectorByUri(holder);
 
 			const service = await identityConnector.checkVerifiablePresentation(presentation);
+
+			if (service.revoked) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					IdentityMetricIds.VpsVerificationFailed,
+					{ failureReason: "revoked" }
+				);
+			} else {
+				await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VpsVerified);
+			}
 
 			return service;
 		} catch (error) {

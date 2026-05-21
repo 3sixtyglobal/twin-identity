@@ -19,6 +19,7 @@ import type { VaultSecret } from "@twin.org/vault-connector-entity-storage";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
+	TEST_EXPLORER_URL,
 	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK
@@ -154,10 +155,7 @@ describe("IotaIdentityConnector", () => {
 		const didParts = didUrn.parts();
 		const objectId = didParts[didParts.length - 1];
 
-		console.debug(
-			"DID Document",
-			`${process.env.TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`
-		);
+		console.debug("DID Document", `${TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`);
 	});
 
 	test("can delete a document", async () => {
@@ -172,7 +170,7 @@ describe("IotaIdentityConnector", () => {
 
 		console.debug(
 			"DID Document (Deleted)",
-			`${process.env.TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`
+			`${TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`
 		);
 
 		await identityConnector.removeDocument(TEST_USER_IDENTITY, testDocument.id);

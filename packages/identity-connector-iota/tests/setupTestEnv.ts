@@ -48,6 +48,7 @@ if (!Is.stringValue(process.env.TEST_MNEMONIC)) {
 export const TEST_USER_IDENTITY = "test-identity";
 export const TEST_MNEMONIC_NAME = "test-mnemonic";
 export const TEST_FAUCET_ENDPOINT = process.env.TEST_FAUCET_ENDPOINT ?? "";
+export const TEST_EXPLORER_URL = process.env.TEST_EXPLORER_URL ?? "";
 
 // Minimum balance required for tests (1 IOTA in nano units)
 const MIN_BALANCE_REQUIRED = 1000000000n; // 1 IOTA = 1,000,000,000 nano IOTA
@@ -110,7 +111,7 @@ export const TEST_ADDRESS = testAddresses[0];
 export async function setupTestEnv(): Promise<void> {
 	console.debug(
 		"Identity Address",
-		`${process.env.TEST_EXPLORER_URL}address/${TEST_ADDRESS}?network=${TEST_NETWORK}`
+		`${TEST_EXPLORER_URL}address/${TEST_ADDRESS}?network=${TEST_NETWORK}`
 	);
 	console.debug(`Network: ${TEST_NETWORK}`);
 

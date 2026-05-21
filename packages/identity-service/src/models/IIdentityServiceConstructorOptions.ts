@@ -10,4 +10,9 @@ export interface IIdentityServiceConstructorOptions {
 	 * The configuration for the identity service.
 	 */
 	config?: IIdentityServiceConfig;
+
+	/**
+	 * The component type for the optional telemetry component used for event metrics.
+	 */
+	telemetryComponentType?: string;
 }
