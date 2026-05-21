@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.28](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.27...identity-service-v0.0.3-next.28) (2026-05-21)
+
+
+### Bug Fixes
+
+* identity routes missing jwt fields ([b47470a](https://github.com/iotaledger/twin-identity/commit/b47470a8e59881d877c84f114892ee290d4254ca))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.27 to 0.0.3-next.28
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.27 to 0.0.3-next.28
+
 ## [0.0.3-next.27](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.26...identity-service-v0.0.3-next.27) (2026-05-21)
 
 
