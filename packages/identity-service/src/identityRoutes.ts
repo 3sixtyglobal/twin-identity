@@ -1384,7 +1384,9 @@ export async function identityVerifiableCredentialCreate(
 		request.body.subject,
 		{
 			revocationIndex: request.body.revocationIndex,
-			expirationDate: Coerce.dateTime(request.body.expirationDate)
+			expirationDate: Coerce.dateTime(request.body.expirationDate),
+			jwtHeaderFields: request.body.jwtHeaderFields,
+			jwtPayloadFields: request.body.jwtPayloadFields
 		},
 		contextIds[ContextIdKeys.Organization]
 	);
@@ -1599,7 +1601,11 @@ export async function identityVerifiablePresentationCreate(
 		request.body.contexts,
 		request.body.types,
 		request.body.verifiableCredentials,
-		{ expirationDate: Coerce.dateTime(request.body.expirationDate) },
+		{
+			expirationDate: Coerce.dateTime(request.body.expirationDate),
+			jwtHeaderFields: request.body.jwtHeaderFields,
+			jwtPayloadFields: request.body.jwtPayloadFields
+		},
 		contextIds[ContextIdKeys.Organization]
 	);
 
