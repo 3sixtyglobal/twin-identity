@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.27](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.26...identity-service-v0.0.3-next.27) (2026-05-21)
+
+
+### Features
+
+* add optional jwt payload and headers to vc and vp tokens ([#135](https://github.com/iotaledger/twin-identity/issues/135)) ([aa1de0f](https://github.com/iotaledger/twin-identity/commit/aa1de0f63be95ff62bae3c699aabc85ea93d74c2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.26 to 0.0.3-next.27
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.26 to 0.0.3-next.27
+
 ## [0.0.3-next.26](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.25...identity-service-v0.0.3-next.26) (2026-05-21)
 
 
