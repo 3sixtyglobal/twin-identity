@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.3-next.26](https://github.com/iotaledger/twin-identity/compare/identity-cli-v0.0.3-next.25...identity-cli-v0.0.3-next.26) (2026-05-21)
+
+
+### Miscellaneous Chores
+
+* **identity-cli:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.25 to 0.0.3-next.26
+    * @twin.org/identity-connector-iota bumped from 0.0.3-next.25 to 0.0.3-next.26
+
 ## [0.0.3-next.25](https://github.com/iotaledger/twin-identity/compare/identity-cli-v0.0.3-next.24...identity-cli-v0.0.3-next.25) (2026-05-20)
 
 

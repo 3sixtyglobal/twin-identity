@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.26](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.25...identity-service-v0.0.3-next.26) (2026-05-21)
+
+
+### Features
+
+* add telemetry metrics ([#132](https://github.com/iotaledger/twin-identity/issues/132)) ([b51cd78](https://github.com/iotaledger/twin-identity/commit/b51cd7816905fd55e250035daf1b8f2047cba83d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.25 to 0.0.3-next.26
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.25 to 0.0.3-next.26
+
 ## [0.0.3-next.25](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.24...identity-service-v0.0.3-next.25) (2026-05-20)
 
 
