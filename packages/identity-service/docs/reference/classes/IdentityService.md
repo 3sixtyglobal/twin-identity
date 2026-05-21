@@ -54,6 +54,22 @@ The class name of the component.
 
 ***
 
+### start() {#start}
+
+> **start**(): `Promise`\<`void`\>
+
+Register all identity metrics with the telemetry component.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Implementation of
+
+`IIdentityComponent.start`
+
+***
+
 ### identityCreate() {#identitycreate}
 
 > **identityCreate**(`namespace?`, `controller?`): `Promise`\<`IDidDocument`\>

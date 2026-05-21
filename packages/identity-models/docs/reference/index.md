@@ -53,8 +53,14 @@
 - [IIdentityResolveRequest](interfaces/IIdentityResolveRequest.md)
 - [IIdentityResolveResponse](interfaces/IIdentityResolveResponse.md)
 
+## Type Aliases
+
+- [IdentityMetricIds](type-aliases/IdentityMetricIds.md)
+
 ## Variables
 
 - [IdentityConnectorFactory](variables/IdentityConnectorFactory.md)
 - [IdentityProfileConnectorFactory](variables/IdentityProfileConnectorFactory.md)
 - [IdentityResolverConnectorFactory](variables/IdentityResolverConnectorFactory.md)
+- [IdentityMetricIds](variables/IdentityMetricIds.md)
+- [IdentityMetrics](variables/IdentityMetrics.md)
