@@ -1331,7 +1331,8 @@ export async function identityAlsoKnownAsRemove(
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.alsoKnownAsRemove(
-		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.alias),
+		request.pathParams.identity,
+		request.pathParams.alias,
 		contextIds[ContextIdKeys.Organization]
 	);
 
@@ -1715,7 +1716,7 @@ export async function identityProofCreate(
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.proofCreate(
-		request.pathParams.identity,
+		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
 		request.body.proofType,
 		request.body.document,
 		contextIds[ContextIdKeys.Organization]
