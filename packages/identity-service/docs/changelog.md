@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.29](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.28...identity-service-v0.0.3-next.29) (2026-05-22)
+
+
+### Bug Fixes
+
+* proof create rest route identifier ([395dc57](https://github.com/iotaledger/twin-identity/commit/395dc5700f8ec1b3a607d18ffb68c8eec8ee751c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.28 to 0.0.3-next.29
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.28 to 0.0.3-next.29
+
 ## [0.0.3-next.28](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.27...identity-service-v0.0.3-next.28) (2026-05-21)
 
 
