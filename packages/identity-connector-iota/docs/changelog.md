@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.3-next.30](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.29...identity-connector-iota-v0.0.3-next.30) (2026-05-28)
+
+
+### Features
+
+* use package id from config constructing clients ([#141](https://github.com/iotaledger/twin-identity/issues/141)) ([de0e047](https://github.com/iotaledger/twin-identity/commit/de0e0476d3c5447bc0a7028109b23602d0ada06d))
+
+
+### Bug Fixes
+
+* linting ([49002a5](https://github.com/iotaledger/twin-identity/commit/49002a5278eca92a24054ec0ab6e72f0ebc50886))
+* resolver requires pkgid ([d83977c](https://github.com/iotaledger/twin-identity/commit/d83977ce807d0e4312c330e32dcef6065eb58211))
+* resolver requires pkgid ([2ca5e01](https://github.com/iotaledger/twin-identity/commit/2ca5e01891180871b5f773564a26d16004ef03bf))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.29 to 0.0.3-next.30
+
 ## [0.0.3-next.29](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.28...identity-connector-iota-v0.0.3-next.29) (2026-05-22)
 
 
