@@ -5,7 +5,6 @@ import type { IIotaIdentityConnectorConfig } from "./IIotaIdentityConnectorConfi
 /**
  * Configuration for the IOTA Identity Resolver Connector.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface IIotaIdentityResolverConnectorConfig extends IIotaIdentityConnectorConfig {
 	/**
 	 * The package ID for the identity contract on the network.
