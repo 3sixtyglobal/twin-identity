@@ -1,11 +1,11 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IIotaIdentityConnectorConfig } from "./IIotaIdentityConnectorConfig.js";
+import { IIotaConfig } from "@twin.org/dlt-iota";
 
 /**
  * Configuration for the IOTA Identity Resolver Connector.
  */
-export interface IIotaIdentityResolverConnectorConfig extends IIotaIdentityConnectorConfig {
+export interface IIotaIdentityResolverConnectorConfig extends IIotaConfig {
 	/**
 	 * The package ID for the identity contract on the network.
 	 * If not provided, a default value will be used based on the detected network type.
