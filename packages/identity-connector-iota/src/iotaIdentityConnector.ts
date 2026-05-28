@@ -1014,7 +1014,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		try {
 			const iotaClient = Iota.createClient(this._config);
 			// @ts-expect-error IotaClient has a mismatch with the library types
-			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
+			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient, this._config?.identityPkgId);
 			const resolver = new Resolver({ client: identityClientReadOnly });
 			const jwt = new Jwt(credential);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
@@ -1446,7 +1446,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		try {
 			const iotaClient = Iota.createClient(this._config);
 			// @ts-expect-error IotaClient has a mismatch with the library types
-			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
+			const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient, this._config?.identityPkgId);
 			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(presentationJwt);
 			const holderId = JwtPresentationValidator.extractHolder(jwt);
@@ -1732,7 +1732,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	private async getIdentityClient(controller?: string): Promise<IdentityClient> {
 		const iotaClient = Iota.createClient(this._config);
 		// @ts-expect-error IotaClient has a mismatch with the library types
-		const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient);
+		const identityClientReadOnly = await IdentityClientReadOnly.create(iotaClient, this._config?.identityPkgId);
 		if (Is.undefined(controller)) {
 			const jwkMemStore = new JwkMemStore();
 			const keyIdMemStore = new KeyIdMemStore();
