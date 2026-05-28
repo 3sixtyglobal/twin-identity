@@ -1448,8 +1448,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 		try {
 			const iotaClient = Iota.createClient(this._config);
-			// @ts-expect-error IotaClient has a mismatch with the library types
 			const identityClientReadOnly = await IdentityClientReadOnly.create(
+				// @ts-expect-error IotaClient has a mismatch with the library types
 				iotaClient,
 				this._config?.identityPkgId
 			);
@@ -1737,8 +1737,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	private async getIdentityClient(controller?: string): Promise<IdentityClient> {
 		const iotaClient = Iota.createClient(this._config);
-		// @ts-expect-error IotaClient has a mismatch with the library types
 		const identityClientReadOnly = await IdentityClientReadOnly.create(
+			// @ts-expect-error IotaClient has a mismatch with the library types
 			iotaClient,
 			this._config?.identityPkgId
 		);

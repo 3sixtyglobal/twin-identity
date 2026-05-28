@@ -39,7 +39,7 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 	 * The configuration to use for IOTA operations.
 	 * @internal
 	 */
-	private readonly _config: IIotaIdentityConnectorConfig;
+	private readonly _config: IIotaIdentityResolverConnectorConfig;
 
 	/**
 	 * Create a new instance of IotaIdentityResolverConnector.
@@ -124,8 +124,11 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 
 		try {
 			const client = Iota.createClient(this._config);
-			// @ts-expect-error IotaClient has a mismatch with the library types
-			const identityClientReadOnly = await IdentityClientReadOnly.create(client);
+			const identityClientReadOnly = await IdentityClientReadOnly.create(
+				// @ts-expect-error IotaClient has a mismatch with the library types
+				client,
+				this._config?.identityPkgId
+			);
 			const resolver = new Resolver<IotaDocument>({
 				client: identityClientReadOnly
 			});
