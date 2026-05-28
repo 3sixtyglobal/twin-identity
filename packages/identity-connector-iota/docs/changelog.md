@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.3-next.31](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.30...identity-connector-iota-v0.0.3-next.31) (2026-05-28)
+
+
+### Bug Fixes
+
+* resolver config definition ([1c0e105](https://github.com/iotaledger/twin-identity/commit/1c0e105ab6090307f1608b84d586d29bbc04accc))
+* resolver config definition ([23923e3](https://github.com/iotaledger/twin-identity/commit/23923e308a59b0ba3e416dfb1d6ef468dc44ed42))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.30 to 0.0.3-next.31
+
 ## [0.0.3-next.30](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.29...identity-connector-iota-v0.0.3-next.30) (2026-05-28)
 
 
