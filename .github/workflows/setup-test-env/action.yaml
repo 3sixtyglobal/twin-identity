@@ -15,6 +15,7 @@ runs:
   using: 'composite'
   steps:
     - name: Set IOTA CLI versions
+      if: inputs.package == 'packages/identity-connector-iota' || inputs.package == 'all'
       shell: bash
       run: |
         echo "IOTA_CLI_VERSION_MAINNET=1.22.1" >> $GITHUB_ENV
@@ -32,12 +33,6 @@ runs:
         chmod +x iota
         sudo mv iota /usr/local/bin/iota
         iota --version
-
-    - name: Remove Existing Twin Gas Station Test Container
-      shell: bash
-      run: |
-        echo "Removing existing twin-gas-station-test container if it exists..."
-        docker rm -f twin-gas-station-test 2>/dev/null || true
 
     - name: Start TWIN Gas Station Test Environment
       if: inputs.package == 'packages/identity-connector-iota' || inputs.package == 'all'
