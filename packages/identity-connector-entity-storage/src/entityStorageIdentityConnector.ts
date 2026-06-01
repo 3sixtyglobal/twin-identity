@@ -800,21 +800,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 			const subjectClone = ObjectHelper.clone(subject);
 
-			const finalTypes: string[] = [DidTypes.VerifiableCredential];
 			const credContext = ObjectHelper.extractProperty<IJsonLdContextDefinitionRoot>(subjectClone, [
 				"@context"
 			]);
 			const credId = ObjectHelper.extractProperty<string>(subjectClone, ["@id", "id"], false);
-			const credType = ObjectHelper.extractProperty<string>(subjectClone, ["@type", "type"]);
-			if (Is.stringValue(credType)) {
-				finalTypes.push(credType);
-			}
 
 			const verifiableCredential: IDidVerifiableCredentialV1 = {
 				"@context": (JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) ??
 					DidContexts.ContextVCv1) as [typeof DidContexts.ContextVCv1],
 				id,
-				type: finalTypes,
+				type: DidTypes.VerifiableCredential,
 				credentialSubject: subjectClone,
 				issuer: issuerDidDocument.id,
 				issuanceDate: new Date(Date.now()).toISOString(),

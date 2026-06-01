@@ -751,6 +751,7 @@ describe("IotaIdentityConnector", () => {
 		const credentialSubject = result.verifiableCredential.credentialSubject;
 		expect(credentialSubject).toBeDefined();
 		if (credentialSubject && !Array.isArray(credentialSubject)) {
+			expect(credentialSubject.type).toEqual("Person");
 			expect(credentialSubject.id).toEqual(did);
 			expect(credentialSubject.name).toEqual("Jane Doe");
 		}

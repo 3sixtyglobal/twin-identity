@@ -221,8 +221,9 @@ describe("IdentityService", () => {
 					"https://w3id.org/security/data-integrity/v2"
 				],
 				id: "https://example.com/credentials/3732",
-				type: ["VerifiableCredential", "Person"],
+				type: "VerifiableCredential",
 				credentialSubject: {
+					"@type": "Person",
 					name: "Jane Doe"
 				},
 				issuer:
@@ -238,13 +239,13 @@ describe("IdentityService", () => {
 					cryptosuite: "eddsa-jcs-2022",
 					proofPurpose: "assertionMethod",
 					proofValue:
-						"z4RCue16MTn7gn7butiDeA97zfw41pGgiWAsyHAFr8ZajPxsQD6T8N7ndLanGTFwGSafU23GpSLe7mXyEz2TPLEyd",
+						"z4PUfbrBmpdZ4VNKWm6zkS7cjn2a7Qu6TupNHo923zYTWcncr5h7uJwJL6EUJyhCBTTrfZYA9wrto39ggnFhfNkiG",
 					type: "DataIntegrityProof",
 					verificationMethod:
 						"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#my-id"
 				}
 			},
-			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI215LWlkIiwidHlwIjoiSldUIiwiYWxnIjoiRWREU0EifQ.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vc2NoZW1hLm9yZyJdLCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiUGVyc29uIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOiJKYW5lIERvZSJ9LCJjcmVkZW50aWFsU3RhdHVzIjp7ImlkIjoiZGlkOmVudGl0eS1zdG9yYWdlOjB4MDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMSNyZXZvY2F0aW9uIiwidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3QiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiI1In19fQ.bn8U__XphFBFlpkn63gyjA68BuTC7M9umw5uU8LTTqP1FgEkCsgOItB5oUq6nhDSeSsqhVFrctOZYpMIHj3LBQ"
+			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI215LWlkIiwidHlwIjoiSldUIiwiYWxnIjoiRWREU0EifQ.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vc2NoZW1hLm9yZyJdLCJ0eXBlIjoiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJAdHlwZSI6IlBlcnNvbiIsIm5hbWUiOiJKYW5lIERvZSJ9LCJjcmVkZW50aWFsU3RhdHVzIjp7ImlkIjoiZGlkOmVudGl0eS1zdG9yYWdlOjB4MDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMSNyZXZvY2F0aW9uIiwidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3QiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiI1In19fQ.b2cSnHw-4Llz4hU4I-kbq7sKWVVqA-bDkMN1IuWxDcW7bLpvIozgADAELPxOukWDNFXOM1-ZByXz9Dwgj3HABg"
 		});
 	});
 });

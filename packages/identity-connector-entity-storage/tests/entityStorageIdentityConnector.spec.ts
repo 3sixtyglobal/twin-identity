@@ -557,11 +557,11 @@ describe("EntityStorageIdentityConnector", () => {
 		]);
 		expect(result.verifiableCredential.id).toEqual("https://example.com/credentials/3732");
 		expect(result.verifiableCredential.type).toContain(DidTypes.VerifiableCredential);
-		expect(result.verifiableCredential.type).toContain("Person");
 
 		const subject = Is.array(result.verifiableCredential.credentialSubject)
 			? result.verifiableCredential.credentialSubject[0]
 			: result.verifiableCredential.credentialSubject;
+		expect(subject?.["@type"]).toEqual("Person");
 		expect((subject?.id as string).startsWith("did:entity-storage")).toBeTruthy();
 		expect(subject?.name).toEqual("Jane Doe");
 		expect(
@@ -755,10 +755,10 @@ describe("EntityStorageIdentityConnector", () => {
 		]);
 		expect(result.verifiableCredential?.id).toEqual("https://example.com/credentials/3732");
 		expect(result.verifiableCredential?.type).toContain(DidTypes.VerifiableCredential);
-		expect(result.verifiableCredential?.type).toContain("Person");
 		const subject = Is.array(result.verifiableCredential?.credentialSubject)
 			? result.verifiableCredential?.credentialSubject[0]
 			: result.verifiableCredential?.credentialSubject;
+		expect(subject?.["@type"]).toEqual("Person");
 		expect((subject?.id as string).startsWith("did:entity-storage")).toBeTruthy();
 		expect(subject?.name).toEqual("Jane Doe");
 		expect(
@@ -796,10 +796,10 @@ describe("EntityStorageIdentityConnector", () => {
 		]);
 		expect(result.verifiableCredential?.id).toEqual("https://example.com/credentials/3732");
 		expect(result.verifiableCredential?.type).toContain(DidTypes.VerifiableCredential);
-		expect(result.verifiableCredential?.type).toContain("Person");
 		const subject = Is.array(result.verifiableCredential?.credentialSubject)
 			? result.verifiableCredential?.credentialSubject[0]
 			: result.verifiableCredential?.credentialSubject;
+		expect(subject?.["@type"]).toEqual("Person");
 		expect((subject?.id as string).startsWith("did:entity-storage")).toBeTruthy();
 		expect(subject?.name).toEqual("Jane Doe");
 		expect(

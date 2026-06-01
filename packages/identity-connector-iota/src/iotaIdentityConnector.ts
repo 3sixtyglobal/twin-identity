@@ -871,12 +871,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const credContext = ObjectHelper.extractProperty<IJsonLdContextDefinitionRoot>(subjectClone, [
 				"@context"
 			]);
-			const credType = ObjectHelper.extractProperty(subjectClone, ["@type", "type"], false);
-
-			const finalTypes: string[] = [DidTypes.VerifiableCredential];
-			if (Is.stringValue(credType)) {
-				finalTypes.push(credType);
-			}
 
 			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
 			const keyType = await this._vaultConnector.getKeyType(keyId);
@@ -900,7 +894,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const credentialData: IDidVerifiableCredentialV1 = {
 				"@context": (JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) ??
 					DidContexts.ContextVCv1) as [typeof DidContexts.ContextVCv1],
-				type: finalTypes,
+				type: DidTypes.VerifiableCredential,
 				credentialSubject: subjectClone
 			};
 
