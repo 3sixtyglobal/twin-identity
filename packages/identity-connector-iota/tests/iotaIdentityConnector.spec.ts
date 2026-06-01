@@ -722,6 +722,7 @@ describe("IotaIdentityConnector", () => {
 			"https://example.edu/credentials/3732",
 			{
 				"@context": ["https://schema.org"],
+				type: "Person",
 				id: did,
 				name: "Jane Doe"
 			},
