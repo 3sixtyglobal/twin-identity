@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.0.3-next.32](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.0.3-next.31...identity-connector-entity-storage-v0.0.3-next.32) (2026-06-01)
+
+
+### Bug Fixes
+
+* identity subject type property ([#146](https://github.com/iotaledger/twin-identity/issues/146)) ([fe71dc6](https://github.com/iotaledger/twin-identity/commit/fe71dc66972120b42f1ff0e1dc8732cb48e1dd2a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.31 to 0.0.3-next.32
+
 ## [0.0.3-next.31](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.0.3-next.30...identity-connector-entity-storage-v0.0.3-next.31) (2026-05-28)
 
 
