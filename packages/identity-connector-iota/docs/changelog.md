@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.35](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.34...identity-connector-iota-v0.0.3-next.35) (2026-06-01)
+
+
+### Miscellaneous Chores
+
+* **identity-connector-iota:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.34 to 0.0.3-next.35
+
 ## [0.0.3-next.34](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.33...identity-connector-iota-v0.0.3-next.34) (2026-06-01)
 
 

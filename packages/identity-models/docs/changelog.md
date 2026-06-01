@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3-next.35](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.0.3-next.34...identity-models-v0.0.3-next.35) (2026-06-01)
+
+
+### Miscellaneous Chores
+
+* **identity-models:** Synchronize repo versions
+
 ## [0.0.3-next.34](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.0.3-next.33...identity-models-v0.0.3-next.34) (2026-06-01)
 
 

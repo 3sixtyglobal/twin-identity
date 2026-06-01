@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.0.3-next.35](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.34...identity-service-v0.0.3-next.35) (2026-06-01)
+
+
+### Features
+
+* remove skipAuth from routes ([a2f8921](https://github.com/iotaledger/twin-identity/commit/a2f892133360a25cb7b6668342e5dad852c3a908))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.34 to 0.0.3-next.35
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.34 to 0.0.3-next.35
+
 ## [0.0.3-next.34](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.33...identity-service-v0.0.3-next.34) (2026-06-01)
 
 
