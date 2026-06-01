@@ -45,6 +45,11 @@
 						"example": "did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a"
 					}
 				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
 				"responses": {
 					"200": {
 						"description": "Response to resolving an identity.",
@@ -86,6 +91,24 @@
 											"properties": {
 												"foo": "bar"
 											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1140,6 +1163,11 @@
 				"tags": [
 					"Identity"
 				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
 				"requestBody": {
 					"description": "Request to verify a verifiable credential.",
 					"required": true,
@@ -1238,6 +1266,24 @@
 							}
 						}
 					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
 					"500": {
 						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
 						"content": {
@@ -1276,6 +1322,11 @@
 							"type": "string"
 						},
 						"example": "eyJraWQiOi...D1Z3AQ"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
 					}
 				],
 				"responses": {
@@ -1333,6 +1384,24 @@
 											"properties": {
 												"foo": "bar"
 											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1717,6 +1786,11 @@
 				"tags": [
 					"Identity"
 				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
 				"requestBody": {
 					"description": "Request to verify a verifiable presentation.",
 					"required": true,
@@ -1821,6 +1895,24 @@
 							}
 						}
 					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
 					"500": {
 						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
 						"content": {
@@ -1859,6 +1951,11 @@
 							"type": "string"
 						},
 						"example": "eyJraWQiOi...D1Z3AQ"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
 					}
 				],
 				"responses": {
@@ -1909,6 +2006,24 @@
 											"properties": {
 												"foo": "bar"
 											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -2103,6 +2218,11 @@
 				"tags": [
 					"Identity"
 				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
 				"requestBody": {
 					"description": "Request to verify a proof.",
 					"required": true,
@@ -2181,6 +2301,24 @@
 											"properties": {
 												"foo": "bar"
 											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -2721,6 +2859,11 @@
 						"example": "role,email,name"
 					}
 				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
 				"responses": {
 					"200": {
 						"description": "Response to get an identity public profile.",
@@ -2765,6 +2908,24 @@
 											"properties": {
 												"foo": "bar"
 											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
 										}
 									}
 								}
