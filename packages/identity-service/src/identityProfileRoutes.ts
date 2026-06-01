@@ -198,8 +198,7 @@ export function generateRestRoutesIdentityProfile(
 			{
 				type: nameof<INotFoundResponse>()
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	const identityProfileUpdateRoute: IRestRoute<IIdentityProfileUpdateRequest, INoContentResponse> =

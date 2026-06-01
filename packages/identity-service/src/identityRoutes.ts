@@ -529,8 +529,7 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	const identityVerifiableCredentialVerifyDocumentRoute: IRestRoute<
@@ -602,8 +601,7 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	const identityVerifiableCredentialRevokeRoute: IRestRoute<
@@ -789,8 +787,7 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	const identityVerifiablePresentationVerifyDocumentRoute: IRestRoute<
@@ -860,8 +857,7 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	const identityProofCreateRoute: IRestRoute<
@@ -1001,8 +997,7 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	return [
