@@ -1828,7 +1828,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	/**
 	 * Attempts to extract DID from transaction object changes.
 	 * @param objectChanges The object changes from the transaction response.
-	 * @param transactionDigest The transaction digest for logging.
+	 * @param networkHrp The network HRP for the DID.
 	 * @returns The DID if found, undefined otherwise.
 	 * @internal
 	 */
@@ -2099,6 +2099,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	/**
 	 * Build the key name to access the specified key in the vault.
 	 * @param identity The identity of the user to access the vault keys.
+	 * @param key The key to access in the vault.
 	 * @returns The vault key.
 	 * @internal
 	 */

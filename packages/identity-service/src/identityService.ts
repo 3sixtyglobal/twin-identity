@@ -812,6 +812,7 @@ export class IdentityService implements IIdentityComponent {
 	 * Get the connector from the namespace.
 	 * @param namespace The namespace for the identity.
 	 * @returns The connector.
+	 * @throws GeneralError if the connector is not found.
 	 * @internal
 	 */
 	private getConnectorByNamespace(namespace?: string): IIdentityConnector {
@@ -832,6 +833,7 @@ export class IdentityService implements IIdentityComponent {
 	 * Get the connector from the uri.
 	 * @param id The id of the identity in urn format.
 	 * @returns The connector.
+	 * @throws GeneralError if the namespace does not match or the connector is not found.
 	 * @internal
 	 */
 	private getConnectorByUri(id: string): IIdentityConnector {

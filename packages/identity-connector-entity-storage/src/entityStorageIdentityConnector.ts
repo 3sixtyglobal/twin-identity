@@ -102,6 +102,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	/**
 	 * Build the key name to access the specified key in the vault.
 	 * @param identity The identity of the user to access the vault keys.
+	 * @param key The key to access in the vault.
 	 * @returns The vault key.
 	 * @internal
 	 */
@@ -112,6 +113,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	/**
 	 * Verify the document in storage.
 	 * @param didDocument The did document that was stored.
+	 * @param vaultConnector The vault connector to use for verification.
 	 * @internal
 	 */
 	public static async verifyDocument(
