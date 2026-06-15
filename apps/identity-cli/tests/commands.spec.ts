@@ -5,6 +5,7 @@ import { CLIUtils } from "@twin.org/cli-core";
 import { Converter, I18n } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { actionCommandAddress } from "@twin.org/crypto-cli";
+import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 import {
 	DidVerificationMethodType,
 	type IDidVerifiableCredential,
@@ -30,7 +31,6 @@ import { actionCommandVerifiablePresentationVerify } from "../src/commands/verif
 import { actionCommandVerificationMethodAdd } from "../src/commands/verificationMethodAdd.js";
 import { actionCommandVerificationMethodRemove } from "../src/commands/verificationMethodRemove.js";
 import { IdentityConnectorTypes } from "../src/models/identityConnectorTypes.js";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 
 const tempDirectory = "./tests/.tmp/";
 
