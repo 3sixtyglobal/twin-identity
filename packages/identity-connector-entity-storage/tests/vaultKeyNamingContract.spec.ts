@@ -32,15 +32,18 @@ describe("Vault Key Naming Contract", () => {
 		SchemaOrgDataTypes.registerRedirects();
 
 		didDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
-			entitySchema: nameof<IdentityDocument>()
+			entitySchema: nameof<IdentityDocument>(),
+			config: { storageKey: "identity-document" }
 		});
 
 		vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
-			entitySchema: nameof<VaultKey>()
+			entitySchema: nameof<VaultKey>(),
+			config: { storageKey: "vault-keys" }
 		});
 
 		vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
-			entitySchema: nameof<VaultSecret>()
+			entitySchema: nameof<VaultSecret>(),
+			config: { storageKey: "vault-secrets" }
 		});
 
 		EntityStorageConnectorFactory.register("identity-document", () => didDocumentEntityStorage);

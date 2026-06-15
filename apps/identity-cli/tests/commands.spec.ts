@@ -30,6 +30,7 @@ import { actionCommandVerifiablePresentationVerify } from "../src/commands/verif
 import { actionCommandVerificationMethodAdd } from "../src/commands/verificationMethodAdd.js";
 import { actionCommandVerificationMethodRemove } from "../src/commands/verificationMethodRemove.js";
 import { IdentityConnectorTypes } from "../src/models/identityConnectorTypes.js";
+import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 
 const tempDirectory = "./tests/.tmp/";
 
@@ -120,6 +121,11 @@ describe("CLI Commands", () => {
 
 	afterAll(async () => {
 		await rm(tempDirectory, { recursive: true, force: true });
+	});
+
+	afterEach(async () => {
+		await EntityStorageConnectorFactory.get("vault-key")?.teardown?.();
+		await EntityStorageConnectorFactory.get("vault-secret")?.teardown?.();
 	});
 
 	test("Can execute identity-create", async () => {

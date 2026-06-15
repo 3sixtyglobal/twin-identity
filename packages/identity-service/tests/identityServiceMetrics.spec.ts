@@ -77,13 +77,16 @@ describe("IdentityService — metrics", () => {
 
 	beforeEach(() => {
 		identityDocStorage = new MemoryEntityStorageConnector<IdentityDocument>({
-			entitySchema: nameof<IdentityDocument>()
+			entitySchema: nameof<IdentityDocument>(),
+			config: { storageKey: "identity-document" }
 		});
 		vaultKeyStorage = new MemoryEntityStorageConnector<VaultKey>({
-			entitySchema: nameof<VaultKey>()
+			entitySchema: nameof<VaultKey>(),
+			config: { storageKey: "vault-key" }
 		});
 		vaultSecretStorage = new MemoryEntityStorageConnector<VaultSecret>({
-			entitySchema: nameof<VaultSecret>()
+			entitySchema: nameof<VaultSecret>(),
+			config: { storageKey: "vault-secret" }
 		});
 
 		EntityStorageConnectorFactory.register("identity-document", () => identityDocStorage);
