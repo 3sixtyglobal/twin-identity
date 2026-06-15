@@ -12,7 +12,7 @@ import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
 
 /**
- * Client for performing identity through to REST endpoints.
+ * Client for performing identity resolution through REST endpoints.
  */
 export class IdentityResolverRestClient
 	extends BaseRestClient

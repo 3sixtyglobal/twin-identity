@@ -58,6 +58,6 @@ export const IdentityMetricIds = {
 } as const;
 
 /**
- * Metric IDs for the identity service.
+ * Union type of all identity service metric ID string values.
  */
 export type IdentityMetricIds = (typeof IdentityMetricIds)[keyof typeof IdentityMetricIds];

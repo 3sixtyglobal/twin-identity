@@ -94,7 +94,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the identity has been removed.
 	 */
 	public async identityRemove(identity: string): Promise<void> {
 		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
@@ -145,7 +145,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -222,7 +222,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Remove a service from the document.
 	 * @param serviceId The id of the service.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async serviceRemove(serviceId: string): Promise<void> {
@@ -247,7 +247,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	 * If the alias is already present the operation is a no-op.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been added.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -274,7 +274,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	 * If the alias is not present the operation is a no-op.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to remove. Must be a Url or Urn.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been removed.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -393,8 +393,8 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Revoke verifiable credential.
 	 * @param issuerId The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index revoke.
-	 * @returns Nothing.
+	 * @param credentialIndex The revocation bitmap index to revoke.
+	 * @returns A promise that resolves when the credential has been revoked.
 	 */
 	public async verifiableCredentialRevoke(
 		issuerId: string,
@@ -418,8 +418,8 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Unrevoke verifiable credential.
 	 * @param issuerId The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index to un revoke.
-	 * @returns Nothing.
+	 * @param credentialIndex The revocation bitmap index to unrevoke.
+	 * @returns A promise that resolves when the credential has been unrevoked.
 	 */
 	public async verifiableCredentialUnrevoke(
 		issuerId: string,

@@ -6,7 +6,7 @@ import { nameof } from "@twin.org/nameof";
 import { Did } from "../types/did.js";
 
 /**
- * Context Id handler for testing as a DID.
+ * Context ID handler that treats context identifiers as DIDs.
  */
 export class DidContextIdHandler implements IContextIdHandler {
 	/**
@@ -38,9 +38,9 @@ export class DidContextIdHandler implements IContextIdHandler {
 	}
 
 	/**
-	 * Guard the value ensuring length.
+	 * Guard the value ensuring it is a valid DID.
 	 * @param value The value to guard.
-	 * @throws GeneralError if the value is too short.
+	 * @throws GeneralError if the value is not a valid DID.
 	 */
 	public guard(value: string): void {
 		Did.guard(DidContextIdHandler.CLASS_NAME, nameof(value), value);

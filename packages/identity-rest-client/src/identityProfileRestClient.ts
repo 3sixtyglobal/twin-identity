@@ -18,7 +18,7 @@ import type {
 import { nameof } from "@twin.org/nameof";
 
 /**
- * Client for performing identity through to REST endpoints.
+ * Client for performing identity profile operations through REST endpoints.
  */
 export class IdentityProfileRestClient<
 	T extends IJsonLdDocument = IJsonLdDocument,
@@ -52,7 +52,7 @@ export class IdentityProfileRestClient<
 	 * Create the profile properties for an identity.
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	public async create(publicProfile?: T, privateProfile?: U): Promise<void> {
 		await this.fetch<IIdentityProfileCreateRequest, never>("", "POST", {
@@ -123,7 +123,7 @@ export class IdentityProfileRestClient<
 	 * Update the profile properties of an identity.
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(publicProfile?: T, privateProfile?: U): Promise<void> {
 		await this.fetch<IIdentityProfileUpdateRequest, never>("/", "PUT", {
@@ -136,7 +136,7 @@ export class IdentityProfileRestClient<
 
 	/**
 	 * Delete the profile for an identity.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(): Promise<void> {
 		await this.fetch<never, never>("/", "DELETE");

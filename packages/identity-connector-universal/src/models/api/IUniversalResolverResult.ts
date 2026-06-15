@@ -3,31 +3,31 @@
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
 
 /**
- * Universal Resolver DIF resolution result
+ * Result returned by a Universal Resolver DIF resolution request.
  */
 export interface IUniversalResolverResult {
 	/**
-	 * DID Document resolved.
+	 * The resolved DID document.
 	 */
 	didDocument: IDidDocument;
 
 	/**
-	 * Resolution metadata
+	 * Metadata about the resolution process.
 	 */
 	didResolutionMetadata: {
 		/**
-		 * The created date of the did document.
+		 * The created date of the DID document.
 		 */
 		created: string;
 
 		/**
-		 * The updated date of the did document.
+		 * The updated date of the DID document.
 		 */
 		updated: string;
 	};
 
 	/**
-	 * DID Document metadata
+	 * Metadata about the DID document.
 	 */
 	didDocumentMetadata: unknown;
 }

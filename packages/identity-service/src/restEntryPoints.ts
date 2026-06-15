@@ -8,6 +8,9 @@ import {
 } from "./identityResolverRoutes.js";
 import { generateRestRoutesIdentity, tagsIdentity } from "./identityRoutes.js";
 
+/**
+ * REST entry points for the identity, identity resolver, and identity profile services.
+ */
 export const restEntryPoints: IRestRouteEntryPoint[] = [
 	{
 		name: "identityResolver",

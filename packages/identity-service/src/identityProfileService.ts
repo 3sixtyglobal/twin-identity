@@ -52,7 +52,7 @@ export class IdentityProfileService<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	public async create(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void> {
 		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
@@ -145,7 +145,7 @@ export class IdentityProfileService<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void> {
 		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
@@ -172,7 +172,7 @@ export class IdentityProfileService<
 	/**
 	 * Delete the profile for an identity.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(identity?: string): Promise<void> {
 		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);

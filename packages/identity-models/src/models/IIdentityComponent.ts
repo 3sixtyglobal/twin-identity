@@ -29,7 +29,7 @@ export interface IIdentityComponent extends IComponent {
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the identity has been removed.
 	 */
 	identityRemove(identity: string, controller?: string): Promise<void>;
 
@@ -54,7 +54,7 @@ export interface IIdentityComponent extends IComponent {
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -82,7 +82,7 @@ export interface IIdentityComponent extends IComponent {
 	 * Remove a service from the document.
 	 * @param serviceId The id of the service.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	serviceRemove(serviceId: string, controller?: string): Promise<void>;
@@ -93,7 +93,7 @@ export interface IIdentityComponent extends IComponent {
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been added.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -105,7 +105,7 @@ export interface IIdentityComponent extends IComponent {
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to remove. Must be a Url or Urn.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been removed.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -154,9 +154,9 @@ export interface IIdentityComponent extends IComponent {
 	/**
 	 * Revoke verifiable credential.
 	 * @param issuerId The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index revoke.
+	 * @param credentialIndex The revocation bitmap index to revoke.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credential has been revoked.
 	 */
 	verifiableCredentialRevoke(
 		issuerId: string,
@@ -167,9 +167,9 @@ export interface IIdentityComponent extends IComponent {
 	/**
 	 * Unrevoke verifiable credential.
 	 * @param issuerId The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index to un revoke.
+	 * @param credentialIndex The revocation bitmap index to unrevoke.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credential has been unrevoked.
 	 */
 	verifiableCredentialUnrevoke(
 		issuerId: string,

@@ -18,10 +18,10 @@ export class VerificationHelper {
 	public static readonly CLASS_NAME: string = nameof<VerificationHelper>();
 
 	/**
-	 * Verified the JWT.
+	 * Verify the JWT and return the decoded header and payload.
 	 * @param resolver The resolver to use for finding the document.
 	 * @param jwt The token to verify.
-	 * @returns The decoded payload.
+	 * @returns The decoded header and payload.
 	 */
 	public static async verifyJwt<T extends IJwtHeader, U extends IJwtPayload>(
 		resolver: IIdentityResolverComponent,
@@ -63,10 +63,10 @@ export class VerificationHelper {
 	}
 
 	/**
-	 * Verified the proof for the document e.g. verifiable credential.
+	 * Verify the proof for the document.
 	 * @param resolver The resolver to use for finding the document.
 	 * @param secureDocument The secure document to verify.
-	 * @returns True if the verification is successful.
+	 * @returns True if all proofs in the document are verified successfully.
 	 */
 	public static async verifyProof(
 		resolver: IIdentityResolverComponent,

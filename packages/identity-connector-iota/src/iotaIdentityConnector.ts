@@ -98,17 +98,8 @@ import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIde
 /**
  * Class for performing identity operations on IOTA.
  *
- * This connector integrates with the TWIN Vault system to ensure secure
- * key management. Private keys are stored in the vault and signing operations
- * are delegated to the vault connector to prevent key exposure.
- *
- * Security Implementation:
- * - Verifiable Credentials: JWT signing delegated to VaultConnectorHelper
- * - Verifiable Presentations: JWT signing delegated to VaultConnectorHelper
- * - Data Integrity Proofs: Async signing delegated to vault via signWithVault method
- *
- * @see VaultConnectorHelper for JWT signing implementation
- * @see signWithVault for Data Integrity Proof signing implementation
+ * Private keys are stored in the vault and all signing operations are delegated
+ * to the vault connector to prevent key exposure.
  */
 export class IotaIdentityConnector implements IIdentityConnector {
 	/**
@@ -301,7 +292,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * Remove a document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the document has been removed.
 	 */
 	public async removeDocument(controller: string, documentId: string): Promise<void> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
@@ -474,7 +465,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * Remove a verification method from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The id of the verification method.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -617,7 +608,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * Remove a service from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param serviceId The id of the service.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async removeService(controller: string, serviceId: string): Promise<void> {
@@ -674,7 +665,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been added.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -736,7 +727,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to remove. Must be a Url or Urn.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been removed.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -794,8 +785,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a verifiable credential for a verification method.
-	 * The credential is signed using the vault connector to ensure the private key
-	 * never leaves the secure vault environment.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The verification method id to use.
 	 * @param id The id of the credential.
@@ -807,7 +796,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param options.jwtPayloadFields Additional fields to include in the JWT payload.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
-	 * @throws GeneralError if signature operation fails.
+	 * @throws GeneralError if the signing operation fails.
 	 */
 	public async createVerifiableCredential(
 		controller: string,
@@ -1056,7 +1045,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been revoked.
 	 */
 	public async revokeVerifiableCredentials(
 		controller: string,
@@ -1129,7 +1118,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to un revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been unrevoked.
 	 */
 	public async unrevokeVerifiableCredentials(
 		controller: string,
@@ -1202,8 +1191,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a verifiable presentation from the supplied verifiable credentials.
-	 * The presentation is signed using the vault connector to ensure the private key
-	 * never leaves the secure vault environment.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The method to associate with the presentation.
 	 * @param presentationId The id of the presentation.
@@ -1216,7 +1203,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param options.jwtPayloadFields Additional fields to include in the JWT payload.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
-	 * @throws GeneralError if signature operation fails.
+	 * @throws GeneralError if the signing operation fails.
 	 */
 	public async createVerifiablePresentation(
 		controller: string,
@@ -1407,7 +1394,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable presentation is valid.
-	 * @param presentation The presentation JWT or JSON-LD object to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
 	public async checkVerifiablePresentation(
@@ -1532,18 +1519,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Create a proof for arbitrary data with the specified verification method.
-	 *
-	 * This method uses async signing to ensure the private key never leaves the vault.
-	 * The signing operation is delegated to the vault connector through a callback,
-	 * with algorithm validation to ensure key type compatibility.
-	 *
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
 	 * @returns The proof.
 	 * @throws NotFoundError if the id can not be resolved.
-	 * @throws GeneralError if the proof creation fails or if there is an algorithm/key type mismatch.
+	 * @throws GeneralError if proof creation fails or the algorithm does not match the key type.
 	 */
 	public async createProof(
 		controller: string,

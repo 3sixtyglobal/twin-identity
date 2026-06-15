@@ -28,7 +28,7 @@ export interface IIdentityConnector extends IComponent {
 	 * Remove a document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the document has been removed.
 	 */
 	removeDocument(controller: string, documentId: string): Promise<void>;
 
@@ -53,7 +53,7 @@ export interface IIdentityConnector extends IComponent {
 	 * Remove a verification method from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The id of the verification method.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -81,7 +81,7 @@ export interface IIdentityConnector extends IComponent {
 	 * Remove a service from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param serviceId The id of the service.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	removeService(controller: string, serviceId: string): Promise<void>;
@@ -92,7 +92,7 @@ export interface IIdentityConnector extends IComponent {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been added.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -104,7 +104,7 @@ export interface IIdentityConnector extends IComponent {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to remove. Must be a Url or Urn.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been removed.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -155,7 +155,7 @@ export interface IIdentityConnector extends IComponent {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been revoked.
 	 */
 	revokeVerifiableCredentials(
 		controller: string,
@@ -167,8 +167,8 @@ export interface IIdentityConnector extends IComponent {
 	 * Unrevoke verifiable credential(s).
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
-	 * @param credentialIndices The revocation bitmap index or indices to un revoke.
-	 * @returns Nothing.
+	 * @param credentialIndices The revocation bitmap index or indices to unrevoke.
+	 * @returns A promise that resolves when the credentials have been unrevoked.
 	 */
 	unrevokeVerifiableCredentials(
 		controller: string,

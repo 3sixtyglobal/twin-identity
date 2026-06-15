@@ -114,6 +114,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Verify the document in storage.
 	 * @param didDocument The did document that was stored.
 	 * @param vaultConnector The vault connector to use for verification.
+	 * @returns A promise that resolves when verification is complete.
+	 * @throws GeneralError if the document signature is invalid.
 	 * @internal
 	 */
 	public static async verifyDocument(
@@ -193,7 +195,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Remove a document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the document has been removed.
 	 */
 	public async removeDocument(controller: string, documentId: string): Promise<void> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
@@ -357,7 +359,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Remove a verification method from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The id of the verification method.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -530,7 +532,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Remove a service from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param serviceId The id of the service.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async removeService(controller: string, serviceId: string): Promise<void> {
@@ -590,7 +592,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been added.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -645,7 +647,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to remove. Must be a Url or Urn.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been removed.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -1051,7 +1053,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been revoked.
 	 */
 	public async revokeVerifiableCredentials(
 		controller: string,
@@ -1129,7 +1131,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to un revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been unrevoked.
 	 */
 	public async unrevokeVerifiableCredentials(
 		controller: string,
@@ -1820,6 +1822,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Update the document in storage.
 	 * @param controller The controller of the document.
 	 * @param didDocument The did document to store.
+	 * @returns A promise that resolves when the document has been signed and persisted.
 	 * @internal
 	 */
 	private async updateDocument(controller: string, didDocument: IDidDocument): Promise<void> {

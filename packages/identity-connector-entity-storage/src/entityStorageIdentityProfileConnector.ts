@@ -66,7 +66,7 @@ export class EntityStorageIdentityProfileConnector<
 	 * @param identity The identity of the profile to create.
 	 * @param publicProfile The public profile data.
 	 * @param privateProfile The private profile data.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	public async create(identity: string, publicProfile?: T, privateProfile?: U): Promise<void> {
 		Guards.stringValue(
@@ -148,7 +148,7 @@ export class EntityStorageIdentityProfileConnector<
 	 * @param identity The identity to update.
 	 * @param publicProfile The public profile data.
 	 * @param privateProfile The private profile data.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(identity: string, publicProfile?: T, privateProfile?: U): Promise<void> {
 		Guards.stringValue(
@@ -187,7 +187,7 @@ export class EntityStorageIdentityProfileConnector<
 	/**
 	 * Delete the profile for an identity.
 	 * @param identity The identity to delete.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(identity: string): Promise<void> {
 		Guards.stringValue(

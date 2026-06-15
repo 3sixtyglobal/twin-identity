@@ -73,6 +73,7 @@ export class IdentityService implements IIdentityComponent {
 
 	/**
 	 * Register all identity metrics with the telemetry component.
+	 * @returns A promise that resolves when all metrics have been registered.
 	 */
 	public async start(): Promise<void> {
 		if (Is.undefined(this._telemetryComponent)) {
@@ -107,7 +108,7 @@ export class IdentityService implements IIdentityComponent {
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the identity has been removed.
 	 */
 	public async identityRemove(identity: string, controller?: string): Promise<void> {
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(identity), identity);
@@ -179,7 +180,7 @@ export class IdentityService implements IIdentityComponent {
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -267,7 +268,7 @@ export class IdentityService implements IIdentityComponent {
 	 * Remove a service from the document.
 	 * @param serviceId The id of the service.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async serviceRemove(serviceId: string, controller?: string): Promise<void> {
@@ -296,7 +297,7 @@ export class IdentityService implements IIdentityComponent {
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been added.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -331,7 +332,7 @@ export class IdentityService implements IIdentityComponent {
 	 * @param documentId The id of the document to update.
 	 * @param alias The alias to remove. Must be a Url or Urn.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the alias has been removed.
 	 * @throws GeneralError if the alias is not a Url or Urn.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
@@ -519,9 +520,9 @@ export class IdentityService implements IIdentityComponent {
 	/**
 	 * Revoke verifiable credential.
 	 * @param issuerIdentity The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index revoke.
+	 * @param credentialIndex The revocation bitmap index to revoke.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credential has been revoked.
 	 */
 	public async verifiableCredentialRevoke(
 		issuerIdentity: string,
@@ -561,7 +562,7 @@ export class IdentityService implements IIdentityComponent {
 	 * @param issuerIdentity The id of the document to update the revocation list for.
 	 * @param credentialIndex The revocation bitmap index to un revoke.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credential has been unrevoked.
 	 */
 	public async verifiableCredentialUnrevoke(
 		issuerIdentity: string,

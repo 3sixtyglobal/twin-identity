@@ -4,7 +4,7 @@ import { GuardError, Urn } from "@twin.org/core";
 import { nameof } from "@twin.org/nameof";
 
 /**
- * Helper methods for Ids.
+ * Helper methods for parsing and validating DID identifiers.
  */
 export class Did {
 	/**
@@ -13,7 +13,7 @@ export class Did {
 	public static readonly CLASS_NAME: string = nameof<Did>();
 
 	/**
-	 * Parse and id in to it's constituent parts.
+	 * Parse an id into its constituent parts.
 	 * @param id The id to parse.
 	 * @returns The parsed id.
 	 * @throws GeneralError if the id is not valid.
@@ -45,7 +45,7 @@ export class Did {
 	 * Guard a string as a DID.
 	 * @param source The source of the error.
 	 * @param property The name of the property.
-	 * @param value The urn to parse.
+	 * @param value The value to assert as a valid DID.
 	 * @throws GuardError If the value does not match the assertion.
 	 */
 	public static guard(source: string, property: string, value: unknown): asserts value is string {

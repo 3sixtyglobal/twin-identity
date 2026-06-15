@@ -15,7 +15,7 @@ export interface IIdentityProfileComponent<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	create(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void>;
 
@@ -49,14 +49,14 @@ export interface IIdentityProfileComponent<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	update(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void>;
 
 	/**
 	 * Delete the profile for an identity.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	remove(identity?: string): Promise<void>;
 
