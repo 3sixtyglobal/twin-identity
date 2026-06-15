@@ -31,6 +31,7 @@ export const TEST_CONTROLLER = "test-controller";
 
 let vaultKeyEntityStorageConnector: MemoryEntityStorageConnector<VaultKey>;
 let identityDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
+let vaultSecretEntityStorageConnector: MemoryEntityStorageConnector<VaultSecret>;
 
 describe("IdentityService", () => {
 	beforeAll(async () => {
@@ -45,7 +46,7 @@ describe("IdentityService", () => {
 			entitySchema: nameof<VaultKey>()
 		});
 
-		const vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
+		vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
 			entitySchema: nameof<VaultSecret>()
 		});
 
@@ -79,6 +80,12 @@ describe("IdentityService", () => {
 			);
 
 		vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
+	});
+
+	afterAll(async () => {
+		await identityDocumentEntityStorage.teardown();
+		await vaultKeyEntityStorageConnector.teardown();
+		await vaultSecretEntityStorageConnector.teardown();
 	});
 
 	test("Can create identity service", () => {

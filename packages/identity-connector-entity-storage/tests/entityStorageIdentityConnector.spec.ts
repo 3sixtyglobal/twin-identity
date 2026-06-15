@@ -42,6 +42,7 @@ let testVpJwt: string;
 
 let didDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
 let vaultKeyEntityStorageConnector: MemoryEntityStorageConnector<VaultKey>;
+let vaultSecretEntityStorageConnector: MemoryEntityStorageConnector<VaultSecret>;
 
 export const TEST_IDENTITY_ID = "test-identity";
 export const TEST_MNEMONIC_NAME = "test-mnemonic";
@@ -61,7 +62,7 @@ describe("EntityStorageIdentityConnector", () => {
 			entitySchema: nameof<VaultKey>()
 		});
 
-		const vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
+		vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
 			entitySchema: nameof<VaultSecret>()
 		});
 
@@ -86,12 +87,18 @@ describe("EntityStorageIdentityConnector", () => {
 			);
 	});
 
+	afterEach(async () => {
+		await didDocumentEntityStorage.teardown();
+		await vaultKeyEntityStorageConnector.teardown();
+		await vaultSecretEntityStorageConnector.teardown();
+	});
+
 	test("can create a document", async () => {
 		const identityConnector = new EntityStorageIdentityConnector();
 
 		const testDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
 
-		const keyStore = vaultKeyEntityStorageConnector.getStore();
+		const keyStore = await vaultKeyEntityStorageConnector.getStore();
 		testDocumentKey = keyStore?.[0] ?? ({} as VaultKey);
 
 		expect(testDocument.id.slice(0, 21)).toEqual("did:entity-storage:0x");
@@ -106,7 +113,7 @@ describe("EntityStorageIdentityConnector", () => {
 			"data:application/octet-stream;base64,H4sIAAAAAAAAA-3BMQEAAADCoPVPbQwfoAAAAAAAAAAAAAAAAAAAAIC3AYbSVKsAQAAA"
 		);
 
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to resolve a document with no id", async () => {
@@ -186,14 +193,14 @@ describe("EntityStorageIdentityConnector", () => {
 		expect(verificationMethod).toBeDefined();
 		expect(verificationMethod?.id).toEqual(`${testIdentityDocument.id}#my-verification-id`);
 
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 
 		const testDocument = testIdentityDocument.document;
 		expect(testDocument?.assertionMethod).toBeDefined();
 
 		testDocumentVerificationMethodId = verificationMethod?.id ?? "";
 
-		const keyStore = vaultKeyEntityStorageConnector.getStore();
+		const keyStore = await vaultKeyEntityStorageConnector.getStore();
 		testDocumentVerificationMethodKey = keyStore?.[1] ?? ({} as VaultKey);
 	});
 
@@ -224,7 +231,7 @@ describe("EntityStorageIdentityConnector", () => {
 		const testDocument = testIdentityDocument.document;
 		expect(testDocument?.verificationMethod).toBeUndefined();
 
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to add a service with no document id", async () => {
@@ -325,7 +332,7 @@ describe("EntityStorageIdentityConnector", () => {
 		expect(service?.serviceEndpoint).toEqual("https://bar.example.com/");
 
 		testServiceId = service?.id ?? "";
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to remove a service with no service id", async () => {
@@ -349,13 +356,13 @@ describe("EntityStorageIdentityConnector", () => {
 
 		await identityConnector.removeService(TEST_IDENTITY_ID, testServiceId);
 
-		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		const testDocument = (await didDocumentEntityStorage.getStore())[0].document;
 
 		const service = (testDocument.service as IDidService[])?.find(
 			s => s.id === `${testDocument.id}#linked-domain`
 		);
 		expect(service).toBeUndefined();
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to add alsoKnownAs with no alias", async () => {
@@ -398,9 +405,9 @@ describe("EntityStorageIdentityConnector", () => {
 			"did:example:linked"
 		);
 
-		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		const testDocument = (await didDocumentEntityStorage.getStore())[0].document;
 		expect(testDocument.alsoKnownAs).toContain("did:example:linked");
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("addAlsoKnownAs is idempotent for duplicates", async () => {
@@ -414,11 +421,11 @@ describe("EntityStorageIdentityConnector", () => {
 			"did:example:linked"
 		);
 
-		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		const testDocument = (await didDocumentEntityStorage.getStore())[0].document;
 		const aliases = Is.array(testDocument.alsoKnownAs) ? testDocument.alsoKnownAs : [];
 		const occurrences = aliases.filter(a => a === "did:example:linked").length;
 		expect(occurrences).toBe(1);
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to remove alsoKnownAs with no alias", async () => {
@@ -461,9 +468,9 @@ describe("EntityStorageIdentityConnector", () => {
 			"did:example:linked"
 		);
 
-		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		const testDocument = (await didDocumentEntityStorage.getStore())[0].document;
 		expect(testDocument.alsoKnownAs).toBeUndefined();
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("removeAlsoKnownAs is a no-op when alias is not present", async () => {
@@ -477,9 +484,9 @@ describe("EntityStorageIdentityConnector", () => {
 			"did:example:missing"
 		);
 
-		const testDocument = didDocumentEntityStorage.getStore()[0].document;
+		const testDocument = (await didDocumentEntityStorage.getStore())[0].document;
 		expect(testDocument.alsoKnownAs).toBeUndefined();
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to create a verifiable credential with no verification method id", async () => {
@@ -584,7 +591,7 @@ describe("EntityStorageIdentityConnector", () => {
 
 		testVcJwt = result.jwt;
 		testVc = result.verifiableCredential;
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can create a verifiable credential with custom jwt header fields", async () => {
@@ -872,7 +879,7 @@ describe("EntityStorageIdentityConnector", () => {
 			[5]
 		);
 
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 		const testDocument = testIdentityDocument.document;
 
 		expect(testDocument.service).toBeDefined();
@@ -886,7 +893,7 @@ describe("EntityStorageIdentityConnector", () => {
 
 		const result = await identityConnector.checkVerifiableCredential(testVcJwt);
 		expect(result.revoked).toBeTruthy();
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to unrevoke a verifiable credential with no documentId", async () => {
@@ -939,7 +946,7 @@ describe("EntityStorageIdentityConnector", () => {
 			[5]
 		);
 
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 		const testDocument = testIdentityDocument.document;
 
 		const revokeService = testDocument.service?.find(s => s.id === `${testDocument.id}#revocation`);
@@ -950,7 +957,7 @@ describe("EntityStorageIdentityConnector", () => {
 
 		const result = await identityConnector.checkVerifiableCredential(testVcJwt);
 		expect(result.revoked).toBeFalsy();
-		testIdentityDocument = ObjectHelper.clone(didDocumentEntityStorage.getStore()?.[0]);
+		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
 	});
 
 	test("can fail to create a verifiable presentation with no presentation method id", async () => {

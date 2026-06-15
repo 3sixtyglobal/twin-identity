@@ -66,19 +66,23 @@ function makeMockTelemetry(): {
 }
 
 describe("IdentityService — metrics", () => {
+	let identityDocStorage: MemoryEntityStorageConnector<IdentityDocument>;
+	let vaultKeyStorage: MemoryEntityStorageConnector<VaultKey>;
+	let vaultSecretStorage: MemoryEntityStorageConnector<VaultSecret>;
+
 	beforeAll(async () => {
 		initSchemaVault();
 		initSchemaIdentity();
 	});
 
 	beforeEach(() => {
-		const identityDocStorage = new MemoryEntityStorageConnector<IdentityDocument>({
+		identityDocStorage = new MemoryEntityStorageConnector<IdentityDocument>({
 			entitySchema: nameof<IdentityDocument>()
 		});
-		const vaultKeyStorage = new MemoryEntityStorageConnector<VaultKey>({
+		vaultKeyStorage = new MemoryEntityStorageConnector<VaultKey>({
 			entitySchema: nameof<VaultKey>()
 		});
-		const vaultSecretStorage = new MemoryEntityStorageConnector<VaultSecret>({
+		vaultSecretStorage = new MemoryEntityStorageConnector<VaultSecret>({
 			entitySchema: nameof<VaultSecret>()
 		});
 
@@ -107,6 +111,12 @@ describe("IdentityService — metrics", () => {
 			);
 
 		vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
+	});
+
+	afterEach(async () => {
+		await identityDocStorage.teardown();
+		await vaultKeyStorage.teardown();
+		await vaultSecretStorage.teardown();
 	});
 
 	test("start() registers all 10 counters with type Counter", async () => {

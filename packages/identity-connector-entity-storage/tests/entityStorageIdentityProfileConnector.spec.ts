@@ -21,6 +21,7 @@ export const TEST_IDENTITY_ID = "test-identity";
 export const TEST_CONTROLLER = "test-controller";
 
 let vaultKeyEntityStorageConnector: MemoryEntityStorageConnector<VaultKey>;
+let vaultSecretEntityStorageConnector: MemoryEntityStorageConnector<VaultSecret>;
 let identityDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
 let identityProfileEntityStorage: MemoryEntityStorageConnector<IdentityProfile>;
 
@@ -43,7 +44,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			entitySchema: nameof<VaultKey>()
 		});
 
-		const vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
+		vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
 			entitySchema: nameof<VaultSecret>()
 		});
 
@@ -58,6 +59,13 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		VaultConnectorFactory.register("vault", () => new EntityStorageVaultConnector());
 
 		IdentityConnectorFactory.register("identity", () => new EntityStorageIdentityConnector());
+	});
+
+	afterEach(async () => {
+		await identityDocumentEntityStorage.teardown();
+		await identityProfileEntityStorage.teardown();
+		await vaultKeyEntityStorageConnector.teardown();
+		await vaultSecretEntityStorageConnector.teardown();
 	});
 
 	test("Can fail to get an identity when connector fails", async () => {
@@ -231,7 +239,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			url: "http://www.janedoe.com"
 		});
 
-		const profile = identityProfileEntityStorage.getStore();
+		const profile = await identityProfileEntityStorage.getStore();
 		expect(profile?.[0].publicProfile).toEqual({
 			"@context": "https://schema.org",
 			"@type": "Person",
@@ -250,7 +258,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			url: "http://www.janedoe.com2"
 		});
 
-		const profile2 = identityProfileEntityStorage.getStore();
+		const profile2 = await identityProfileEntityStorage.getStore();
 		expect(profile2?.[0].identity).toEqual(identityResult.id);
 		expect(profile2?.[0].publicProfile).toEqual({
 			"@context": "https://schema.org",

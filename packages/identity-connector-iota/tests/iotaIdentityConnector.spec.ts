@@ -286,7 +286,7 @@ describe("IotaIdentityConnector", () => {
 		testVerificationMethodId = addedMethod.id;
 
 		const keyStore =
-			EntityStorageConnectorFactory.get<MemoryEntityStorageConnector<VaultSecret>>(
+			await EntityStorageConnectorFactory.get<MemoryEntityStorageConnector<VaultSecret>>(
 				"vault-key"
 			).getStore();
 

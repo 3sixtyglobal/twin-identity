@@ -44,15 +44,17 @@ describe("CLI", () => {
 
 describe("CLI Vault Key Naming", () => {
 	let vaultConnector: EntityStorageVaultConnector;
+	let vaultKeyEntityStorage: MemoryEntityStorageConnector<VaultKey>;
+	let vaultSecretEntityStorage: MemoryEntityStorageConnector<VaultSecret>;
 
 	beforeEach(() => {
 		initSchemaVault();
 
-		const vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
+		vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
 			entitySchema: nameof<VaultKey>()
 		});
 
-		const vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
+		vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
 			entitySchema: nameof<VaultSecret>()
 		});
 
@@ -61,6 +63,11 @@ describe("CLI Vault Key Naming", () => {
 
 		vaultConnector = new EntityStorageVaultConnector();
 		VaultConnectorFactory.register("vault", () => vaultConnector);
+	});
+
+	afterEach(async () => {
+		await vaultKeyEntityStorage.teardown();
+		await vaultSecretEntityStorage.teardown();
 	});
 
 	describe("verifiable-credential-create key naming", () => {

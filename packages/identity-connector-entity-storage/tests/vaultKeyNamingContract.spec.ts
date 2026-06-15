@@ -22,21 +22,24 @@ const TEST_IDENTITY_ID = "test-identity";
 describe("Vault Key Naming Contract", () => {
 	let identityConnector: EntityStorageIdentityConnector;
 	let vaultConnector: EntityStorageVaultConnector;
+	let didDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
+	let vaultKeyEntityStorage: MemoryEntityStorageConnector<VaultKey>;
+	let vaultSecretEntityStorage: MemoryEntityStorageConnector<VaultSecret>;
 
 	beforeEach(() => {
 		initSchemaVault();
 		initSchemaIdentity();
 		SchemaOrgDataTypes.registerRedirects();
 
-		const didDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
+		didDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
 			entitySchema: nameof<IdentityDocument>()
 		});
 
-		const vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
+		vaultKeyEntityStorage = new MemoryEntityStorageConnector<VaultKey>({
 			entitySchema: nameof<VaultKey>()
 		});
 
-		const vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
+		vaultSecretEntityStorage = new MemoryEntityStorageConnector<VaultSecret>({
 			entitySchema: nameof<VaultSecret>()
 		});
 
@@ -48,6 +51,12 @@ describe("Vault Key Naming Contract", () => {
 		VaultConnectorFactory.register("vault", () => vaultConnector);
 
 		identityConnector = new EntityStorageIdentityConnector();
+	});
+
+	afterEach(async () => {
+		await didDocumentEntityStorage.teardown();
+		await vaultKeyEntityStorage.teardown();
+		await vaultSecretEntityStorage.teardown();
 	});
 
 	test("verification method keys are stored with document ID prefix", async () => {
