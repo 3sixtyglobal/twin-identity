@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.0.3-next.36](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.35...identity-service-v0.0.3-next.36) (2026-06-17)
+
+
+### Bug Fixes
+
+* use async getStore in tests ([cfc0d87](https://github.com/iotaledger/twin-identity/commit/cfc0d873532e8ab2010f86f05bffaad3bbaf5786))
+* use async getStore in tests ([3424c81](https://github.com/iotaledger/twin-identity/commit/3424c81cf7407ede4a89a026072720d52bf689b2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.35 to 0.0.3-next.36
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.0.3-next.35 to 0.0.3-next.36
+
 ## [0.0.3-next.35](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.0.3-next.34...identity-service-v0.0.3-next.35) (2026-06-01)
 
 

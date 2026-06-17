@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.0.3-next.36](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.35...identity-connector-iota-v0.0.3-next.36) (2026-06-17)
+
+
+### Features
+
+* add vault signing ([#153](https://github.com/iotaledger/twin-identity/issues/153)) ([9458e4c](https://github.com/iotaledger/twin-identity/commit/9458e4c96ce19e0fc704905dfb3aac04dc6cf237))
+
+
+### Bug Fixes
+
+* use async getStore in tests ([cfc0d87](https://github.com/iotaledger/twin-identity/commit/cfc0d873532e8ab2010f86f05bffaad3bbaf5786))
+* use async getStore in tests ([3424c81](https://github.com/iotaledger/twin-identity/commit/3424c81cf7407ede4a89a026072720d52bf689b2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.0.3-next.35 to 0.0.3-next.36
+
 ## [0.0.3-next.35](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.0.3-next.34...identity-connector-iota-v0.0.3-next.35) (2026-06-01)
 
 
