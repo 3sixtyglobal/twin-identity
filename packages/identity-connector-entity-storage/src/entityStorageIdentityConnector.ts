@@ -270,7 +270,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				try {
 					// If there is an existing key, we will use it.
 					const existingKey = await this._vaultConnector.getKey(
-						EntityStorageIdentityConnector.buildVaultKey(didDocument.id, verificationMethodId)
+						EntityStorageIdentityConnector.buildVaultKey(didDocument.id, verificationMethodId),
+						"public"
 					);
 					methodKeyPublic = existingKey.publicKey;
 				} catch {}

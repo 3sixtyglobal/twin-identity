@@ -58,7 +58,7 @@ import {
 	type IJsonLdContextDefinitionRoot,
 	type IJsonLdNodeObject
 } from "@twin.org/data-json-ld";
-import { Iota } from "@twin.org/dlt-iota";
+import { Iota, VaultJwtSigner } from "@twin.org/dlt-iota";
 import { Did, DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
@@ -383,7 +383,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				try {
 					// If there is an existing key, we will use it.
 					const existingKey = await this._vaultConnector.getKey(
-						this.buildVaultKey(documentId, verificationMethodId)
+						VaultConnectorHelper.buildKeyName(documentId, verificationMethodId),
+						"public"
 					);
 					methodKeyPublic = existingKey.publicKey;
 				} catch {}
@@ -393,7 +394,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				// If there is no existing key, we will create a new one with a temporary name.
 				tempKeyId = `temp-vm-${Converter.bytesToBase64Url(RandomHelper.generate(16))}`;
 				methodKeyPublic = await this._vaultConnector.createKey(
-					this.buildVaultKey(documentId, tempKeyId),
+					VaultConnectorHelper.buildKeyName(documentId, tempKeyId),
 					VaultKeyType.Ed25519
 				);
 			}
@@ -406,8 +407,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			if (Is.stringValue(tempKeyId)) {
 				// If we created a temporary key, we will rename it to the final method id.
 				await this._vaultConnector.renameKey(
-					this.buildVaultKey(documentId, tempKeyId),
-					this.buildVaultKey(documentId, methodId.slice(1))
+					VaultConnectorHelper.buildKeyName(documentId, tempKeyId),
+					VaultConnectorHelper.buildKeyName(documentId, methodId.slice(1))
 				);
 				tempKeyId = undefined;
 			}
@@ -455,7 +456,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			if (Is.stringValue(tempKeyId)) {
 				// If we created a temporary key and it is still in use, we will remove it from the vault.
 				try {
-					await this._vaultConnector.removeKey(tempKeyId);
+					await this._vaultConnector.removeKey(
+						VaultConnectorHelper.buildKeyName(documentId, tempKeyId)
+					);
 				} catch {}
 			}
 		}
@@ -861,7 +864,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				"@context"
 			]);
 
-			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
+			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
 			const keyType = await this._vaultConnector.getKeyType(keyId);
 
 			if (Is.undefined(keyType)) {
@@ -1312,7 +1315,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
+			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
 			const keyType = await this._vaultConnector.getKeyType(keyId);
 
 			if (Is.undefined(keyType)) {
@@ -1579,7 +1582,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				});
 			}
 
-			const keyId = this.buildVaultKey(idParts.id, idParts.fragment);
+			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
 			const keyType = await this._vaultConnector.getKeyType(keyId);
 
 			if (Is.undefined(keyType)) {
@@ -1736,36 +1739,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			return IdentityClient.create(identityClientReadOnly, signer);
 		}
 
-		const keyPair = await Iota.getKeyPair(
+		const signer = await VaultJwtSigner.create(
 			this._vaultConnector,
 			this._config,
 			controller,
 			this._walletAccountIndex,
-			this._walletAddressIndex,
-			false
+			this._walletAddressIndex
 		);
-
-		const jwkMemStore = new JwkMemStore();
-		const keyIdMemStore = new KeyIdMemStore();
-		const storage = new Storage(jwkMemStore, keyIdMemStore);
-
-		const jwkParams: IJwkParams = {
-			kty: JwkType.Okp,
-			crv: "Ed25519",
-			alg: JwsAlgorithm.EdDSA,
-			x: Converter.bytesToBase64Url(keyPair.publicKey),
-			d: Converter.bytesToBase64Url(keyPair.privateKey)
-		};
-
-		const jwk = new Jwk(jwkParams);
-		const publicKeyJwk = jwk.toPublic();
-		if (!publicKeyJwk) {
-			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "publicKeyJwkMissing", {
-				jwk: jwk.kid()
-			});
-		}
-		const keyId = await jwkMemStore.insert(jwk);
-		const signer = new StorageSigner(storage, keyId, publicKeyJwk);
 		return IdentityClient.create(identityClientReadOnly, signer);
 	}
 
@@ -2076,16 +2056,5 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				Iota.extractPayloadError(error)
 			);
 		}
-	}
-
-	/**
-	 * Build the key name to access the specified key in the vault.
-	 * @param identity The identity of the user to access the vault keys.
-	 * @param key The key to access in the vault.
-	 * @returns The vault key.
-	 * @internal
-	 */
-	private buildVaultKey(identity: string, key: string): string {
-		return `${identity}/${key}`;
 	}
 }

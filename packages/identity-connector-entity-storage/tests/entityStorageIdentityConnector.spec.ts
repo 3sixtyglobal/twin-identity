@@ -595,6 +595,9 @@ describe("EntityStorageIdentityConnector", () => {
 		testVcJwt = result.jwt;
 		testVc = result.verifiableCredential;
 		testIdentityDocument = ObjectHelper.clone((await didDocumentEntityStorage.getStore())?.[0]);
+
+		const keyStore = await vaultKeyEntityStorageConnector.getStore();
+		testDocumentKey = keyStore[0];
 	});
 
 	test("can create a verifiable credential with custom jwt header fields", async () => {
