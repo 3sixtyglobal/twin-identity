@@ -1,6 +1,6 @@
 # Class: Did
 
-Helper methods for Ids.
+Helper methods for parsing and validating DID identifiers.
 
 ## Constructors
 
@@ -26,7 +26,7 @@ Runtime name for the class.
 
 > `static` **parse**(`id`): `object`
 
-Parse and id in to it's constituent parts.
+Parse an id into its constituent parts.
 
 #### Parameters
 
@@ -84,7 +84,7 @@ The name of the property.
 
 `unknown`
 
-The urn to parse.
+The value to assert as a valid DID.
 
 #### Returns
 

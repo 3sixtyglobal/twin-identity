@@ -26,7 +26,7 @@ Runtime name for the class.
 
 > `static` **verifyJwt**\<`T`, `U`\>(`resolver`, `jwt`): `Promise`\<\{ `header`: `T`; `payload`: `U`; \}\>
 
-Verified the JWT.
+Verify the JWT and return the decoded header and payload.
 
 #### Type Parameters
 
@@ -56,7 +56,7 @@ The token to verify.
 
 `Promise`\<\{ `header`: `T`; `payload`: `U`; \}\>
 
-The decoded payload.
+The decoded header and payload.
 
 ***
 
@@ -64,7 +64,7 @@ The decoded payload.
 
 > `static` **verifyProof**(`resolver`, `secureDocument`): `Promise`\<`boolean`\>
 
-Verified the proof for the document e.g. verifiable credential.
+Verify the proof for the document.
 
 #### Parameters
 
@@ -84,4 +84,4 @@ The secure document to verify.
 
 `Promise`\<`boolean`\>
 
-True if the verification is successful.
+True if all proofs in the document are verified successfully.

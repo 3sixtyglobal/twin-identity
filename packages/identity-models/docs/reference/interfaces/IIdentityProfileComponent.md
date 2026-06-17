@@ -48,7 +48,7 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 ***
 
@@ -144,7 +144,7 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 ***
 
@@ -166,7 +166,7 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 ***
 

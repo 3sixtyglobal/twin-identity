@@ -1,6 +1,6 @@
 # Class: DidContextIdHandler
 
-Context Id handler for testing as a DID.
+Context ID handler that treats context identifiers as DIDs.
 
 ## Implements
 
@@ -74,7 +74,7 @@ Short form string.
 
 > **guard**(`value`): `void`
 
-Guard the value ensuring length.
+Guard the value ensuring it is a valid DID.
 
 #### Parameters
 
@@ -90,7 +90,7 @@ The value to guard.
 
 #### Throws
 
-GeneralError if the value is too short.
+GeneralError if the value is not a valid DID.
 
 #### Implementation of
 

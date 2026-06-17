@@ -1,6 +1,6 @@
 # Class: IdentityResolverRestClient
 
-Client for performing identity through to REST endpoints.
+Client for performing identity resolution through REST endpoints.
 
 ## Extends
 

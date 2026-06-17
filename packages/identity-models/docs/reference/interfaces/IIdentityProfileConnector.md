@@ -48,7 +48,7 @@ The private profile data as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 ***
 
@@ -116,7 +116,7 @@ The private profile data as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 ***
 
@@ -138,7 +138,7 @@ The identity to delete.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 ***
 

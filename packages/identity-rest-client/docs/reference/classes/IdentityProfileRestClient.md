@@ -1,6 +1,6 @@
 # Class: IdentityProfileRestClient\<T, U\>
 
-Client for performing identity through to REST endpoints.
+Client for performing identity profile operations through REST endpoints.
 
 ## Extends
 
@@ -96,7 +96,7 @@ The private profile data as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 #### Implementation of
 
@@ -192,7 +192,7 @@ The private profile data as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 #### Implementation of
 
@@ -210,7 +210,7 @@ Delete the profile for an identity.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 #### Implementation of
 

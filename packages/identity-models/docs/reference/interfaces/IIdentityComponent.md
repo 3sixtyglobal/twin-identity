@@ -60,7 +60,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the identity has been removed.
 
 ***
 
@@ -136,7 +136,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the verification method has been removed.
 
 #### Throws
 
@@ -222,7 +222,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the service has been removed.
 
 #### Throws
 
@@ -261,7 +261,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the alias has been added.
 
 #### Throws
 
@@ -304,7 +304,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the alias has been removed.
 
 #### Throws
 
@@ -428,7 +428,7 @@ The id of the document to update the revocation list for.
 
 `number`
 
-The revocation bitmap index revoke.
+The revocation bitmap index to revoke.
 
 ##### controller?
 
@@ -440,7 +440,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credential has been revoked.
 
 ***
 
@@ -462,7 +462,7 @@ The id of the document to update the revocation list for.
 
 `number`
 
-The revocation bitmap index to un revoke.
+The revocation bitmap index to unrevoke.
 
 ##### controller?
 
@@ -474,7 +474,7 @@ The controller of the identity who can make changes.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credential has been unrevoked.
 
 ***
 

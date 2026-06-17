@@ -2,19 +2,8 @@
 
 Class for performing identity operations on IOTA.
 
-This connector integrates with the TWIN Vault system to ensure secure
-key management. Private keys are stored in the vault and signing operations
-are delegated to the vault connector to prevent key exposure.
-
-Security Implementation:
-- Verifiable Credentials: JWT signing delegated to VaultConnectorHelper
-- Verifiable Presentations: JWT signing delegated to VaultConnectorHelper
-- Data Integrity Proofs: Async signing delegated to vault via signWithVault method
-
-## See
-
- - VaultConnectorHelper for JWT signing implementation
- - signWithVault for Data Integrity Proof signing implementation
+Private keys are stored in the vault and all signing operations are delegated
+to the vault connector to prevent key exposure.
 
 ## Implements
 
@@ -144,7 +133,7 @@ The id of the document to remove.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the document has been removed.
 
 #### Implementation of
 
@@ -228,7 +217,7 @@ The id of the verification method.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the verification method has been removed.
 
 #### Throws
 
@@ -322,7 +311,7 @@ The id of the service.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the service has been removed.
 
 #### Throws
 
@@ -365,7 +354,7 @@ The alias to add. Must be a Url or Urn (typically another DID).
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the alias has been added.
 
 #### Throws
 
@@ -412,7 +401,7 @@ The alias to remove. Must be a Url or Urn.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the alias has been removed.
 
 #### Throws
 
@@ -433,8 +422,6 @@ NotFoundError if the id can not be resolved.
 > **createVerifiableCredential**(`controller`, `verificationMethodId`, `id`, `subject`, `options?`): `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredential`; `jwt`: `string`; \}\>
 
 Create a verifiable credential for a verification method.
-The credential is signed using the vault connector to ensure the private key
-never leaves the secure vault environment.
 
 #### Parameters
 
@@ -502,7 +489,7 @@ NotFoundError if the id can not be resolved.
 
 #### Throws
 
-GeneralError if signature operation fails.
+GeneralError if the signing operation fails.
 
 #### Implementation of
 
@@ -566,7 +553,7 @@ The revocation bitmap index or indices to revoke.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credentials have been revoked.
 
 #### Implementation of
 
@@ -604,7 +591,7 @@ The revocation bitmap index or indices to un revoke.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credentials have been unrevoked.
 
 #### Implementation of
 
@@ -617,8 +604,6 @@ Nothing.
 > **createVerifiablePresentation**(`controller`, `verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `options?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentation`; `jwt`: `string`; \}\>
 
 Create a verifiable presentation from the supplied verifiable credentials.
-The presentation is signed using the vault connector to ensure the private key
-never leaves the secure vault environment.
 
 #### Parameters
 
@@ -692,7 +677,7 @@ NotFoundError if the id can not be resolved.
 
 #### Throws
 
-GeneralError if signature operation fails.
+GeneralError if the signing operation fails.
 
 #### Implementation of
 
@@ -712,7 +697,7 @@ Check a verifiable presentation is valid.
 
 `string` \| `IDidVerifiablePresentation`
 
-The presentation JWT or JSON-LD object to verify.
+The presentation to verify.
 
 #### Returns
 
@@ -731,10 +716,6 @@ The presentation stored in the jwt and the revocation status.
 > **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
 
 Create a proof for arbitrary data with the specified verification method.
-
-This method uses async signing to ensure the private key never leaves the vault.
-The signing operation is delegated to the vault connector through a callback,
-with algorithm validation to ensure key type compatibility.
 
 #### Parameters
 
@@ -774,7 +755,7 @@ NotFoundError if the id can not be resolved.
 
 #### Throws
 
-GeneralError if the proof creation fails or if there is an algorithm/key type mismatch.
+GeneralError if proof creation fails or the algorithm does not match the key type.
 
 #### Implementation of
 

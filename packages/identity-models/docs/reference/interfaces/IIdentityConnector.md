@@ -54,7 +54,7 @@ The id of the document to remove.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the document has been removed.
 
 ***
 
@@ -130,7 +130,7 @@ The id of the verification method.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the verification method has been removed.
 
 #### Throws
 
@@ -216,7 +216,7 @@ The id of the service.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the service has been removed.
 
 #### Throws
 
@@ -255,7 +255,7 @@ The alias to add. Must be a Url or Urn (typically another DID).
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the alias has been added.
 
 #### Throws
 
@@ -298,7 +298,7 @@ The alias to remove. Must be a Url or Urn.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the alias has been removed.
 
 #### Throws
 
@@ -434,7 +434,7 @@ The revocation bitmap index or indices to revoke.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credentials have been revoked.
 
 ***
 
@@ -462,13 +462,13 @@ The id of the document to update the revocation list for.
 
 `number`[]
 
-The revocation bitmap index or indices to un revoke.
+The revocation bitmap index or indices to unrevoke.
 
 #### Returns
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credentials have been unrevoked.
 
 ***
 

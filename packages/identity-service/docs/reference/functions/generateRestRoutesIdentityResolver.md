@@ -2,7 +2,7 @@
 
 > **generateRestRoutesIdentityResolver**(`baseRouteName`, `componentName`): `IRestRoute`\<`any`, `any`\>[]
 
-The REST routes for identity.
+The REST routes for identity resolution.
 
 ## Parameters
 

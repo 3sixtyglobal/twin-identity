@@ -102,7 +102,7 @@ The private profile data.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 #### Implementation of
 
@@ -178,7 +178,7 @@ The private profile data.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 #### Implementation of
 
@@ -204,7 +204,7 @@ The identity to delete.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 #### Implementation of
 
