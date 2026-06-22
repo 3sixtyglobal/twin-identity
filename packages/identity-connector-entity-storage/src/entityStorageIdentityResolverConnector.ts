@@ -90,7 +90,7 @@ export class EntityStorageIdentityResolverConnector implements IIdentityResolver
 			throw new GeneralError(
 				EntityStorageIdentityResolverConnector.CLASS_NAME,
 				"resolveDocumentFailed",
-				undefined,
+				{ documentId },
 				error
 			);
 		}

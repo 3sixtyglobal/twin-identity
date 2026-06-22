@@ -35,6 +35,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	/**
 	 * Create a new instance of IdentityResolverService.
 	 * @param options The options for the service.
+	 * @throws GeneralError if no connectors are registered.
 	 */
 	constructor(options?: IIdentityResolverServiceConstructorOptions) {
 		const names = IdentityResolverConnectorFactory.names();

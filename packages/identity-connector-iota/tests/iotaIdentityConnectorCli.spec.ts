@@ -9,7 +9,8 @@ import {
 	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK,
-	setupTestEnv
+	setupTestEnv,
+	TEST_GAS_BUDGET
 } from "./setupTestEnv.js";
 import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 
@@ -26,7 +27,8 @@ describe("IotaIdentityConnector CLI", () => {
 			config: {
 				clientOptions: TEST_CLIENT_OPTIONS,
 				vaultMnemonicId: TEST_MNEMONIC_NAME,
-				network: TEST_NETWORK
+				network: TEST_NETWORK,
+				gasBudget: TEST_GAS_BUDGET
 			}
 		});
 

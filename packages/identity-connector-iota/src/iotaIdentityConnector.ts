@@ -19,7 +19,7 @@ import {
 	JwtPresentationValidator,
 	KeyIdMemStore,
 	MethodScope,
-	OnChainIdentity,
+	type OnChainIdentity,
 	Resolver,
 	RevocationBitmap,
 	Service,
@@ -301,11 +301,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 
-			const idParts = DocumentHelper.parseId(documentId).id.split(":");
-			const onChain = await OnChainIdentity.getById(
-				`0x${idParts[idParts.length - 1]}`,
-				identityClient
-			);
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+			const onChain = identity.toFullFledged();
 			if (Is.undefined(onChain)) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}

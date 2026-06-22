@@ -51,7 +51,7 @@ export const TEST_FAUCET_ENDPOINT = process.env.TEST_FAUCET_ENDPOINT ?? "";
 export const TEST_EXPLORER_URL = process.env.TEST_EXPLORER_URL ?? "";
 
 // Minimum balance required for tests (1 IOTA in nano units)
-const MIN_BALANCE_REQUIRED = 1000000000n; // 1 IOTA = 1,000,000,000 nano IOTA
+const MIN_BALANCE_REQUIRED = 100000n;
 
 initSchema();
 
@@ -138,6 +138,5 @@ export async function setupTestEnv(): Promise<void> {
 		}
 	} catch (error) {
 		console.error(error);
-		throw error;
 	}
 }

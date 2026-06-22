@@ -130,7 +130,7 @@ describe("IdentityService", () => {
 			id: "did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#hGHGs0DxLAWcgzx0QjTbzJc3PO-NMqSFAPcdgzx_qQo",
 			controller:
 				"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101",
-			type: "JsonWebKey",
+			type: "JsonWebKey2020",
 			publicKeyJwk: {
 				alg: "EdDSA",
 				kty: "OKP",

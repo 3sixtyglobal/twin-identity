@@ -326,7 +326,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const didVerificationMethod: IDidDocumentVerificationMethod = {
 				id: methodId,
 				controller: documentId,
-				type: "JsonWebKey",
+				type: "JsonWebKey2020",
 				publicKeyJwk: {
 					...jwkParams,
 					kid
@@ -567,6 +567,12 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					if (didDocument.service?.length === 0) {
 						delete didDocument.service;
 					}
+				} else {
+					throw new NotFoundError(
+						EntityStorageIdentityConnector.CLASS_NAME,
+						"serviceNotFound",
+						serviceId
+					);
 				}
 			} else {
 				throw new NotFoundError(
