@@ -26,6 +26,10 @@ The options for the service.
 
 `IdentityResolverService`
 
+#### Throws
+
+GeneralError if no connectors are registered.
+
 ## Properties
 
 ### CLASS\_NAME {#class_name}
