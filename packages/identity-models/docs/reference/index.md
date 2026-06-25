@@ -2,6 +2,8 @@
 
 ## Classes
 
+- [DidContextIdHandler](classes/DidContextIdHandler.md)
+- [Did](classes/Did.md)
 - [DocumentHelper](classes/DocumentHelper.md)
 - [VerificationHelper](classes/VerificationHelper.md)
 
@@ -13,6 +15,8 @@
 - [IIdentityProfileConnector](interfaces/IIdentityProfileConnector.md)
 - [IIdentityResolverComponent](interfaces/IIdentityResolverComponent.md)
 - [IIdentityResolverConnector](interfaces/IIdentityResolverConnector.md)
+- [IIdentityAlsoKnownAsCreateRequest](interfaces/IIdentityAlsoKnownAsCreateRequest.md)
+- [IIdentityAlsoKnownAsRemoveRequest](interfaces/IIdentityAlsoKnownAsRemoveRequest.md)
 - [IIdentityCreateRequest](interfaces/IIdentityCreateRequest.md)
 - [IIdentityCreateResponse](interfaces/IIdentityCreateResponse.md)
 - [IIdentityProofCreateRequest](interfaces/IIdentityProofCreateRequest.md)
@@ -27,10 +31,12 @@
 - [IIdentityVerifiableCredentialCreateResponse](interfaces/IIdentityVerifiableCredentialCreateResponse.md)
 - [IIdentityVerifiableCredentialRevokeRequest](interfaces/IIdentityVerifiableCredentialRevokeRequest.md)
 - [IIdentityVerifiableCredentialUnrevokeRequest](interfaces/IIdentityVerifiableCredentialUnrevokeRequest.md)
+- [IIdentityVerifiableCredentialVerifyDocumentRequest](interfaces/IIdentityVerifiableCredentialVerifyDocumentRequest.md)
 - [IIdentityVerifiableCredentialVerifyRequest](interfaces/IIdentityVerifiableCredentialVerifyRequest.md)
 - [IIdentityVerifiableCredentialVerifyResponse](interfaces/IIdentityVerifiableCredentialVerifyResponse.md)
 - [IIdentityVerifiablePresentationCreateRequest](interfaces/IIdentityVerifiablePresentationCreateRequest.md)
 - [IIdentityVerifiablePresentationCreateResponse](interfaces/IIdentityVerifiablePresentationCreateResponse.md)
+- [IIdentityVerifiablePresentationVerifyDocumentRequest](interfaces/IIdentityVerifiablePresentationVerifyDocumentRequest.md)
 - [IIdentityVerifiablePresentationVerifyRequest](interfaces/IIdentityVerifiablePresentationVerifyRequest.md)
 - [IIdentityVerifiablePresentationVerifyResponse](interfaces/IIdentityVerifiablePresentationVerifyResponse.md)
 - [IIdentityVerificationMethodCreateRequest](interfaces/IIdentityVerificationMethodCreateRequest.md)
@@ -47,8 +53,14 @@
 - [IIdentityResolveRequest](interfaces/IIdentityResolveRequest.md)
 - [IIdentityResolveResponse](interfaces/IIdentityResolveResponse.md)
 
+## Type Aliases
+
+- [IdentityMetricIds](type-aliases/IdentityMetricIds.md)
+
 ## Variables
 
 - [IdentityConnectorFactory](variables/IdentityConnectorFactory.md)
 - [IdentityProfileConnectorFactory](variables/IdentityProfileConnectorFactory.md)
 - [IdentityResolverConnectorFactory](variables/IdentityResolverConnectorFactory.md)
+- [IdentityMetricIds](variables/IdentityMetricIds.md)
+- [IdentityMetrics](variables/IdentityMetrics.md)

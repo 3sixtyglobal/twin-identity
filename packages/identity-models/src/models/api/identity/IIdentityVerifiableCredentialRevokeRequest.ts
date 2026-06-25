@@ -17,6 +17,6 @@ export interface IIdentityVerifiableCredentialRevokeRequest {
 		/**
 		 * The revocation index to revoke.
 		 */
-		revocationIndex: number;
+		revocationIndex: string;
 	};
 }

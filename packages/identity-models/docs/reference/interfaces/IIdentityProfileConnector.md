@@ -18,7 +18,7 @@ Interface describing a contract which provides profile operations.
 
 ## Methods
 
-### create()
+### create() {#create}
 
 > **create**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -48,11 +48,11 @@ The private profile data as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`identity`, `publicPropertyNames?`, `privatePropertyNames?`): `Promise`\<\{ `publicProfile`: `Partial`\<`T`\>; `privateProfile`: `Partial`\<`U`\>; \}\>
 
@@ -86,7 +86,7 @@ The identity profile, will only return private data if you have correct permissi
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -116,11 +116,11 @@ The private profile data as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(`identity`): `Promise`\<`void`\>
 
@@ -138,13 +138,13 @@ The identity to delete.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 ***
 
-### list()
+### list() {#list}
 
-> **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested identities.
 
@@ -180,7 +180,7 @@ The private properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

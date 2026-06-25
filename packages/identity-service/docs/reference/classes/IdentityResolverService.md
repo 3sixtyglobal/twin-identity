@@ -26,29 +26,39 @@ The options for the service.
 
 `IdentityResolverService`
 
+#### Throws
+
+GeneralError if no connectors are registered.
+
 ## Properties
 
-### NAMESPACE
+### CLASS\_NAME {#class_name}
 
-> `readonly` `static` **NAMESPACE**: `string` = `"identity-resolver"`
-
-The namespace supported by the identity service.
-
-***
-
-### CLASS\_NAME
-
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
 
-#### Implementation of
-
-`IIdentityResolverComponent.CLASS_NAME`
-
 ## Methods
 
-### identityResolve()
+### className() {#classname}
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityResolverComponent.className`
+
+***
+
+### identityResolve() {#identityresolve}
 
 > **identityResolve**(`identity`): `Promise`\<`IDidDocument`\>
 

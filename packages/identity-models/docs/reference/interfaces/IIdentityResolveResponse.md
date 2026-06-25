@@ -4,7 +4,7 @@ Response to resolving an identity.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `IDidDocument`
 

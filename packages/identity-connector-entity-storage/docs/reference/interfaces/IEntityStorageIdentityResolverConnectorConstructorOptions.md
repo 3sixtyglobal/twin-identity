@@ -8,9 +8,9 @@ Options for the entity storage identity connector constructor.
 
 ## Properties
 
-### didDocumentEntityStorageType?
+### didDocumentEntityStorageType? {#diddocumententitystoragetype}
 
-> `optional` **didDocumentEntityStorageType**: `string`
+> `optional` **didDocumentEntityStorageType?**: `string`
 
 The entity storage for the did documents.
 
@@ -22,9 +22,9 @@ identity-document
 
 ***
 
-### vaultConnectorType?
+### vaultConnectorType? {#vaultconnectortype}
 
-> `optional` **vaultConnectorType**: `string`
+> `optional` **vaultConnectorType?**: `string`
 
 The vault for the private keys.
 

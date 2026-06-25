@@ -29,7 +29,7 @@ export interface IIdentityComponent extends IComponent {
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the identity has been removed.
 	 */
 	identityRemove(identity: string, controller?: string): Promise<void>;
 
@@ -54,7 +54,7 @@ export interface IIdentityComponent extends IComponent {
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -82,17 +82,45 @@ export interface IIdentityComponent extends IComponent {
 	 * Remove a service from the document.
 	 * @param serviceId The id of the service.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	serviceRemove(serviceId: string, controller?: string): Promise<void>;
+
+	/**
+	 * Add an alias to the alsoKnownAs property on the document.
+	 * If the alias is already present the operation is a no-op.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
+	 * @param controller The controller of the identity who can make changes.
+	 * @returns A promise that resolves when the alias has been added.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	alsoKnownAsAdd(documentId: string, alias: string, controller?: string): Promise<void>;
+
+	/**
+	 * Remove an alias from the alsoKnownAs property on the document.
+	 * If the alias is not present the operation is a no-op.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to remove. Must be a Url or Urn.
+	 * @param controller The controller of the identity who can make changes.
+	 * @returns A promise that resolves when the alias has been removed.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	alsoKnownAsRemove(documentId: string, alias: string, controller?: string): Promise<void>;
 
 	/**
 	 * Create a verifiable credential for a verification method.
 	 * @param verificationMethodId The verification method id to use.
 	 * @param id The id of the credential.
 	 * @param subject The credential subject to store in the verifiable credential.
-	 * @param revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options Additional options for creating the verifiable credential.
+	 * @param options.revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options.expirationDate The date the verifiable credential is valid until.
+	 * @param options.jwtHeaderFields Additional fields to include in the JWT header when creating the verifiable credential in jwt format.
+	 * @param options.jwtPayloadFields Additional fields to include in the JWT payload when creating the verifiable credential in jwt format.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
@@ -101,7 +129,12 @@ export interface IIdentityComponent extends IComponent {
 		verificationMethodId: string,
 		id: string | undefined,
 		subject: IJsonLdNodeObject,
-		revocationIndex?: number,
+		options?: {
+			revocationIndex?: number;
+			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
+		},
 		controller?: string
 	): Promise<{
 		verifiableCredential: IDidVerifiableCredential;
@@ -110,10 +143,10 @@ export interface IIdentityComponent extends IComponent {
 
 	/**
 	 * Verify a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	verifiableCredentialVerify(credentialJwt: string): Promise<{
+	verifiableCredentialVerify(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}>;
@@ -121,9 +154,9 @@ export interface IIdentityComponent extends IComponent {
 	/**
 	 * Revoke verifiable credential.
 	 * @param issuerId The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index revoke.
+	 * @param credentialIndex The revocation bitmap index to revoke.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credential has been revoked.
 	 */
 	verifiableCredentialRevoke(
 		issuerId: string,
@@ -134,9 +167,9 @@ export interface IIdentityComponent extends IComponent {
 	/**
 	 * Unrevoke verifiable credential.
 	 * @param issuerId The id of the document to update the revocation list for.
-	 * @param credentialIndex The revocation bitmap index to un revoke.
+	 * @param credentialIndex The revocation bitmap index to unrevoke.
 	 * @param controller The controller of the identity who can make changes.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credential has been unrevoked.
 	 */
 	verifiableCredentialUnrevoke(
 		issuerId: string,
@@ -151,7 +184,10 @@ export interface IIdentityComponent extends IComponent {
 	 * @param contexts The contexts for the data stored in the verifiable credential.
 	 * @param types The types for the data stored in the verifiable credential.
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
-	 * @param expiresInMinutes The time in minutes for the presentation to expire.
+	 * @param options Additional options for creating the verifiable presentation.
+	 * @param options.expirationDate The date the verifiable presentation is valid until.
+	 * @param options.jwtHeaderFields Additional fields to include in the JWT header when creating the verifiable presentation in jwt format.
+	 * @param options.jwtPayloadFields	Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
@@ -162,7 +198,11 @@ export interface IIdentityComponent extends IComponent {
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
 		verifiableCredentials: (string | IDidVerifiableCredential)[],
-		expiresInMinutes?: number,
+		options?: {
+			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
+		},
 		controller?: string
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentation;
@@ -171,10 +211,10 @@ export interface IIdentityComponent extends IComponent {
 
 	/**
 	 * Verify a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	verifiablePresentationVerify(presentationJwt: string): Promise<{
+	verifiablePresentationVerify(presentation: string | IDidVerifiablePresentation): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];

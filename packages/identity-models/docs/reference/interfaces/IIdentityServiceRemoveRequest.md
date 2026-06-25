@@ -4,7 +4,7 @@ Request to remove a service.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 

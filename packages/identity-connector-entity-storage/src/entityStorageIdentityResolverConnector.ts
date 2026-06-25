@@ -9,9 +9,9 @@ import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
 import { VaultConnectorFactory, type IVaultConnector } from "@twin.org/vault-models";
-import type { IdentityDocument } from "./entities/identityDocument";
-import { EntityStorageIdentityConnector } from "./entityStorageIdentityConnector";
-import type { IEntityStorageIdentityResolverConnectorConstructorOptions } from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions";
+import type { IdentityDocument } from "./entities/identityDocument.js";
+import { EntityStorageIdentityConnector } from "./entityStorageIdentityConnector.js";
+import type { IEntityStorageIdentityResolverConnectorConstructorOptions } from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations using entity storage.
@@ -25,7 +25,7 @@ export class EntityStorageIdentityResolverConnector implements IIdentityResolver
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<EntityStorageIdentityResolverConnector>();
+	public static readonly CLASS_NAME: string = nameof<EntityStorageIdentityResolverConnector>();
 
 	/**
 	 * The entity storage for identities.
@@ -51,18 +51,34 @@ export class EntityStorageIdentityResolverConnector implements IIdentityResolver
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return EntityStorageIdentityResolverConnector.CLASS_NAME;
+	}
+
+	/**
 	 * Resolve a document from its id.
 	 * @param documentId The id of the document to resolve.
 	 * @returns The resolved document.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async resolveDocument(documentId: string): Promise<IDidDocument> {
-		Guards.stringValue(this.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(
+			EntityStorageIdentityResolverConnector.CLASS_NAME,
+			nameof(documentId),
+			documentId
+		);
 
 		try {
 			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
 			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
+				throw new NotFoundError(
+					EntityStorageIdentityResolverConnector.CLASS_NAME,
+					"documentNotFound",
+					documentId
+				);
 			}
 			await EntityStorageIdentityConnector.verifyDocument(
 				didIdentityDocument,
@@ -71,7 +87,12 @@ export class EntityStorageIdentityResolverConnector implements IIdentityResolver
 
 			return didIdentityDocument.document;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "resolveDocumentFailed", undefined, error);
+			throw new GeneralError(
+				EntityStorageIdentityResolverConnector.CLASS_NAME,
+				"resolveDocumentFailed",
+				{ documentId },
+				error
+			);
 		}
 	}
 }

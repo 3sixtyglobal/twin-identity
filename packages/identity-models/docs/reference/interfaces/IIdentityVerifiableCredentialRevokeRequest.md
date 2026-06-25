@@ -4,7 +4,7 @@ Request to revoke a verifiable credential.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -18,6 +18,6 @@ The identity to revoke the verification credential for.
 
 #### revocationIndex
 
-> **revocationIndex**: `number`
+> **revocationIndex**: `string`
 
 The revocation index to revoke.

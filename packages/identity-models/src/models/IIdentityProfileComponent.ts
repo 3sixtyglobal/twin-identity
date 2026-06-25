@@ -15,7 +15,7 @@ export interface IIdentityProfileComponent<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	create(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void>;
 
@@ -49,14 +49,14 @@ export interface IIdentityProfileComponent<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	update(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void>;
 
 	/**
 	 * Delete the profile for an identity.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	remove(identity?: string): Promise<void>;
 
@@ -65,7 +65,7 @@ export interface IIdentityProfileComponent<
 	 * @param publicFilters The filters to apply to the identities public profiles.
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	list(
@@ -75,7 +75,7 @@ export interface IIdentityProfileComponent<
 		}[],
 		publicPropertyNames?: (keyof T)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identities.

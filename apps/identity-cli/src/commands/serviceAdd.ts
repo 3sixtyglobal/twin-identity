@@ -8,12 +8,13 @@ import {
 	type CliOutputOptions
 } from "@twin.org/cli-core";
 import { Converter, I18n, Is, StringHelper, Urn } from "@twin.org/core";
+import { DocumentHelper } from "@twin.org/identity-models";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the service add command for the CLI.
@@ -44,8 +45,12 @@ export function buildCommandServiceAdd(): Command {
 		.requiredOption(
 			I18n.formatMessage("commands.service-add.options.endpoint.param"),
 			I18n.formatMessage("commands.service-add.options.endpoint.description")
+		)
+		.option(
+			I18n.formatMessage("commands.service-add.options.addressIndex.param"),
+			I18n.formatMessage("commands.service-add.options.addressIndex.description"),
+			"0"
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -91,6 +96,7 @@ export function buildCommandServiceAdd(): Command {
  * @param opts.id The id of the service to add.
  * @param opts.type The type of the service to add.
  * @param opts.endpoint The service endpoint.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  * @param opts.explorer The explorer URL.
@@ -102,6 +108,7 @@ export async function actionCommandServiceAdd(
 		id: string;
 		type: string;
 		endpoint: string;
+		addressIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
@@ -113,6 +120,7 @@ export async function actionCommandServiceAdd(
 	const id: string = CLIParam.stringValue("id", opts.id);
 	const type: string = CLIParam.stringValue("type", opts.type);
 	const endpoint: string = CLIParam.url("endpoint", opts.endpoint);
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -124,6 +132,7 @@ export async function actionCommandServiceAdd(
 	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.serviceId"), id);
 	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.serviceType"), type);
 	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.serviceEndpoint"), endpoint);
+	CLIDisplay.value(I18n.formatMessage("commands.service-add.labels.addressIndex"), addressIndex);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -134,10 +143,10 @@ export async function actionCommandServiceAdd(
 	setupVault();
 
 	const vaultSeedId = "local-seed";
-	const localIdentity = "local";
+	const vmParts = DocumentHelper.parseId(did);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
-	await vaultConnector.setSecret(`${localIdentity}/${vaultSeedId}`, Converter.bytesToBase64(seed));
+	await vaultConnector.setSecret(`${vmParts.id}/${vaultSeedId}`, Converter.bytesToBase64(seed));
 
 	const walletConnector = setupWalletConnector(
 		{ nodeEndpoint, vaultSeedId, network },
@@ -146,7 +155,7 @@ export async function actionCommandServiceAdd(
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 
@@ -155,7 +164,7 @@ export async function actionCommandServiceAdd(
 
 	CLIDisplay.spinnerStart();
 
-	const service = await identityConnector.addService(localIdentity, did, id, type, endpoint);
+	const service = await identityConnector.addService(vmParts.id, did, id, type, endpoint);
 
 	CLIDisplay.spinnerStop();
 
@@ -167,8 +176,8 @@ export async function actionCommandServiceAdd(
 			opts.env,
 			[
 				`DID_SERVICE_ID="${service.id}"`,
-				`DID_SERVICE_TYPE="${service.type}"`,
-				`DID_SERVICE_ENDPOINT="${service.serviceEndpoint}"`
+				`DID_SERVICE_TYPE="${Is.string(service.type) ? service.type : service.type.join(",")}"`,
+				`DID_SERVICE_ENDPOINT="${Is.string(service.serviceEndpoint) ? service.serviceEndpoint : service.serviceEndpoint.join(",")}"`
 			],
 			opts.mergeEnv
 		);
@@ -177,7 +186,7 @@ export async function actionCommandServiceAdd(
 	if (opts.connector === IdentityConnectorTypes.Iota) {
 		const didUrn = Urn.fromValidString(did);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 		CLIDisplay.value(
 			I18n.formatMessage("commands.common.labels.explore"),
 			`${StringHelper.trimTrailingSlashes(explorerEndpoint)}/object/${objectId}?network=${network}`

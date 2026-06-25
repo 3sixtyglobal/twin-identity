@@ -4,7 +4,7 @@ Request to verify a verifiable credential.
 
 ## Properties
 
-### query
+### query {#query}
 
 > **query**: `object`
 

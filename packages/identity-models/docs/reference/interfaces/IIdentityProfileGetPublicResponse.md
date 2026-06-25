@@ -4,7 +4,7 @@ Response to get an identity public profile.
 
 ## Properties
 
-### headers
+### headers {#headers}
 
 > **headers**: `object`
 
@@ -16,7 +16,7 @@ The response headers.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `Partial`\<`IJsonLdDocument`\>
 

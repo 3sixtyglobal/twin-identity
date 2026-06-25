@@ -7,6 +7,12 @@ import type { IIotaConfig } from "@twin.org/dlt-iota";
  */
 export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	/**
+	 * The wallet account index to use for funding and controlling the identity.
+	 * @default 0
+	 */
+	walletAccountIndex?: number;
+
+	/**
 	 * The wallet address index to use for funding and controlling the identity.
 	 * @default 0
 	 */

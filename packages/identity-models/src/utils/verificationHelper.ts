@@ -5,8 +5,8 @@ import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { nameof } from "@twin.org/nameof";
 import { ProofHelper, type IDidDocument, type IProof } from "@twin.org/standards-w3c-did";
 import { Jwk, Jwt, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
-import { DocumentHelper } from "./documentHelper";
-import type { IIdentityResolverComponent } from "../models/IIdentityResolverComponent";
+import { DocumentHelper } from "./documentHelper.js";
+import type { IIdentityResolverComponent } from "../models/IIdentityResolverComponent.js";
 
 /**
  * Helper methods for verification.
@@ -18,10 +18,10 @@ export class VerificationHelper {
 	public static readonly CLASS_NAME: string = nameof<VerificationHelper>();
 
 	/**
-	 * Verified the JWT.
+	 * Verify the JWT and return the decoded header and payload.
 	 * @param resolver The resolver to use for finding the document.
 	 * @param jwt The token to verify.
-	 * @returns The decoded payload.
+	 * @returns The decoded header and payload.
 	 */
 	public static async verifyJwt<T extends IJwtHeader, U extends IJwtPayload>(
 		resolver: IIdentityResolverComponent,
@@ -63,10 +63,10 @@ export class VerificationHelper {
 	}
 
 	/**
-	 * Verified the proof for the document e.g. verifiable credential.
+	 * Verify the proof for the document.
 	 * @param resolver The resolver to use for finding the document.
 	 * @param secureDocument The secure document to verify.
-	 * @returns True if the verification is successful.
+	 * @returns True if all proofs in the document are verified successfully.
 	 */
 	public static async verifyProof(
 		resolver: IIdentityResolverComponent,
@@ -113,9 +113,9 @@ export class VerificationHelper {
 				documentCache[proofVerificationMethod.id] = document;
 			}
 
-			const verificationJwk = await DocumentHelper.getJwk(document, proofVerificationMethod.id);
+			const verificationJwk = DocumentHelper.getJwk(document, proofVerificationMethod.id);
 
-			const verified = ProofHelper.verifyProof(secureDocument, proof, verificationJwk);
+			const verified = await ProofHelper.verifyProof(secureDocument, proof, verificationJwk);
 
 			if (!verified) {
 				return false;

@@ -38,7 +38,7 @@ The options for the identity service.
 
 ## Properties
 
-### NAMESPACE
+### NAMESPACE {#namespace}
 
 > `readonly` `static` **NAMESPACE**: `string` = `"entity-storage"`
 
@@ -46,19 +46,33 @@ The namespace supported by the identity profile connector.
 
 ***
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
 
-#### Implementation of
-
-`IIdentityProfileConnector.CLASS_NAME`
-
 ## Methods
 
-### create()
+### className() {#classname}
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityProfileConnector.className`
+
+***
+
+### create() {#create}
 
 > **create**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -88,7 +102,7 @@ The private profile data.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 #### Implementation of
 
@@ -96,7 +110,7 @@ Nothing.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`identity`, `publicPropertyNames?`, `privatePropertyNames?`): `Promise`\<\{ `publicProfile`: `Partial`\<`T`\>; `privateProfile`: `Partial`\<`U`\>; \}\>
 
@@ -134,7 +148,7 @@ The items properties.
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`identity`, `publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
 
@@ -164,7 +178,7 @@ The private profile data.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 #### Implementation of
 
@@ -172,7 +186,7 @@ Nothing.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(`identity`): `Promise`\<`void`\>
 
@@ -190,7 +204,7 @@ The identity to delete.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 #### Implementation of
 
@@ -198,9 +212,9 @@ Nothing.
 
 ***
 
-### list()
+### list() {#list}
 
-> **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested types.
 
@@ -236,7 +250,7 @@ The private properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

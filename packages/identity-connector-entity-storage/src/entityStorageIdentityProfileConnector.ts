@@ -17,8 +17,8 @@ import {
 } from "@twin.org/entity-storage-models";
 import type { IIdentityProfileConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import type { IdentityProfile } from "./entities/identityProfile";
-import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions";
+import type { IdentityProfile } from "./entities/identityProfile.js";
+import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions.js";
 
 /**
  * Class which implements the identity profile connector contract.
@@ -26,8 +26,7 @@ import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from ".
 export class EntityStorageIdentityProfileConnector<
 	T extends IJsonLdDocument = IJsonLdDocument,
 	U extends IJsonLdDocument = IJsonLdDocument
-> implements IIdentityProfileConnector<T, U>
-{
+> implements IIdentityProfileConnector<T, U> {
 	/**
 	 * The namespace supported by the identity profile connector.
 	 */
@@ -36,7 +35,7 @@ export class EntityStorageIdentityProfileConnector<
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<EntityStorageIdentityProfileConnector>();
+	public static readonly CLASS_NAME: string = nameof<EntityStorageIdentityProfileConnector>();
 
 	/**
 	 * The storage connector for the profiles.
@@ -55,20 +54,36 @@ export class EntityStorageIdentityProfileConnector<
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return EntityStorageIdentityProfileConnector.CLASS_NAME;
+	}
+
+	/**
 	 * Create the profile properties for an identity.
 	 * @param identity The identity of the profile to create.
 	 * @param publicProfile The public profile data.
 	 * @param privateProfile The private profile data.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	public async create(identity: string, publicProfile?: T, privateProfile?: U): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(
+			EntityStorageIdentityProfileConnector.CLASS_NAME,
+			nameof(identity),
+			identity
+		);
 
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 
 			if (!Is.empty(profile)) {
-				throw new AlreadyExistsError(this.CLASS_NAME, "alreadyExists", identity);
+				throw new AlreadyExistsError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"alreadyExists",
+					identity
+				);
 			}
 
 			await this._profileEntityStorage.set({
@@ -77,10 +92,15 @@ export class EntityStorageIdentityProfileConnector<
 				privateProfile
 			});
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "createFailed", { identity }, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"createFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -102,15 +122,24 @@ export class EntityStorageIdentityProfileConnector<
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 			if (!profile) {
-				throw new NotFoundError(this.CLASS_NAME, "getFailed", identity);
+				throw new NotFoundError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"identityNotFound",
+					identity
+				);
 			}
 
 			return this.pickProperties(profile, publicPropertyNames, privatePropertyNames);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "getFailed", undefined, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"getFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -119,15 +148,23 @@ export class EntityStorageIdentityProfileConnector<
 	 * @param identity The identity to update.
 	 * @param publicProfile The public profile data.
 	 * @param privateProfile The private profile data.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(identity: string, publicProfile?: T, privateProfile?: U): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(
+			EntityStorageIdentityProfileConnector.CLASS_NAME,
+			nameof(identity),
+			identity
+		);
 
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 			if (Is.empty(profile)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"notFound",
+					identity
+				);
 			}
 
 			profile.publicProfile = publicProfile ?? profile.publicProfile;
@@ -135,33 +172,51 @@ export class EntityStorageIdentityProfileConnector<
 
 			await this._profileEntityStorage.set(profile);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "updateFailed", { identity }, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"updateFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
 	/**
 	 * Delete the profile for an identity.
 	 * @param identity The identity to delete.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(identity: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(
+			EntityStorageIdentityProfileConnector.CLASS_NAME,
+			nameof(identity),
+			identity
+		);
 
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 			if (Is.empty(profile)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(
+					EntityStorageIdentityProfileConnector.CLASS_NAME,
+					"notFound",
+					identity
+				);
 			}
 
 			await this._profileEntityStorage.remove(identity);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "removeFailed", { identity }, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"removeFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -172,7 +227,7 @@ export class EntityStorageIdentityProfileConnector<
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param privatePropertyNames The private properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	public async list(
@@ -187,7 +242,7 @@ export class EntityStorageIdentityProfileConnector<
 		publicPropertyNames?: (keyof T)[],
 		privatePropertyNames?: (keyof U)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identities.
@@ -233,7 +288,7 @@ export class EntityStorageIdentityProfileConnector<
 				undefined,
 				undefined,
 				cursor,
-				pageSize
+				limit
 			);
 
 			const items: {
@@ -253,7 +308,12 @@ export class EntityStorageIdentityProfileConnector<
 				cursor: result.cursor
 			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "listFailed", undefined, error);
+			throw new GeneralError(
+				EntityStorageIdentityProfileConnector.CLASS_NAME,
+				"listFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -275,10 +335,10 @@ export class EntityStorageIdentityProfileConnector<
 	} {
 		return {
 			publicProfile: Is.array(publicPropertyNames)
-				? ObjectHelper.pick<T>(profile.publicProfile as T, publicPropertyNames)
+				? ObjectHelper.pick(profile.publicProfile as T, publicPropertyNames)
 				: (profile.publicProfile as T),
 			privateProfile: Is.array(privatePropertyNames)
-				? ObjectHelper.pick<U>(profile.privateProfile as U, privatePropertyNames)
+				? ObjectHelper.pick(profile.privateProfile as U, privatePropertyNames)
 				: (profile.privateProfile as U)
 		};
 	}

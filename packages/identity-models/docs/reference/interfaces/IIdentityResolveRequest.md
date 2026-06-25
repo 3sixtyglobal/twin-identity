@@ -4,7 +4,7 @@ Resolve an identity.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 

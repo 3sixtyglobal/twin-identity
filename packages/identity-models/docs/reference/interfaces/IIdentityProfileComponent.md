@@ -18,7 +18,7 @@ Interface describing a contract which provides profile operations.
 
 ## Methods
 
-### create()
+### create() {#create}
 
 > **create**(`publicProfile?`, `privateProfile?`, `identity?`): `Promise`\<`void`\>
 
@@ -48,11 +48,11 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`publicPropertyNames?`, `privatePropertyNames?`, `identity?`): `Promise`\<\{ `identity`: `string`; `publicProfile?`: `Partial`\<`T`\>; `privateProfile?`: `Partial`\<`U`\>; \}\>
 
@@ -86,7 +86,7 @@ The items identity and the properties.
 
 ***
 
-### getPublic()
+### getPublic() {#getpublic}
 
 > **getPublic**(`identity`, `propertyNames?`): `Promise`\<`Partial`\<`T`\>\>
 
@@ -114,7 +114,7 @@ The items properties.
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`publicProfile?`, `privateProfile?`, `identity?`): `Promise`\<`void`\>
 
@@ -144,11 +144,11 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(`identity?`): `Promise`\<`void`\>
 
@@ -166,13 +166,13 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 ***
 
-### list()
+### list() {#list}
 
-> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested identities.
 
@@ -196,7 +196,7 @@ The public properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

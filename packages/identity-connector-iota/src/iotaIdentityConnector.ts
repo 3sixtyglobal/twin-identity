@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0.
 import {
 	Credential,
-	Duration,
 	EdDSAJwsVerifier,
 	FailFast,
 	IdentityClient,
@@ -13,72 +12,94 @@ import {
 	JwkMemStore,
 	JwkType,
 	JwsAlgorithm,
-	JwsSignatureOptions,
 	Jwt,
 	JwtCredentialValidationOptions,
 	JwtCredentialValidator,
-	JwtPresentationOptions,
 	JwtPresentationValidationOptions,
 	JwtPresentationValidator,
 	KeyIdMemStore,
-	MethodDigest,
 	MethodScope,
-	OnChainIdentity,
-	Presentation,
+	type OnChainIdentity,
 	Resolver,
 	RevocationBitmap,
 	Service,
 	Storage,
 	StorageSigner,
 	SubjectHolderRelationship,
-	Timestamp,
 	VerificationMethod,
 	type ControllerToken,
-	type CreateIdentity,
-	type CreateProposal,
 	type DIDUrl,
 	type ICredential,
-	type IJwkParams,
-	type IPresentation,
-	type UpdateDid
+	type IJwkParams
 } from "@iota/identity-wasm/node/index.js";
-import type { TransactionBuilder } from "@iota/iota-interaction-ts/node/transaction_internal.js";
-import { IotaClient } from "@iota/iota-sdk/client";
+import type {
+	Transaction,
+	TransactionBuilder,
+	TransactionOutput
+} from "@iota/iota-interaction-ts/node/transaction_internal.js";
 import {
+	ArrayHelper,
 	BaseError,
 	Converter,
 	GeneralError,
 	Guards,
+	HealthStatus,
 	Is,
 	NotFoundError,
 	ObjectHelper,
+	RandomHelper,
 	Url,
-	Urn
+	Urn,
+	type IHealth
 } from "@twin.org/core";
-import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import { Iota } from "@twin.org/dlt-iota";
-import { DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
+import {
+	JsonLdHelper,
+	JsonLdProcessor,
+	type IJsonLdContextDefinitionRoot,
+	type IJsonLdNodeObject
+} from "@twin.org/data-json-ld";
+import { Iota, VaultJwtSigner } from "@twin.org/dlt-iota";
+import { Did, DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
+	DidContexts,
+	DidTypes,
 	DidVerificationMethodType,
+	JwsAlgorithms,
+	type IDidVerifiableCredential,
+	type IDidVerifiableCredentialV1,
+	type IDidVerifiablePresentationV1,
 	ProofHelper,
 	ProofTypes,
 	type IDidDocument,
 	type IDidDocumentVerificationMethod,
 	type IDidService,
-	type IDidVerifiableCredential,
 	type IDidVerifiablePresentation,
 	type IProof
 } from "@twin.org/standards-w3c-did";
-import { VaultConnectorFactory, VaultKeyType, type IVaultConnector } from "@twin.org/vault-models";
-import { Jwk as JwkHelper } from "@twin.org/web";
-import { NetworkConstants } from "./constants/networkConstants";
-import type { IIdentityTransactionResult } from "./models/IIdentityTransactionResult";
-import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig";
-import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIdentityConnectorConstructorOptions";
+import {
+	VaultConnectorFactory,
+	VaultConnectorHelper,
+	VaultKeyType,
+	type IVaultConnector
+} from "@twin.org/vault-models";
+import {
+	FetchHelper,
+	HttpMethod,
+	Jwk as JwkHelper,
+	Jwt as JwtHelper,
+	type IJwtHeader,
+	type IJwtPayload
+} from "@twin.org/web";
+import { NetworkConstants } from "./constants/networkConstants.js";
+import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig.js";
+import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIdentityConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations on IOTA.
+ *
+ * Private keys are stored in the vault and all signing operations are delegated
+ * to the vault connector to prevent key exposure.
  */
 export class IotaIdentityConnector implements IIdentityConnector {
 	/**
@@ -89,7 +110,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IotaIdentityConnector>();
+	public static readonly CLASS_NAME: string = nameof<IotaIdentityConnector>();
 
 	/**
 	 * The vault for the keys.
@@ -102,6 +123,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @internal
 	 */
 	private readonly _config: IIotaIdentityConnectorConfig;
+
+	/**
+	 * The wallet account index to use for funding.
+	 * @internal
+	 */
+	private readonly _walletAccountIndex: number;
 
 	/**
 	 * The wallet address index to use for funding.
@@ -127,14 +154,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param options The options for the identity connector.
 	 */
 	constructor(options: IIotaIdentityConnectorConstructorOptions) {
-		Guards.object(this.CLASS_NAME, nameof(options), options);
+		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(options), options);
 		Guards.object<IIotaIdentityConnectorConfig>(
-			this.CLASS_NAME,
+			IotaIdentityConnector.CLASS_NAME,
 			nameof(options.config),
 			options.config
 		);
 		Guards.object<IIotaIdentityConnectorConfig["clientOptions"]>(
-			this.CLASS_NAME,
+			IotaIdentityConnector.CLASS_NAME,
 			nameof(options.config.clientOptions),
 			options.config.clientOptions
 		);
@@ -143,10 +170,81 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		this._config = options.config;
 
 		this._gasBudget = this._config.gasBudget ?? 1_000_000_000;
+		this._walletAccountIndex = options.config.walletAccountIndex ?? 0;
 		this._walletAddressIndex = options.config.walletAddressIndex ?? 0;
 		this._standardGasPrice = BigInt(this._config.standardGasPrice ?? 1000);
 
 		Iota.populateConfig(this._config);
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IotaIdentityConnector.CLASS_NAME;
+	}
+
+	/**
+	 * Returns the health status of the component.
+	 * @returns The health status of the component.
+	 */
+	public async health(): Promise<IHealth[]> {
+		const results: IHealth[] = [];
+		const nodeEndpoint = (this._config.clientOptions as { url?: string }).url;
+
+		try {
+			const iotaClient = Iota.createClient(this._config);
+			const version = await iotaClient.getRpcApiVersion();
+
+			results.push({
+				source: IotaIdentityConnector.CLASS_NAME,
+				status: Is.stringValue(version) ? HealthStatus.Ok : HealthStatus.Error,
+				description: "healthDescription",
+				message: Is.stringValue(version) ? undefined : "nodeHealthCheckFailed",
+				data: { endpoint: nodeEndpoint }
+			});
+		} catch {
+			results.push({
+				source: IotaIdentityConnector.CLASS_NAME,
+				status: HealthStatus.Error,
+				description: "healthDescription",
+				message: "nodeHealthCheckFailed",
+				data: { endpoint: nodeEndpoint }
+			});
+		}
+
+		if (Is.stringValue(this._config.gasStation?.gasStationUrl)) {
+			const gasStationEndpoint = this._config.gasStation.gasStationUrl;
+			try {
+				const response = await FetchHelper.fetch(
+					IotaIdentityConnector.CLASS_NAME,
+					gasStationEndpoint,
+					HttpMethod.GET
+				);
+
+				const body = await response.text();
+				const isHealthy = response.ok && body.trim() === "OK";
+
+				results.push({
+					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
+					status: isHealthy ? HealthStatus.Ok : HealthStatus.Error,
+					description: "healthDescription",
+					message: isHealthy ? undefined : "healthCheckFailed",
+					data: { endpoint: gasStationEndpoint }
+				});
+			} catch {
+				results.push({
+					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "healthCheckFailed",
+					data: { endpoint: gasStationEndpoint }
+				});
+			}
+		}
+
+		return results;
 	}
 
 	/**
@@ -155,7 +253,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @returns The created document.
 	 */
 	public async createDocument(controller: string): Promise<IDidDocument> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
@@ -168,12 +266,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const executionResult = await this.executeIdentityTransaction(
 				controller,
-				identityClient.createIdentity(document).finish()
+				identityClient.createIdentity(document).finish() as unknown as TransactionBuilder<
+					Transaction<unknown>
+				>
 			);
 
-			const did = this.extractDidFromExecutionResult(executionResult, networkHrp);
-
-			// Both regular and gas station transactions now use waitForTransactionConfirmation
+			const did = this.extractDidFromExecutionResult(executionResult, networkHrp); // Both regular and gas station transactions now use waitForTransactionConfirmation
 			// so the DID should be immediately resolvable after transaction confirmation
 			const resolved = await identityClient.resolveDid(did);
 
@@ -182,7 +280,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			return docJson.doc;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"createDocumentFailed",
 				undefined,
 				Iota.extractPayloadError(error)
@@ -194,40 +292,42 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * Remove a document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the document has been removed.
 	 */
 	public async removeDocument(controller: string, documentId: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 
-			const idParts = DocumentHelper.parseId(documentId).id.split(":");
-			const onChain = await OnChainIdentity.getById(
-				`0x${idParts[idParts.length - 1]}`,
-				identityClient
-			);
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+			const onChain = identity.toFullFledged();
 			if (Is.undefined(onChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
 			const controllerToken = await onChain.getControllerToken(identityClient);
 			if (Is.undefined(controllerToken)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const deleteBuilder = await onChain
+			const deleteBuilder = onChain
 				.deleteDid(controllerToken)
 				.withGasBudget(BigInt(this._gasBudget));
 
 			if (Is.object(this._config.gasStation)) {
-				await this.executeDocumentUpdateWithGasStation(controller, deleteBuilder);
+				await this.executeGasStationTransaction(controller, deleteBuilder, "update");
 			}
 
 			await deleteBuilder.buildAndExecute(identityClient);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "removeDocumentFailed", undefined, error);
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"removeDocumentFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -247,10 +347,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		verificationMethodType: DidVerificationMethodType,
 		verificationMethodId?: string
 	): Promise<IDidDocumentVerificationMethod> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
 		Guards.arrayOneOf<DidVerificationMethodType>(
-			this.CLASS_NAME,
+			IotaIdentityConnector.CLASS_NAME,
 			nameof(verificationMethodType),
 			verificationMethodType,
 			Object.values(DidVerificationMethodType)
@@ -261,30 +361,39 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const identityClient = await this.getIdentityClient(controller);
 			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(documentId));
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", identityOnChain);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					identityOnChain
+				);
 			}
 
 			let methodKeyPublic;
 			if (Is.stringValue(verificationMethodId)) {
 				// If there is a verification method id, we will try to get the key from the vault.
 				try {
-					const defaultMethodId = `${controller}/${verificationMethodId}`;
 					// If there is an existing key, we will use it.
-					const existingKey = await this._vaultConnector.getKey(defaultMethodId);
+					const existingKey = await this._vaultConnector.getKey(
+						VaultConnectorHelper.buildKeyName(documentId, verificationMethodId),
+						"public"
+					);
 					methodKeyPublic = existingKey.publicKey;
 				} catch {}
 			}
 
 			if (Is.empty(methodKeyPublic)) {
 				// If there is no existing key, we will create a new one with a temporary name.
-				tempKeyId = `${controller}/temp-vm-${Date.now()}`;
-				methodKeyPublic = await this._vaultConnector.createKey(tempKeyId, VaultKeyType.Ed25519);
+				tempKeyId = `temp-vm-${Converter.bytesToBase64Url(RandomHelper.generate(16))}`;
+				methodKeyPublic = await this._vaultConnector.createKey(
+					VaultConnectorHelper.buildKeyName(documentId, tempKeyId),
+					VaultKeyType.Ed25519
+				);
 			}
 
 			const jwkParams = await JwkHelper.fromEd25519Public(methodKeyPublic);
@@ -294,13 +403,18 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			if (Is.stringValue(tempKeyId)) {
 				// If we created a temporary key, we will rename it to the final method id.
-				await this._vaultConnector.renameKey(tempKeyId, `${controller}/${methodId.slice(1)}`);
+				await this._vaultConnector.renameKey(
+					VaultConnectorHelper.buildKeyName(documentId, tempKeyId),
+					VaultConnectorHelper.buildKeyName(documentId, methodId.slice(1))
+				);
 				tempKeyId = undefined;
 			}
 
 			const method = VerificationMethod.newFromJwk(document.id(), jwk, methodId);
 			const methods = document.methods();
-			const existingMethod = methods.find(m => m.id().toString() === method.id().toString());
+			const existingMethod = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === this.stringifyIdentityValue(method.id())
+			);
 
 			if (existingMethod) {
 				document.removeMethod(method.id());
@@ -322,7 +436,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const controllerToken = await identityOnChain.getControllerToken(identityClient);
 			if (Is.empty(controllerToken)) {
-				throw new GeneralError(this.CLASS_NAME, "missingControllerToken");
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
 			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
@@ -330,7 +444,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			return method.toJSON() as IDidDocumentVerificationMethod;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"addVerificationMethodFailed",
 				undefined,
 				Iota.extractPayloadError(error)
@@ -339,7 +453,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			if (Is.stringValue(tempKeyId)) {
 				// If we created a temporary key and it is still in use, we will remove it from the vault.
 				try {
-					await this._vaultConnector.removeKey(tempKeyId);
+					await this._vaultConnector.removeKey(
+						VaultConnectorHelper.buildKeyName(documentId, tempKeyId)
+					);
 				} catch {}
 			}
 		}
@@ -349,7 +465,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * Remove a verification method from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The id of the verification method.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
@@ -357,27 +473,37 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		controller: string,
 		verificationMethodId: string
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
 			if (Is.empty(idParts.fragment)) {
-				throw new NotFoundError(this.CLASS_NAME, "missingDid", verificationMethodId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"missingDid",
+					verificationMethodId
+				);
 			}
 
 			const identityClient = await this.getIdentityClient(controller);
 			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", idParts.id);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
 			const methods = document.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 			if (!method) {
 				throw new NotFoundError(
-					this.CLASS_NAME,
+					IotaIdentityConnector.CLASS_NAME,
 					"verificationMethodNotFound",
 					verificationMethodId
 				);
@@ -385,21 +511,25 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.removeMethod(method.id());
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(idParts.id));
+			const identity = await identityClient.getIdentity(Did.parse(idParts.id).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", verificationMethodId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					verificationMethodId
+				);
 			}
 
 			const controllerToken = await identityOnChain.getControllerToken(identityClient);
 			if (Is.empty(controllerToken)) {
-				throw new GeneralError(this.CLASS_NAME, "missingControllerToken");
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
 			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"removeVerificationMethodFailed",
 				undefined,
 				Iota.extractPayloadError(error)
@@ -424,27 +554,32 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		serviceType: string | string[],
 		serviceEndpoint: string | string[]
 	): Promise<IDidService> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(documentId), documentId);
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceId), serviceId);
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceType), serviceType);
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(serviceId), serviceId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(serviceType), serviceType);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", documentId);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 			}
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(documentId));
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", identityOnChain);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					identityOnChain
+				);
 			}
 
+			const documentIdValue = this.stringifyIdentityValue(document.id());
 			const service = new Service({
-				id: `${document.id()}#${serviceId}`,
+				id: `${documentIdValue}#${serviceId}`,
 				type: serviceType,
 				serviceEndpoint
 			});
@@ -453,7 +588,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			const controllerToken = await identityOnChain.getControllerToken(identityClient);
 			if (Is.empty(controllerToken)) {
-				throw new GeneralError(this.CLASS_NAME, "missingControllerToken");
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
 			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
@@ -461,7 +596,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			return service.toJSON() as unknown as IDidService;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"addServiceFailed",
 				undefined,
 				Iota.extractPayloadError(error)
@@ -473,51 +608,175 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * Remove a service from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param serviceId The id of the service.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the service has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 */
 	public async removeService(controller: string, serviceId: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(serviceId), serviceId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(serviceId), serviceId);
 
 		try {
 			const idParts = DocumentHelper.parseId(serviceId);
 			if (Is.empty(idParts.fragment)) {
-				throw new NotFoundError(this.CLASS_NAME, "missingDid", serviceId);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "missingDid", serviceId);
 			}
 
 			const identityClient = await this.getIdentityClient(controller);
 			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", idParts.id);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
 			const services = document.service();
-			const service = services.find(s => s.id().toString() === serviceId);
+			const service = services.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
 
 			if (!service) {
-				throw new NotFoundError(this.CLASS_NAME, "serviceNotFound", serviceId);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "serviceNotFound", serviceId);
 			}
 
 			document.removeService(service.id());
 
-			const identity = await identityClient.getIdentity(this.extractAliasId(idParts.id));
+			const identity = await identityClient.getIdentity(Did.parse(idParts.id).id);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", idParts.id);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "identityNotFound", idParts.id);
 			}
 
 			const controllerToken = await identityOnChain.getControllerToken(identityClient);
 			if (Is.empty(controllerToken)) {
-				throw new GeneralError(this.CLASS_NAME, "missingControllerToken");
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
 			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"removeServiceFailed",
+				undefined,
+				Iota.extractPayloadError(error)
+			);
+		}
+	}
+
+	/**
+	 * Add an alias to the alsoKnownAs property on the document.
+	 * If the alias is already present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to add. Must be a Url or Urn (typically another DID).
+	 * @returns A promise that resolves when the alias has been added.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async addAlsoKnownAs(
+		controller: string,
+		documentId: string,
+		alias: string
+	): Promise<void> {
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(alias), alias);
+		if (!Url.tryParseExact(alias) && !Urn.tryParseExact(alias)) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "invalidAlias", { alias });
+		}
+
+		try {
+			const identityClient = await this.getIdentityClient(controller);
+			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
+			if (Is.undefined(document)) {
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
+			}
+
+			const existing = document.alsoKnownAs();
+			if (existing.includes(alias)) {
+				return;
+			}
+
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+			const identityOnChain = identity.toFullFledged();
+			if (Is.undefined(identityOnChain)) {
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					identityOnChain
+				);
+			}
+
+			document.setAlsoKnownAs([...existing, alias]);
+
+			const controllerToken = await identityOnChain.getControllerToken(identityClient);
+			if (Is.empty(controllerToken)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
+			}
+
+			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+		} catch (error) {
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"addAlsoKnownAsFailed",
+				undefined,
+				Iota.extractPayloadError(error)
+			);
+		}
+	}
+
+	/**
+	 * Remove an alias from the alsoKnownAs property on the document.
+	 * If the alias is not present the operation is a no-op.
+	 * @param controller The controller of the identity who can make changes.
+	 * @param documentId The id of the document to update.
+	 * @param alias The alias to remove. Must be a Url or Urn.
+	 * @returns A promise that resolves when the alias has been removed.
+	 * @throws GeneralError if the alias is not a Url or Urn.
+	 * @throws NotFoundError if the id can not be resolved.
+	 */
+	public async removeAlsoKnownAs(
+		controller: string,
+		documentId: string,
+		alias: string
+	): Promise<void> {
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(alias), alias);
+		if (!Url.tryParseExact(alias) && !Urn.tryParseExact(alias)) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "invalidAlias", { alias });
+		}
+
+		try {
+			const identityClient = await this.getIdentityClient(controller);
+			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
+			if (Is.undefined(document)) {
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
+			}
+
+			const existing = document.alsoKnownAs();
+			if (!existing.includes(alias)) {
+				return;
+			}
+
+			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+			const identityOnChain = identity.toFullFledged();
+			if (Is.undefined(identityOnChain)) {
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					identityOnChain
+				);
+			}
+
+			document.setAlsoKnownAs(existing.filter(a => a !== alias));
+
+			const controllerToken = await identityOnChain.getControllerToken(identityClient);
+			if (Is.empty(controllerToken)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
+			}
+
+			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+		} catch (error) {
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"removeAlsoKnownAsFailed",
 				undefined,
 				Iota.extractPayloadError(error)
 			);
@@ -530,83 +789,86 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param verificationMethodId The verification method id to use.
 	 * @param id The id of the credential.
 	 * @param subject The credential subject to store in the verifiable credential.
-	 * @param revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options Additional options for creating the verifiable credential.
+	 * @param options.revocationIndex The bitmap revocation index of the credential, if undefined will not have revocation status.
+	 * @param options.expirationDate The date the verifiable credential is valid until.
+	 * @param options.jwtHeaderFields Additional fields to include in the JWT header.
+	 * @param options.jwtPayloadFields Additional fields to include in the JWT payload.
 	 * @returns The created verifiable credential and its token.
 	 * @throws NotFoundError if the id can not be resolved.
+	 * @throws GeneralError if the signing operation fails.
 	 */
 	public async createVerifiableCredential(
 		controller: string,
 		verificationMethodId: string,
 		id: string | undefined,
 		subject: IJsonLdNodeObject,
-		revocationIndex?: number
+		options?: {
+			revocationIndex?: number;
+			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
+		}
 	): Promise<{
 		verifiableCredential: IDidVerifiableCredential;
 		jwt: string;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
-		Guards.objectValue(this.CLASS_NAME, nameof(subject), subject);
-		if (!Is.undefined(revocationIndex)) {
-			Guards.number(this.CLASS_NAME, nameof(revocationIndex), revocationIndex);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
+		Guards.objectValue(IotaIdentityConnector.CLASS_NAME, nameof(subject), subject);
+		if (!Is.undefined(options?.revocationIndex)) {
+			Guards.number(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(options.revocationIndex),
+				options.revocationIndex
+			);
 		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
 			if (Is.empty(idParts.fragment)) {
-				throw new NotFoundError(this.CLASS_NAME, "missingDid", verificationMethodId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"missingDid",
+					verificationMethodId
+				);
 			}
 
-			const identityClient = await this.getIdentityClient(controller);
+			const identityClient = await this.getIdentityClient();
 			const issuerDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(issuerDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", idParts.id);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
 			const methods = issuerDocument.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 			if (!method) {
-				throw new GeneralError(this.CLASS_NAME, "methodMissing", { method: verificationMethodId });
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
+					method: verificationMethodId
+				});
 			}
 
 			const subjectClone = ObjectHelper.clone(subject);
 
-			const credContext = ObjectHelper.extractProperty(subjectClone, "@context", true);
-			const credType = ObjectHelper.extractProperty(subjectClone, ["@type", "type"], false);
+			const credContext = ObjectHelper.extractProperty<IJsonLdContextDefinitionRoot>(subjectClone, [
+				"@context"
+			]);
 
-			const finalTypes = [];
-			if (Is.stringValue(credType)) {
-				finalTypes.push(credType);
-			}
+			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
+			const keyType = await this._vaultConnector.getKeyType(keyId);
 
-			const verificationMethodKey = await this._vaultConnector.getKey(
-				`${controller}/${idParts.fragment}`
-			);
-
-			if (Is.undefined(verificationMethodKey)) {
-				throw new GeneralError(this.CLASS_NAME, "verificationKeyMissing", {
+			if (Is.undefined(keyType)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "verificationKeyMissing", {
 					method: verificationMethodId
 				});
 			}
-
-			if (Is.undefined(verificationMethodKey.publicKey)) {
-				throw new GeneralError(this.CLASS_NAME, "publicKeyJwkMethodMissing", {
-					method: verificationMethodId
-				});
-			}
-
-			const jwkMemStore = new JwkMemStore();
-
-			const jwkResult = await JwkHelper.fromEd25519Private(verificationMethodKey.privateKey);
-			const jwkParams = jwkResult as IJwkParams;
-
-			const keyId = await jwkMemStore.insert(new Jwk(jwkParams));
-			const keyIdMemStore = new KeyIdMemStore();
-			const methodDigest = new MethodDigest(method);
-			await keyIdMemStore.insertKeyId(methodDigest, keyId);
-
-			const storage = new Storage(jwkMemStore, keyIdMemStore);
 
 			const subjectId = subjectClone.id;
 			if (
@@ -614,48 +876,87 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				!Url.tryParseExact(subjectId) &&
 				!Urn.tryParseExact(subjectId)
 			) {
-				throw new GeneralError(this.CLASS_NAME, "invalidSubjectId", { subjectId });
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "invalidSubjectId", { subjectId });
 			}
 
-			const unsignedVc = new Credential({
-				issuer: idParts.id,
-				credentialSubject: subjectClone,
-				type: finalTypes,
-				id,
-				context: credContext as ICredential["context"]
-			});
+			// Build the credential structure manually to avoid exposing private key
+			const credentialData: IDidVerifiableCredentialV1 = {
+				"@context": (JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, credContext) ??
+					DidContexts.ContextVCv1) as [typeof DidContexts.ContextVCv1],
+				type: DidTypes.VerifiableCredential,
+				credentialSubject: subjectClone
+			};
 
-			if (!Is.undefined(revocationIndex)) {
-				Object.assign(unsignedVc, {
-					credentialStatus: {
-						id: `${issuerDocument.id().toString()}#revocation`,
-						type: RevocationBitmap.type(),
-						revocationBitmapIndex: revocationIndex.toString()
-					}
-				});
+			if (!Is.undefined(options?.revocationIndex)) {
+				const issuerDocumentIdValue = this.stringifyIdentityValue(issuerDocument.id());
+				credentialData.credentialStatus = {
+					id: `${issuerDocumentIdValue}#revocation`,
+					type: RevocationBitmap.type(),
+					revocationBitmapIndex: options.revocationIndex.toString()
+				};
 			}
 
-			const credentialJwt = await issuerDocument.createCredentialJwt(
-				storage,
-				`#${idParts.fragment}`,
-				unsignedVc,
-				new JwsSignatureOptions()
+			// Construct JWT header and payload
+			const jwtHeader: IJwtHeader = {
+				...options?.jwtHeaderFields,
+				kid: verificationMethodId,
+				typ: "JWT",
+				alg: JwsAlgorithms.EdDSA
+			};
+
+			const jwtPayload: IJwtPayload = {
+				...options?.jwtPayloadFields,
+				iss: idParts.id,
+				nbf: Math.floor(Date.now() / 1000),
+				jti: id,
+				sub: Is.stringValue(subjectId) ? subjectId : undefined,
+				vc: credentialData
+			};
+
+			if (Is.date(options?.expirationDate)) {
+				jwtPayload.exp = Math.floor(options.expirationDate.getTime() / 1000);
+			}
+
+			// Sign using vault connector - private key never leaves the vault
+			const credentialJwt = await JwtHelper.encodeWithSigner(
+				jwtHeader,
+				jwtPayload,
+				async (header, payload) =>
+					VaultConnectorHelper.jwtSigner(this._vaultConnector, keyId, header, payload)
 			);
 
+			// Validate the credential JWT
 			const validatedCredential = new JwtCredentialValidator(new EdDSAJwsVerifier());
 			const decoded = validatedCredential.validate(
-				credentialJwt,
+				new Jwt(credentialJwt),
 				issuerDocument,
 				new JwtCredentialValidationOptions(),
 				FailFast.FirstError
 			);
 
+			const vc = decoded.credential().toJSON() as IDidVerifiableCredential;
+
+			vc.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(vc)
+			);
+
+			// Promote the proof's @context to the VC root so JSON-LD processors can resolve DataIntegrity terms (proofValue, cryptosuite, etc.)
+			const proofContext = vc.proof["@context"];
+			if (!Is.empty(proofContext)) {
+				vc["@context"] = (JsonLdProcessor.combineContexts(vc["@context"], proofContext) ??
+					vc["@context"]) as IDidVerifiableCredential["@context"];
+				delete vc.proof["@context"];
+			}
+
 			return {
-				verifiableCredential: decoded.credential().toJSON() as IDidVerifiableCredential,
-				jwt: credentialJwt.toString()
+				verifiableCredential: vc,
+				jwt: credentialJwt
 			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "createVerifiableCredentialFailed", {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "createVerifiableCredentialFailed", {
 				error: BaseError.fromError(error)
 			});
 		}
@@ -663,26 +964,51 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable credential is valid.
-	 * @param credentialJwt The credential to verify.
+	 * @param credential The credential to verify.
 	 * @returns The credential stored in the jwt and the revocation status.
 	 */
-	public async checkVerifiableCredential(credentialJwt: string): Promise<{
+	public async checkVerifiableCredential(credential: string | IDidVerifiableCredential): Promise<{
 		revoked: boolean;
 		verifiableCredential?: IDidVerifiableCredential;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(credentialJwt), credentialJwt);
+		if (Is.object(credential)) {
+			Guards.objectValue<IDidVerifiableCredential>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(credential),
+				credential
+			);
+			Guards.objectValue<IDidVerifiableCredential>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(credential.proof),
+				credential.proof
+			);
+			const { proof, ...doc } = credential;
+			await this.verifyProof(
+				JsonLdHelper.toNodeObject(doc),
+				ArrayHelper.fromObjectOrArray(proof)[0]
+			);
+			return {
+				revoked: false,
+				verifiableCredential: doc
+			};
+		}
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(credential), credential);
 
 		try {
+			const iotaClient = Iota.createClient(this._config);
 			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				new IotaClient(this._config.clientOptions)
+				// @ts-expect-error IotaClient has a mismatch with the library types
+				iotaClient,
+				this._config?.identityPkgId
 			);
 			const resolver = new Resolver({ client: identityClientReadOnly });
-			const jwt = new Jwt(credentialJwt);
+			const jwt = new Jwt(credential);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
-			const issuerDocument = await resolver.resolve(issuerDocumentId.toString());
+			const issuerDid = this.stringifyIdentityValue(issuerDocumentId);
+			const issuerDocument = await resolver.resolve(issuerDid);
 
 			if (Is.undefined(issuerDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", issuerDocumentId.toString());
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", issuerDid);
 			}
 
 			const validatedCredential = new JwtCredentialValidator(new EdDSAJwsVerifier());
@@ -692,21 +1018,25 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				new JwtCredentialValidationOptions(),
 				FailFast.FirstError
 			);
-			const credential = decoded.credential();
+			const vc = decoded.credential().toJSON() as IDidVerifiableCredential;
 
 			return {
 				revoked: false,
-				verifiableCredential: credential.toJSON() as IDidVerifiableCredential
+				verifiableCredential: vc
 			};
 		} catch (error) {
-			if (error instanceof Error && error.message.toLowerCase().includes("revoked")) {
+			if (BaseError.isErrorMessage(error, /revoked/i)) {
 				return {
 					revoked: true
 				};
 			}
-			throw new GeneralError(this.CLASS_NAME, "checkingVerifiableCredentialFailed", {
-				error: BaseError.fromError(error)
-			});
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"checkingVerifiableCredentialFailed",
+				{
+					error: BaseError.fromError(error)
+				}
+			);
 		}
 	}
 
@@ -715,27 +1045,37 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been revoked.
 	 */
 	public async revokeVerifiableCredentials(
 		controller: string,
 		issuerDocumentId: string,
 		credentialIndices: number[]
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(issuerDocumentId), issuerDocumentId);
-		Guards.array(this.CLASS_NAME, nameof(credentialIndices), credentialIndices);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(issuerDocumentId),
+			issuerDocumentId
+		);
+		Guards.array(IotaIdentityConnector.CLASS_NAME, nameof(credentialIndices), credentialIndices);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 			const document = await identityClient.resolveDid(IotaDID.parse(issuerDocumentId));
 
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", issuerDocumentId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"documentNotFound",
+					issuerDocumentId
+				);
 			}
 
-			const serviceId = `${document.id().toString()}#revocation`;
-			const revocationService = document.service().find(s => s.id().toString() === serviceId);
+			const serviceId = `${this.stringifyIdentityValue(document.id())}#revocation`;
+			const revocationService = document
+				.service()
+				.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
 
 			if (Is.undefined(revocationService)) {
 				const revocationBitmap = new RevocationBitmap();
@@ -745,23 +1085,31 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			document.revokeCredentials("revocation", credentialIndices);
 
-			const aliasId = this.extractAliasId(issuerDocumentId);
+			const aliasId = Did.parse(issuerDocumentId).id;
 			const identity = await identityClient.getIdentity(aliasId);
 			const identityOnChain = identity.toFullFledged();
 			if (Is.undefined(identityOnChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", issuerDocumentId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					issuerDocumentId
+				);
 			}
 
 			const controllerToken = await identityOnChain.getControllerToken(identityClient);
 			if (Is.empty(controllerToken)) {
-				throw new GeneralError(this.CLASS_NAME, "missingControllerToken");
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
 			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "revokeVerifiableCredentialsFailed", {
-				error: BaseError.fromError(error)
-			});
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"revokeVerifiableCredentialsFailed",
+				{
+					error: BaseError.fromError(error)
+				}
+			);
 		}
 	}
 
@@ -770,52 +1118,74 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param controller The controller of the identity who can make changes.
 	 * @param issuerDocumentId The id of the document to update the revocation list for.
 	 * @param credentialIndices The revocation bitmap index or indices to un revoke.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the credentials have been unrevoked.
 	 */
 	public async unrevokeVerifiableCredentials(
 		controller: string,
 		issuerDocumentId: string,
 		credentialIndices: number[]
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(issuerDocumentId), issuerDocumentId);
-		Guards.array(this.CLASS_NAME, nameof(credentialIndices), credentialIndices);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(issuerDocumentId),
+			issuerDocumentId
+		);
+		Guards.array(IotaIdentityConnector.CLASS_NAME, nameof(credentialIndices), credentialIndices);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 			const document = await identityClient.resolveDid(IotaDID.parse(issuerDocumentId));
 
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", issuerDocumentId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"documentNotFound",
+					issuerDocumentId
+				);
 			}
 
-			const serviceId = `${document.id().toString()}#revocation`;
-			const revocationService = document.service().find(s => s.id().toString() === serviceId);
+			const serviceId = `${this.stringifyIdentityValue(document.id())}#revocation`;
+			const revocationService = document
+				.service()
+				.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
 
 			if (Is.undefined(revocationService)) {
-				throw new NotFoundError(this.CLASS_NAME, "revocationServiceNotFound", serviceId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"revocationServiceNotFound",
+					serviceId
+				);
 			}
 
 			document.unrevokeCredentials("revocation", credentialIndices);
 
-			const aliasId = this.extractAliasId(issuerDocumentId);
+			const aliasId = Did.parse(issuerDocumentId).id;
 			const identity = await identityClient.getIdentity(aliasId);
 			const identityOnChain = identity.toFullFledged();
 
 			if (Is.undefined(identityOnChain)) {
-				throw new NotFoundError(this.CLASS_NAME, "identityNotFound", issuerDocumentId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"identityNotFound",
+					issuerDocumentId
+				);
 			}
 
 			const controllerToken = await identityOnChain.getControllerToken(identityClient);
 			if (Is.empty(controllerToken)) {
-				throw new GeneralError(this.CLASS_NAME, "missingControllerToken");
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
 			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "unrevokeVerifiableCredentialsFailed", {
-				error: BaseError.fromError(error)
-			});
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"unrevokeVerifiableCredentialsFailed",
+				{
+					error: BaseError.fromError(error)
+				}
+			);
 		}
 	}
 
@@ -827,9 +1197,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param contexts The contexts for the data stored in the verifiable credential.
 	 * @param types The types for the data stored in the verifiable credential.
 	 * @param verifiableCredentials The credentials to use for creating the presentation in jwt format.
-	 * @param expiresInMinutes The time in minutes for the presentation to expire.
+	 * @param options Additional options for creating the verifiable presentation.
+	 * @param options.expirationDate The date the verifiable presentation is valid until.
+	 * @param options.jwtHeaderFields Additional fields to include in the JWT header.
+	 * @param options.jwtPayloadFields Additional fields to include in the JWT payload.
 	 * @returns The created verifiable presentation and its token.
 	 * @throws NotFoundError if the id can not be resolved.
+	 * @throws GeneralError if the signing operation fails.
 	 */
 	public async createVerifiablePresentation(
 		controller: string,
@@ -838,57 +1212,96 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		contexts: IJsonLdContextDefinitionRoot | undefined,
 		types: string | string[] | undefined,
 		verifiableCredentials: (string | IDidVerifiableCredential)[],
-		expiresInMinutes?: number
+		options?: {
+			expirationDate?: Date;
+			jwtHeaderFields?: { [id: string]: string };
+			jwtPayloadFields?: { [id: string]: string };
+		}
 	): Promise<{
 		verifiablePresentation: IDidVerifiablePresentation;
 		jwt: string;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 		if (Is.array(types)) {
-			Guards.arrayValue(this.CLASS_NAME, nameof(types), types);
+			Guards.arrayValue(IotaIdentityConnector.CLASS_NAME, nameof(types), types);
 		} else if (Is.string(types)) {
-			Guards.stringValue(this.CLASS_NAME, nameof(types), types);
+			Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(types), types);
 		}
-		Guards.arrayValue(this.CLASS_NAME, nameof(verifiableCredentials), verifiableCredentials);
-		if (!Is.undefined(expiresInMinutes)) {
-			Guards.integer(this.CLASS_NAME, nameof(expiresInMinutes), expiresInMinutes);
+		Guards.arrayValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(verifiableCredentials),
+			verifiableCredentials
+		);
+		if (!Is.undefined(options?.expirationDate)) {
+			Guards.date(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(options.expirationDate),
+				options?.expirationDate
+			);
 		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
 			if (Is.empty(idParts.fragment)) {
-				throw new NotFoundError(this.CLASS_NAME, "missingDid", verificationMethodId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"missingDid",
+					verificationMethodId
+				);
 			}
 
-			const identityClient = await this.getIdentityClient(controller);
-			const issuerDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
+			const identityClient = await this.getIdentityClient();
+			const holderDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
-			if (Is.undefined(issuerDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", idParts.id);
+			if (Is.undefined(holderDocument)) {
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
-			const methods = issuerDocument.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const methods = holderDocument.methods();
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 
 			if (!method) {
-				throw new GeneralError(this.CLASS_NAME, "methodMissing", { method: verificationMethodId });
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
+					method: verificationMethodId
+				});
 			}
 
 			const didMethod = method.toJSON() as IDidDocumentVerificationMethod;
 
 			if (Is.undefined(didMethod.publicKeyJwk)) {
-				throw new GeneralError(this.CLASS_NAME, "publicKeyJwkMethodMissing", {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "publicKeyJwkMethodMissing", {
 					method: verificationMethodId
 				});
 			}
 
-			const finalTypes = [];
+			const finalTypes: string[] = [DidTypes.VerifiablePresentation];
 			if (Is.array(types)) {
 				finalTypes.push(...types);
 			} else if (Is.stringValue(types)) {
 				finalTypes.push(types);
 			}
+
+			// Build context with base VC context while avoiding duplicates
+			const combinedContext: IJsonLdContextDefinitionRoot =
+				JsonLdProcessor.combineContexts(DidContexts.ContextVCv1, contexts) ??
+				DidContexts.ContextVCv1;
+
+			// Build the complete verifiable presentation first
+			const verifiablePresentation: IDidVerifiablePresentationV1 = {
+				"@context": combinedContext as IDidVerifiablePresentationV1["@context"],
+				id: presentationId,
+				type: finalTypes,
+				verifiableCredential:
+					verifiableCredentials as IDidVerifiablePresentationV1["verifiableCredential"],
+				holder: idParts.id
+			};
 
 			const credentials = [];
 			for (const cred of verifiableCredentials) {
@@ -899,73 +1312,79 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			const unsignedVp = new Presentation({
-				context: contexts as IPresentation["context"],
-				id: presentationId,
-				verifiableCredential: credentials,
-				type: finalTypes,
-				holder: idParts.id
-			});
+			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
+			const keyType = await this._vaultConnector.getKeyType(keyId);
 
-			const verificationMethodKey = await this._vaultConnector.getKey(
-				`${controller}/${idParts.fragment}`
-			);
-
-			if (Is.undefined(verificationMethodKey)) {
-				throw new GeneralError(this.CLASS_NAME, "verificationKeyMissing", {
+			if (Is.undefined(keyType)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "verificationKeyMissing", {
 					method: verificationMethodId
 				});
 			}
 
-			const jwkParams = {
-				alg: didMethod.publicKeyJwk.alg,
-				kty: didMethod.publicKeyJwk.kty as JwkType,
-				crv: didMethod.publicKeyJwk.crv,
-				x: didMethod.publicKeyJwk.x,
-				d: Converter.bytesToBase64Url(verificationMethodKey.privateKey)
-			} as IJwkParams;
+			// Construct JWT header and payload
+			const jwtHeader: IJwtHeader = {
+				...options?.jwtHeaderFields,
+				kid: verificationMethodId,
+				typ: "JWT",
+				alg: JwsAlgorithms.EdDSA
+			};
 
-			const jwkMemStore = new JwkMemStore();
-			const jwk = new Jwk(jwkParams);
-			const publicKeyJwk = jwk.toPublic();
-			if (!publicKeyJwk) {
-				throw new GeneralError(this.CLASS_NAME, "publicKeyJwkMissing", {
-					jwk: jwk.kid()
-				});
+			const jwtVp = ObjectHelper.pick(ObjectHelper.clone(verifiablePresentation), [
+				"@context",
+				"type",
+				"verifiableCredential"
+			]);
+
+			const jwtPayload: IJwtPayload = {
+				...options?.jwtPayloadFields,
+				iss: verifiablePresentation.holder,
+				nbf: Math.floor(Date.now() / 1000),
+				vp: jwtVp
+			};
+			if (Is.date(options?.expirationDate)) {
+				jwtPayload.exp = Math.floor(options.expirationDate.getTime() / 1000);
 			}
-			const keyId = await jwkMemStore.insert(jwk);
-			const keyIdMemStore = new KeyIdMemStore();
-			const methodDigest = new MethodDigest(method);
 
-			await keyIdMemStore.insertKeyId(methodDigest, keyId);
-
-			const expirationDate =
-				Is.integer(expiresInMinutes) && expiresInMinutes > 0
-					? Timestamp.nowUTC().checkedAdd(Duration.minutes(expiresInMinutes))
-					: undefined;
-
-			const storage = new Storage(jwkMemStore, keyIdMemStore);
-			const presentationJwt = await issuerDocument.createPresentationJwt(
-				storage,
-				`#${method.id().fragment()?.toString()}`,
-				unsignedVp,
-				new JwsSignatureOptions(),
-				new JwtPresentationOptions({ expirationDate })
+			// Sign using vault connector - private key never leaves the vault
+			const presentationJwt = await JwtHelper.encodeWithSigner(
+				jwtHeader,
+				jwtPayload,
+				async (header, payload) =>
+					VaultConnectorHelper.jwtSigner(this._vaultConnector, keyId, header, payload)
 			);
-			const validatedCredential = new JwtPresentationValidator(new EdDSAJwsVerifier());
-			const decoded = validatedCredential.validate(
-				presentationJwt,
-				issuerDocument,
+
+			// Validate the presentation JWT
+			const validatedPresentation = new JwtPresentationValidator(new EdDSAJwsVerifier());
+			validatedPresentation.validate(
+				new Jwt(presentationJwt),
+				holderDocument,
 				new JwtPresentationValidationOptions()
 			);
 
+			verifiablePresentation.proof = await this.createProof(
+				controller,
+				verificationMethodId,
+				ProofTypes.DataIntegrityProof,
+				JsonLdHelper.toNodeObject(verifiablePresentation)
+			);
+
+			// Promote the proof's @context to the VP root so JSON-LD processors can resolve DataIntegrity terms
+			const proofContext = verifiablePresentation.proof["@context"];
+			if (!Is.empty(proofContext)) {
+				verifiablePresentation["@context"] = (JsonLdProcessor.combineContexts(
+					verifiablePresentation["@context"],
+					proofContext
+				) ?? verifiablePresentation["@context"]) as IDidVerifiablePresentationV1["@context"];
+				delete verifiablePresentation.proof["@context"];
+			}
+
 			return {
-				verifiablePresentation: decoded.presentation().toJSON() as IDidVerifiablePresentation,
-				jwt: presentationJwt.toString()
+				verifiablePresentation,
+				jwt: presentationJwt
 			};
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"createVerifiablePresentationFailed",
 				undefined,
 				Iota.extractPayloadError(error)
@@ -975,27 +1394,54 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Check a verifiable presentation is valid.
-	 * @param presentationJwt The presentation to verify.
+	 * @param presentation The presentation to verify.
 	 * @returns The presentation stored in the jwt and the revocation status.
 	 */
-	public async checkVerifiablePresentation(presentationJwt: string): Promise<{
+	public async checkVerifiablePresentation(
+		presentation: string | IDidVerifiablePresentation
+	): Promise<{
 		revoked: boolean;
 		verifiablePresentation?: IDidVerifiablePresentation;
 		issuers?: IDidDocument[];
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(presentationJwt), presentationJwt);
+		if (Is.object(presentation)) {
+			Guards.objectValue<IDidVerifiablePresentation>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(presentation),
+				presentation
+			);
+			Guards.objectValue(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(presentation.proof),
+				presentation.proof
+			);
+			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
+			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
+			Guards.objectValue(IotaIdentityConnector.CLASS_NAME, nameof(proof), proofEntry);
+			await this.verifyProof(JsonLdHelper.toNodeObject(doc), proofEntry);
+			return {
+				revoked: false,
+				verifiablePresentation: doc
+			};
+		}
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(presentation), presentation);
+		const presentationJwt = presentation;
 
 		try {
+			const iotaClient = Iota.createClient(this._config);
 			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				new IotaClient(this._config.clientOptions)
+				// @ts-expect-error IotaClient has a mismatch with the library types
+				iotaClient,
+				this._config?.identityPkgId
 			);
 			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(presentationJwt);
 			const holderId = JwtPresentationValidator.extractHolder(jwt);
-			const holderDocument = await resolver.resolve(holderId.toString());
+			const holderDid = this.stringifyIdentityValue(holderId);
+			const holderDocument = await resolver.resolve(holderDid);
 
 			if (Is.undefined(holderDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", holderId.toString());
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", holderDid);
 			}
 
 			const validatedCredential = new JwtPresentationValidator(new EdDSAJwsVerifier());
@@ -1004,11 +1450,11 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				holderDocument,
 				new JwtPresentationValidationOptions()
 			);
-			const presentation = decoded.presentation();
+			const decodedPresentation = decoded.presentation();
 
 			const credentialValidator = new JwtCredentialValidator(new EdDSAJwsVerifier());
 			const validationOptions = new JwtCredentialValidationOptions({
-				subjectHolderRelationship: [holderId.toString(), SubjectHolderRelationship.AlwaysSubject]
+				subjectHolderRelationship: [holderDid, SubjectHolderRelationship.AlwaysSubject]
 			});
 
 			const jwtCredentials: Jwt[] = decoded
@@ -1027,7 +1473,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			for (const jwtCredential of jwtCredentials) {
 				const issuer = JwtCredentialValidator.extractIssuerFromJwt(jwtCredential);
-				issuers.push(issuer.toString());
+				issuers.push(this.stringifyIdentityValue(issuer));
 			}
 
 			const resolvedIssuers = await resolver.resolveMultiple(issuers);
@@ -1052,18 +1498,18 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			return {
 				revoked: false,
-				verifiablePresentation: presentation.toJSON() as IDidVerifiablePresentation,
+				verifiablePresentation: decodedPresentation.toJSON() as IDidVerifiablePresentation,
 				issuers: jsonIssuers as IDidDocument[]
 			};
 		} catch (error) {
-			if (error instanceof Error && error.message.toLowerCase().includes("revoked")) {
+			if (BaseError.isErrorMessage(error, /revoked/i)) {
 				return {
 					revoked: true
 				};
 			}
 
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"checkingVerifiablePresentationFailed",
 				undefined,
 				Iota.extractPayloadError(error)
@@ -1078,6 +1524,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
 	 * @returns The proof.
+	 * @throws NotFoundError if the id can not be resolved.
+	 * @throws GeneralError if proof creation fails or the algorithm does not match the key type.
 	 */
 	public async createProof(
 		controller: string,
@@ -1085,56 +1533,71 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		proofType: ProofTypes,
 		unsecureDocument: IJsonLdNodeObject
 	): Promise<IProof> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.stringValue(this.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(verificationMethodId),
+			verificationMethodId
+		);
 		Guards.arrayOneOf<ProofTypes>(
-			this.CLASS_NAME,
+			IotaIdentityConnector.CLASS_NAME,
 			nameof(proofType),
 			proofType,
 			Object.values(ProofTypes)
 		);
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(unsecureDocument), unsecureDocument);
+		Guards.object<IJsonLdNodeObject>(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(unsecureDocument),
+			unsecureDocument
+		);
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
 			if (Is.empty(idParts.fragment)) {
-				throw new NotFoundError(this.CLASS_NAME, "missingDid", verificationMethodId);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"missingDid",
+					verificationMethodId
+				);
 			}
 
-			const identityClient = await this.getIdentityClient(controller);
+			const identityClient = await this.getIdentityClient();
 			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(document)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", idParts.id);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
 			const methods = document.methods();
-			const method = methods.find(m => m.id().toString() === verificationMethodId);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
+			);
 
 			if (!method) {
-				throw new GeneralError(this.CLASS_NAME, "methodMissing", { method: verificationMethodId });
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
+					method: verificationMethodId
+				});
 			}
 
-			const keyId = `${controller}/${idParts.fragment}`;
-			const verificationMethodKey = await this._vaultConnector.getKey(keyId);
+			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
+			const keyType = await this._vaultConnector.getKeyType(keyId);
 
-			if (Is.undefined(verificationMethodKey)) {
-				throw new GeneralError(this.CLASS_NAME, "privateKeyMissing", { keyId });
+			if (Is.undefined(keyType)) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "privateKeyMissing", { keyId });
 			}
 
 			const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
 
-			const jwk = await JwkHelper.fromEd25519Private(verificationMethodKey.privateKey);
-			const signedProof = await ProofHelper.createProof(
+			const signedProof = await ProofHelper.createProofWithSigner(
 				proofType,
 				unsecureDocument,
 				unsignedProof,
-				jwk
+				async (data, algorithm) => this.signWithVault(keyId, keyType, data, algorithm)
 			);
 			return signedProof;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"createProofFailed",
 				{ controller, verificationMethodId, proofType },
 				Iota.extractPayloadError(error)
@@ -1149,49 +1612,97 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @returns True if the proof is verified.
 	 */
 	public async verifyProof(document: IJsonLdNodeObject, proof: IProof): Promise<boolean> {
-		Guards.object<IJsonLdNodeObject>(this.CLASS_NAME, nameof(document), document);
-		Guards.object<IProof>(this.CLASS_NAME, nameof(proof), proof);
-		Guards.stringValue(this.CLASS_NAME, nameof(proof.verificationMethod), proof.verificationMethod);
+		Guards.object<IJsonLdNodeObject>(IotaIdentityConnector.CLASS_NAME, nameof(document), document);
+		Guards.object<IProof>(IotaIdentityConnector.CLASS_NAME, nameof(proof), proof);
+		Guards.stringValue(
+			IotaIdentityConnector.CLASS_NAME,
+			nameof(proof.verificationMethod),
+			proof.verificationMethod
+		);
 
 		try {
 			const idParts = DocumentHelper.parseId(proof.verificationMethod);
 
 			if (Is.empty(idParts.fragment)) {
-				throw new NotFoundError(this.CLASS_NAME, "missingDid", proof.verificationMethod);
+				throw new NotFoundError(
+					IotaIdentityConnector.CLASS_NAME,
+					"missingDid",
+					proof.verificationMethod
+				);
 			}
 
 			const identityClient = await this.getIdentityClient();
 			const resolvedDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
 
 			if (Is.undefined(resolvedDocument)) {
-				throw new NotFoundError(this.CLASS_NAME, "documentNotFound", idParts.id);
+				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
 			}
 
 			const methods = resolvedDocument.methods();
-			const method = methods.find(m => m.id().toString() === proof.verificationMethod);
+			const method = methods.find(
+				m => this.stringifyIdentityValue(m.id()) === proof.verificationMethod
+			);
 
 			if (!method) {
-				throw new GeneralError(this.CLASS_NAME, "methodMissing", {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
 					method: proof.verificationMethod
 				});
 			}
 
 			const didMethod = method.toJSON() as IDidDocumentVerificationMethod;
 			if (Is.undefined(didMethod.publicKeyJwk)) {
-				throw new GeneralError(this.CLASS_NAME, "publicKeyJwkMethodMissing", {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "publicKeyJwkMethodMissing", {
 					method: proof.verificationMethod
 				});
 			}
 
-			return ProofHelper.verifyProof(document, proof, didMethod.publicKeyJwk);
+			const result = await ProofHelper.verifyProof(document, proof, didMethod.publicKeyJwk);
+			return result;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"verifyProofFailed",
 				undefined,
 				Iota.extractPayloadError(error)
 			);
 		}
+	}
+
+	/**
+	 * Signs data using the vault connector with algorithm validation.
+	 * @param keyId The vault key identifier.
+	 * @param keyType The type of the key.
+	 * @param data The data to sign.
+	 * @param algorithm The signing algorithm.
+	 * @returns The signature bytes.
+	 * @throws GeneralError if algorithm doesn't match key type.
+	 * @internal
+	 */
+	private async signWithVault(
+		keyId: string,
+		keyType: VaultKeyType,
+		data: Uint8Array,
+		algorithm: string
+	): Promise<Uint8Array> {
+		if (algorithm === JwsAlgorithms.EdDSA && keyType !== VaultKeyType.Ed25519) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "algorithmKeyTypeMismatch", {
+				algorithm,
+				expectedKeyType: VaultKeyType.Ed25519,
+				actualKeyType: keyType,
+				keyId
+			});
+		}
+		return this._vaultConnector.sign(keyId, data);
+	}
+
+	/**
+	 * Stringify identity-wasm values with an explicit toString contract.
+	 * @param value The identity value to stringify.
+	 * @returns The string representation.
+	 * @internal
+	 */
+	private stringifyIdentityValue(value: unknown): string {
+		return (value as { toString: () => string }).toString();
 	}
 
 	/**
@@ -1201,8 +1712,11 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @internal
 	 */
 	private async getIdentityClient(controller?: string): Promise<IdentityClient> {
+		const iotaClient = Iota.createClient(this._config);
 		const identityClientReadOnly = await IdentityClientReadOnly.create(
-			new IotaClient(this._config.clientOptions)
+			// @ts-expect-error IotaClient has a mismatch with the library types
+			iotaClient,
+			this._config?.identityPkgId
 		);
 		if (Is.undefined(controller)) {
 			const jwkMemStore = new JwkMemStore();
@@ -1222,47 +1736,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			return IdentityClient.create(identityClientReadOnly, signer);
 		}
 
-		const seed = await Iota.getSeed(this._config, this._vaultConnector, controller);
-
-		const kp = Iota.getKeyPair(
-			seed,
-			this._config.coinType ?? Iota.DEFAULT_COIN_TYPE,
-			0,
-			this._walletAddressIndex,
-			false
+		const signer = await VaultJwtSigner.create(
+			this._vaultConnector,
+			this._config,
+			controller,
+			this._walletAccountIndex,
+			this._walletAddressIndex
 		);
-
-		const jwkMemStore = new JwkMemStore();
-		const keyIdMemStore = new KeyIdMemStore();
-		const storage = new Storage(jwkMemStore, keyIdMemStore);
-
-		const jwkParams: IJwkParams = {
-			kty: JwkType.Okp,
-			crv: "Ed25519",
-			alg: JwsAlgorithm.EdDSA,
-			x: Converter.bytesToBase64Url(kp.publicKey),
-			d: Converter.bytesToBase64Url(kp.privateKey)
-		};
-
-		const jwk = new Jwk(jwkParams);
-		const publicKeyJwk = jwk.toPublic();
-		if (!publicKeyJwk) {
-			throw new GeneralError(this.CLASS_NAME, "publicKeyJwkMissing", {
-				jwk: jwk.kid()
-			});
-		}
-		const keyId = await jwkMemStore.insert(jwk);
-		const signer = new StorageSigner(storage, keyId, publicKeyJwk);
 		return IdentityClient.create(identityClientReadOnly, signer);
-	}
-
-	/**
-	 * Get the IOTA client for transaction operations.
-	 * @returns The IOTA client.
-	 * @internal
-	 */
-	private getIotaClient(): IotaClient {
-		return Iota.createClient(this._config);
 	}
 
 	/**
@@ -1274,10 +1755,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @internal
 	 */
 	private extractDidFromExecutionResult(
-		executionResult: IIdentityTransactionResult,
+		executionResult: TransactionOutput<Transaction<OnChainIdentity>>,
 		networkHrp: string
 	): IotaDID {
-		if (Is.function(executionResult.output?.didDocument)) {
+		if (Is.function(executionResult.output?.didDocument?.bind(executionResult.output))) {
 			return executionResult.output.didDocument().id();
 		}
 
@@ -1293,7 +1774,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 		}
 
-		throw new GeneralError(this.CLASS_NAME, "didExtractionFailed", {
+		throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "didExtractionFailed", {
 			resultType: typeof executionResult,
 			availableKeys: Object.keys(executionResult ?? {}),
 			hasOutput: Is.object(executionResult.output),
@@ -1306,7 +1787,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	/**
 	 * Attempts to extract DID from transaction object changes.
 	 * @param objectChanges The object changes from the transaction response.
-	 * @param transactionDigest The transaction digest for logging.
+	 * @param networkHrp The network HRP for the DID.
 	 * @returns The DID if found, undefined otherwise.
 	 * @internal
 	 */
@@ -1366,18 +1847,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
-	 * Extract alias id from document id.
-	 * @param documentId The id of the document.
-	 * @returns The alias id.
-	 * @internal
-	 */
-	private extractAliasId(documentId: string): string {
-		const didUrn = Urn.fromValidString(documentId);
-		const didParts = didUrn.parts();
-		return didParts[didParts.length - 1];
-	}
-
-	/**
 	 * Execute identity transaction with conditional gas station support.
 	 * @param controller The controller identity.
 	 * @param transactionBuilder The finished transaction builder from createIdentity().finish().
@@ -1386,10 +1855,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	private async executeIdentityTransaction(
 		controller: string,
-		transactionBuilder: TransactionBuilder<CreateIdentity>
-	): Promise<IIdentityTransactionResult> {
+		transactionBuilder: TransactionBuilder<Transaction<unknown>>
+	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		if (Is.object(this._config.gasStation)) {
-			return this.executeIdentityTransactionWithGasStation(controller, transactionBuilder);
+			return this.executeGasStationTransaction(controller, transactionBuilder, "identity");
 		}
 
 		const identityClient = await this.getIdentityClient(controller);
@@ -1400,7 +1869,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const [txBytes, signatures, createIdentity] = buildResult;
 
 			if (Is.arrayValue(signatures)) {
-				const iotaClient = this.getIotaClient();
+				const iotaClient = Iota.createClient(this._config);
 
 				const txResponse = await iotaClient.executeTransactionBlock({
 					transactionBlock: txBytes,
@@ -1420,7 +1889,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 				if (!confirmedTx) {
 					throw new GeneralError(
-						this.CLASS_NAME,
+						IotaIdentityConnector.CLASS_NAME,
 						"transactionConfirmationTimeout",
 						undefined,
 						txResponse.digest
@@ -1433,12 +1902,12 @@ export class IotaIdentityConnector implements IIdentityConnector {
 					networkHrp: identityClient.network()
 				};
 
-				return result as unknown as IIdentityTransactionResult;
+				return result as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 			}
 		}
 
 		throw new GeneralError(
-			this.CLASS_NAME,
+			IotaIdentityConnector.CLASS_NAME,
 			"transactionBuildFailed",
 			{
 				buildResultType: typeof buildResult,
@@ -1448,41 +1917,6 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			},
 			Iota.extractPayloadError(buildResult)
 		);
-	}
-
-	/**
-	 * Execute identity transaction with gas station sponsoring.
-	 * @param controller The controller identity.
-	 * @param transactionBuilder The finished transaction builder.
-	 * @returns The execution result.
-	 * @internal
-	 */
-	private async executeIdentityTransactionWithGasStation(
-		controller: string,
-		transactionBuilder: TransactionBuilder<CreateIdentity>
-	): Promise<IIdentityTransactionResult> {
-		return this.executeGasStationTransaction(controller, transactionBuilder, "identity");
-	}
-
-	/**
-	 * Get user address for the given controller.
-	 * @param controller The controller to get the address for.
-	 * @returns The user address.
-	 * @internal
-	 */
-	private async getUserAddress(controller: string): Promise<string> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-
-		const seed = await Iota.getSeed(this._config, this._vaultConnector, controller);
-		const addresses = Iota.getAddresses(
-			seed,
-			this._config.coinType ?? Iota.DEFAULT_COIN_TYPE,
-			0,
-			this._walletAddressIndex,
-			1,
-			false
-		);
-		return addresses[0];
 	}
 
 	/**
@@ -1499,36 +1933,24 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		identityOnChain: OnChainIdentity,
 		document: IotaDocument,
 		controllerToken: ControllerToken
-	): Promise<IIdentityTransactionResult> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.object(this.CLASS_NAME, nameof(identityOnChain), identityOnChain);
-		Guards.object(this.CLASS_NAME, nameof(document), document);
-		Guards.object(this.CLASS_NAME, nameof(controllerToken), controllerToken);
+	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(identityOnChain), identityOnChain);
+		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(document), document);
+		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(controllerToken), controllerToken);
 
 		const updateBuilder = identityOnChain
 			.updateDidDocument(document.clone(), controllerToken)
 			.withGasBudget(BigInt(this._gasBudget));
 
 		if (Is.object(this._config.gasStation)) {
-			return this.executeDocumentUpdateWithGasStation(controller, updateBuilder);
+			return this.executeGasStationTransaction(controller, updateBuilder, "update");
 		}
 
 		const identityClient = await this.getIdentityClient(controller);
-		return updateBuilder.buildAndExecute(identityClient) as unknown as IIdentityTransactionResult;
-	}
-
-	/**
-	 * Execute document update transaction with gas station sponsoring.
-	 * @param controller The controller identity.
-	 * @param updateBuilder The document update builder.
-	 * @returns The execution result.
-	 * @internal
-	 */
-	private async executeDocumentUpdateWithGasStation(
-		controller: string,
-		updateBuilder: TransactionBuilder<CreateProposal<UpdateDid>>
-	): Promise<IIdentityTransactionResult> {
-		return this.executeGasStationTransaction(controller, updateBuilder, "update");
+		return updateBuilder.buildAndExecute(identityClient) as unknown as TransactionOutput<
+			Transaction<OnChainIdentity>
+		>;
 	}
 
 	/**
@@ -1541,19 +1963,25 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 */
 	private async executeGasStationTransaction(
 		controller: string,
-		builder: TransactionBuilder<CreateIdentity> | TransactionBuilder<CreateProposal<UpdateDid>>,
+		builder: TransactionBuilder<Transaction<unknown>>,
 		operationType: "identity" | "update"
-	): Promise<IIdentityTransactionResult> {
-		Guards.stringValue(this.CLASS_NAME, nameof(controller), controller);
-		Guards.object(this.CLASS_NAME, nameof(builder), builder);
+	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
+		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(builder), builder);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 
-			// Get user address for gas station, as the user remains the sender
-			const userAddress = await this.getUserAddress(controller);
+			// Get address for gas station, as the controller remains the sender
+			const controllerAddress = await Iota.getAddress(
+				this._vaultConnector,
+				this._config,
+				controller,
+				this._walletAccountIndex,
+				this._walletAddressIndex
+			);
 
-			const gasReservation = await Iota.reserveGas(this._config, this._gasBudget);
+			const gasReservation = await Iota.reserveGas(this._config);
 
 			const gasCoinsWithStringVersions = gasReservation.gasCoins.map(coin => ({
 				objectId: coin.objectId,
@@ -1562,7 +1990,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}));
 
 			const gasConfiguredBuilder = builder
-				.withSender(userAddress)
+				.withSender(controllerAddress)
 				.withGasBudget(BigInt(this._gasBudget))
 				.withGasOwner(gasReservation.sponsorAddress)
 				.withGasPayment(gasCoinsWithStringVersions)
@@ -1572,7 +2000,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			if (Is.arrayValue(buildResult) && buildResult.length === 3 && Is.uint8Array(buildResult[0])) {
 				const [txBytes, signatures] = buildResult;
-				const iotaClient = this.getIotaClient();
+				const iotaClient = Iota.createClient(this._config);
 
 				const confirmedResponse = await Iota.executeAndConfirmGasStationTransaction(
 					this._config,
@@ -1596,14 +2024,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 						response: confirmedResponse,
 						networkHrp: identityClient.network()
 					};
-					return result as unknown as IIdentityTransactionResult;
+					return result as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 				}
 
-				return confirmedResponse as unknown as IIdentityTransactionResult;
+				return confirmedResponse as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 			}
 
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				"gasStationTransactionBuildFailed",
 				{
 					buildResultType: typeof buildResult,
@@ -1619,7 +2047,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 					: "gasStationDocumentUpdateFailed";
 
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IotaIdentityConnector.CLASS_NAME,
 				errorMessage,
 				undefined,
 				Iota.extractPayloadError(error)

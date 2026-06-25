@@ -6,10 +6,12 @@ import type {
 	IRestRoute,
 	ITag
 } from "@twin.org/api-models";
+import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import {
 	DocumentHelper,
-	type IIdentityRemoveRequest,
+	type IIdentityAlsoKnownAsCreateRequest,
+	type IIdentityAlsoKnownAsRemoveRequest,
 	type IIdentityComponent,
 	type IIdentityCreateRequest,
 	type IIdentityCreateResponse,
@@ -17,6 +19,7 @@ import {
 	type IIdentityProofCreateResponse,
 	type IIdentityProofVerifyRequest,
 	type IIdentityProofVerifyResponse,
+	type IIdentityRemoveRequest,
 	type IIdentityServiceCreateRequest,
 	type IIdentityServiceCreateResponse,
 	type IIdentityServiceRemoveRequest,
@@ -25,6 +28,7 @@ import {
 	type IIdentityVerifiableCredentialRevokeRequest,
 	type IIdentityVerifiableCredentialUnrevokeRequest,
 	type IIdentityVerifiableCredentialVerifyRequest,
+	type IIdentityVerifiableCredentialVerifyDocumentRequest,
 	type IIdentityVerifiableCredentialVerifyResponse,
 	type IIdentityVerifiablePresentationCreateRequest,
 	type IIdentityVerifiablePresentationCreateResponse,
@@ -32,10 +36,15 @@ import {
 	type IIdentityVerifiablePresentationVerifyResponse,
 	type IIdentityVerificationMethodCreateRequest,
 	type IIdentityVerificationMethodCreateResponse,
-	type IIdentityVerificationMethodRemoveRequest
+	type IIdentityVerificationMethodRemoveRequest,
+	type IIdentityVerifiablePresentationVerifyDocumentRequest
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import { DidContexts } from "@twin.org/standards-w3c-did";
+import {
+	DidContexts,
+	type IDidVerifiablePresentation,
+	type IDidVerifiableCredential
+} from "@twin.org/standards-w3c-did";
 import { HttpStatusCode } from "@twin.org/web";
 
 /**
@@ -319,6 +328,82 @@ export function generateRestRoutesIdentity(
 			]
 		};
 
+	const identityAlsoKnownAsCreateRoute: IRestRoute<
+		IIdentityAlsoKnownAsCreateRequest,
+		INoContentResponse
+	> = {
+		operationId: "identityAlsoKnownAsCreate",
+		summary: "Add an alias to the alsoKnownAs property on the document",
+		tag: tagsIdentity[0].name,
+		method: "POST",
+		path: `${baseRouteName}/:identity/alias`,
+		handler: async (httpRequestContext, request) =>
+			identityAlsoKnownAsCreate(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityAlsoKnownAsCreateRequest>(),
+			examples: [
+				{
+					id: "identityAlsoKnownAsCreateRequestExample",
+					request: {
+						pathParams: {
+							identity:
+								"did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a"
+						},
+						body: {
+							alias: "did:example:123"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>()
+			}
+		]
+	};
+
+	const identityAlsoKnownAsRemoveRoute: IRestRoute<
+		IIdentityAlsoKnownAsRemoveRequest,
+		INoContentResponse
+	> = {
+		operationId: "identityAlsoKnownAsRemove",
+		summary: "Remove an alias from the alsoKnownAs property on the document",
+		tag: tagsIdentity[0].name,
+		method: "DELETE",
+		path: `${baseRouteName}/:identity/alias/:alias`,
+		handler: async (httpRequestContext, request) =>
+			identityAlsoKnownAsRemove(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityAlsoKnownAsRemoveRequest>(),
+			examples: [
+				{
+					id: "identityAlsoKnownAsRemoveRequestExample",
+					request: {
+						pathParams: {
+							identity:
+								"did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a",
+							alias: "did:example:123"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>(),
+				examples: [
+					{
+						id: "identityAlsoKnownAsRemoveResponseExample",
+						response: {
+							statusCode: HttpStatusCode.noContent
+						}
+					}
+				]
+			}
+		]
+	};
+
 	const identityVerifiableCredentialCreateRoute: IRestRoute<
 		IIdentityVerifiableCredentialCreateRequest,
 		IIdentityVerifiableCredentialCreateResponse
@@ -327,7 +412,7 @@ export function generateRestRoutesIdentity(
 		summary: "Create an identity verifiable credential",
 		tag: tagsIdentity[0].name,
 		method: "POST",
-		path: `${baseRouteName}/:identity/verifiable-credential`,
+		path: `${baseRouteName}/:identity/verifiable-credential/:verificationMethodId`,
 		handler: async (httpRequestContext, request) =>
 			identityVerifiableCredentialCreate(httpRequestContext, componentName, request),
 		requestType: {
@@ -364,7 +449,7 @@ export function generateRestRoutesIdentity(
 						response: {
 							body: {
 								verifiableCredential: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "https://example.com/credentials/3732",
 									type: ["VerifiableCredential", "Person"],
 									credentialSubject: {
@@ -423,7 +508,7 @@ export function generateRestRoutesIdentity(
 							body: {
 								revoked: false,
 								verifiableCredential: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "https://example.com/credentials/3732",
 									type: ["VerifiableCredential", "Person"],
 									credentialSubject: {
@@ -444,8 +529,79 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
+	};
+
+	const identityVerifiableCredentialVerifyDocumentRoute: IRestRoute<
+		IIdentityVerifiableCredentialVerifyDocumentRequest,
+		IIdentityVerifiableCredentialVerifyResponse
+	> = {
+		operationId: "identityVerifiableCredentialVerifyDocument",
+		summary: "Verify an identity verifiable credential document",
+		tag: tagsIdentity[0].name,
+		method: "POST",
+		path: `${baseRouteName}/verifiable-credential/verify/document`,
+		handler: async (httpRequestContext, request) =>
+			identityVerifiableCredentialVerifyDocument(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityVerifiableCredentialVerifyDocumentRequest>(),
+			examples: [
+				{
+					id: "identityVerifiableCredentialVerifyDocumentRequestExample",
+					request: {
+						body: {
+							"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+							id: "https://example.com/credentials/3732",
+							type: ["VerifiableCredential", "Person"],
+							credentialSubject: {
+								id: "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+								name: "Jane Doe"
+							},
+							issuer:
+								"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+							issuanceDate: "2025-01-24T09:21:51.500Z",
+							credentialStatus: {
+								id: "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+								type: "BitstringStatusList",
+								revocationBitmapIndex: "5"
+							}
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<IIdentityVerifiableCredentialVerifyResponse>(),
+				examples: [
+					{
+						id: "identityVerifiableCredentialVerifyResponseExample",
+						response: {
+							body: {
+								revoked: false,
+								verifiableCredential: {
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+									id: "https://example.com/credentials/3732",
+									type: ["VerifiableCredential", "Person"],
+									credentialSubject: {
+										id: "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+										name: "Jane Doe"
+									},
+									issuer:
+										"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+									issuanceDate: "2025-01-24T09:21:51.500Z",
+									credentialStatus: {
+										id: "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+										type: "BitstringStatusList",
+										revocationBitmapIndex: "5"
+									}
+								}
+							}
+						}
+					}
+				]
+			}
+		]
 	};
 
 	const identityVerifiableCredentialRevokeRoute: IRestRoute<
@@ -468,7 +624,7 @@ export function generateRestRoutesIdentity(
 						pathParams: {
 							identity:
 								"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
-							revocationIndex: 5
+							revocationIndex: "5"
 						}
 					}
 				}
@@ -509,7 +665,7 @@ export function generateRestRoutesIdentity(
 						pathParams: {
 							identity:
 								"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
-							revocationIndex: 5
+							revocationIndex: "5"
 						}
 					}
 				}
@@ -538,7 +694,7 @@ export function generateRestRoutesIdentity(
 		summary: "Create an identity verifiable presentation",
 		tag: tagsIdentity[0].name,
 		method: "POST",
-		path: `${baseRouteName}/:identity/verifiable-presentation`,
+		path: `${baseRouteName}/:identity/verifiable-presentation/:verificationMethodId`,
 		handler: async (httpRequestContext, request) =>
 			identityVerifiablePresentationCreate(httpRequestContext, componentName, request),
 		requestType: {
@@ -569,7 +725,7 @@ export function generateRestRoutesIdentity(
 						response: {
 							body: {
 								verifiablePresentation: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "presentationId",
 									type: ["VerifiablePresentation", "Person"],
 									verifiableCredential: ["eyJraWQiOi...D1Z3AQ"],
@@ -619,7 +775,7 @@ export function generateRestRoutesIdentity(
 							body: {
 								revoked: false,
 								verifiablePresentation: {
-									"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
 									id: "presentationId",
 									type: ["VerifiablePresentation", "Person"],
 									verifiableCredential: ["eyJraWQiOi...D1Z3AQ"],
@@ -631,8 +787,77 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
+	};
+
+	const identityVerifiablePresentationVerifyDocumentRoute: IRestRoute<
+		IIdentityVerifiablePresentationVerifyDocumentRequest,
+		IIdentityVerifiablePresentationVerifyResponse
+	> = {
+		operationId: "identityVerifiablePresentationVerifyDocument",
+		summary: "Verify an identity verifiable presentation document",
+		tag: tagsIdentity[0].name,
+		method: "POST",
+		path: `${baseRouteName}/verifiable-presentation/verify/document`,
+		handler: async (httpRequestContext, request) =>
+			identityVerifiablePresentationVerifyDocument(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityVerifiablePresentationVerifyDocumentRequest>(),
+			examples: [
+				{
+					id: "identityVerifiablePresentationVerifyDocumentRequestExample",
+					request: {
+						body: {
+							"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+							id: "https://example.com/credentials/3732",
+							type: ["VerifiableCredential", "Person"],
+							verifiableCredential: [
+								{
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+									id: "https://example.com/credentials/3732",
+									type: ["VerifiableCredential", "Person"],
+									credentialSubject: {
+										id: "did:entity-storage:0x4757993355b921a8229bd780f30921b6a0216a72e6c3f37a09d13b8426a17def",
+										name: "Jane Doe"
+									},
+									issuer:
+										"did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a",
+									issuanceDate: "2025-01-24T09:21:51.500Z",
+									credentialStatus: {
+										id: "did:entity-storage:0x879c31386f992cfa29b77fe31e37256d69f6a57653cee4eb60ad4c4613c5515a#revocation",
+										type: "BitstringStatusList",
+										revocationBitmapIndex: "5"
+									}
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<IIdentityVerifiablePresentationVerifyResponse>(),
+				examples: [
+					{
+						id: "identityVerifiablePresentationVerifyResponseExample",
+						response: {
+							body: {
+								revoked: false,
+								verifiablePresentation: {
+									"@context": ["https://www.w3.org/2018/credentials/v1", "https://schema.org"],
+									id: "presentationId",
+									type: ["VerifiablePresentation", "Person"],
+									verifiableCredential: ["eyJraWQiOi...D1Z3AQ"],
+									holder:
+										"did:entity-storage:0xcea318e06e89f3fb4048160770effd84d0cfa5801fee13dfa6f9413a00429cec"
+								}
+							}
+						}
+					}
+				]
+			}
+		]
 	};
 
 	const identityProofCreateRoute: IRestRoute<
@@ -643,7 +868,7 @@ export function generateRestRoutesIdentity(
 		summary: "Create an identity proof",
 		tag: tagsIdentity[0].name,
 		method: "POST",
-		path: `${baseRouteName}/:identity/proof`,
+		path: `${baseRouteName}/:identity/proof/:verificationMethodId`,
 		handler: async (httpRequestContext, request) =>
 			identityProofCreate(httpRequestContext, componentName, request),
 		requestType: {
@@ -661,8 +886,8 @@ export function generateRestRoutesIdentity(
 							proofType: "DataIntegrityProof",
 							document: {
 								"@context": [
-									"https://www.w3.org/ns/credentials/v2",
-									"https://www.w3.org/ns/credentials/examples/v2"
+									"https://www.w3.org/2018/credentials/v1",
+									"https://www.w3.org/2018/credentials/examples/v1"
 								],
 								id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 								type: ["VerifiableCredential", "AlumniCredential"],
@@ -689,7 +914,7 @@ export function generateRestRoutesIdentity(
 						response: {
 							body: {
 								"@context": [
-									"https://www.w3.org/ns/credentials/v2",
+									"https://w3id.org/security/data-integrity/v2",
 									"https://www.w3.org/ns/credentials/examples/v2"
 								],
 								type: "DataIntegrityProof",
@@ -728,8 +953,8 @@ export function generateRestRoutesIdentity(
 						body: {
 							document: {
 								"@context": [
-									"https://www.w3.org/ns/credentials/v2",
-									"https://www.w3.org/ns/credentials/examples/v2"
+									"https://www.w3.org/2018/credentials/v1",
+									"https://www.w3.org/2018/credentials/examples/v1"
 								],
 								id: "urn:uuid:58172aac-d8ba-11ed-83dd-0b3aef56cc33",
 								type: ["VerifiableCredential", "AlumniCredential"],
@@ -743,7 +968,7 @@ export function generateRestRoutesIdentity(
 								}
 							},
 							proof: {
-								"@context": "https://www.w3.org/ns/credentials/v2",
+								"@context": "https://w3id.org/security/data-integrity/v2",
 								type: "DataIntegrityProof",
 								cryptosuite: "eddsa-jcs-2022",
 								created: "2025-01-24T11:32:13.106Z",
@@ -772,8 +997,7 @@ export function generateRestRoutesIdentity(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	return [
@@ -783,11 +1007,15 @@ export function generateRestRoutesIdentity(
 		identityVerificationMethodRemoveRoute,
 		identityServiceCreateRoute,
 		identityServiceRemoveRoute,
+		identityAlsoKnownAsCreateRoute,
+		identityAlsoKnownAsRemoveRoute,
 		identityVerifiableCredentialCreateRoute,
+		identityVerifiableCredentialVerifyDocumentRoute,
 		identityVerifiableCredentialVerifyRoute,
 		identityVerifiableCredentialRevokeRoute,
 		identityVerifiableCredentialUnrevokeRoute,
 		identityVerifiablePresentationCreateRoute,
+		identityVerifiablePresentationVerifyDocumentRoute,
 		identityVerifiablePresentationVerifyRoute,
 		identityProofCreateRoute,
 		identityProofVerifyRoute
@@ -807,17 +1035,15 @@ export async function identityCreate(
 	request: IIdentityCreateRequest
 ): Promise<IIdentityCreateResponse> {
 	Guards.object<IIdentityCreateRequest>(ROUTES_SOURCE, nameof(request), request);
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.identityCreate(
 		request.body?.namespace,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -843,15 +1069,15 @@ export async function identityRemove(
 		nameof(request.pathParams),
 		request.pathParams
 	);
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
-	await component.identityRemove(request.pathParams.identity, httpRequestContext.userIdentity);
+	await component.identityRemove(
+		request.pathParams.identity,
+		contextIds[ContextIdKeys.Organization]
+	);
 
 	return {
 		statusCode: HttpStatusCode.noContent
@@ -870,11 +1096,6 @@ export async function identityVerificationMethodCreate(
 	componentName: string,
 	request: IIdentityVerificationMethodCreateRequest
 ): Promise<IIdentityVerificationMethodCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerificationMethodCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityVerificationMethodCreateRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -887,13 +1108,16 @@ export async function identityVerificationMethodCreate(
 		request.pathParams.identity
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verificationMethodCreate(
 		request.pathParams.identity,
 		request.body.verificationMethodType,
 		request.body.verificationMethodId,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -913,11 +1137,6 @@ export async function identityVerificationMethodRemove(
 	componentName: string,
 	request: IIdentityVerificationMethodRemoveRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerificationMethodRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityVerificationMethodRemoveRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -935,11 +1154,14 @@ export async function identityVerificationMethodRemove(
 		request.pathParams.verificationMethodId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.verificationMethodRemove(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -959,11 +1181,6 @@ export async function identityServiceCreate(
 	componentName: string,
 	request: IIdentityServiceCreateRequest
 ): Promise<IIdentityServiceCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityServiceCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityServiceCreateRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -976,6 +1193,9 @@ export async function identityServiceCreate(
 		request.pathParams.identity
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.serviceCreate(
@@ -983,7 +1203,7 @@ export async function identityServiceCreate(
 		request.body.serviceId,
 		request.body.type,
 		request.body.endpoint,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1003,11 +1223,6 @@ export async function identityServiceRemove(
 	componentName: string,
 	request: IIdentityServiceRemoveRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityServiceRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityServiceRemoveRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -1025,11 +1240,95 @@ export async function identityServiceRemove(
 		request.pathParams.serviceId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.serviceRemove(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.serviceId),
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
+	);
+
+	return {
+		statusCode: HttpStatusCode.noContent
+	};
+}
+
+/**
+ * Create an identity alias.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityAlsoKnownAsCreate(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityAlsoKnownAsCreateRequest
+): Promise<INoContentResponse> {
+	Guards.object<IIdentityAlsoKnownAsCreateRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.object<IIdentityAlsoKnownAsCreateRequest["pathParams"]>(
+		ROUTES_SOURCE,
+		nameof(request.pathParams),
+		request.pathParams
+	);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams.identity),
+		request.pathParams.identity
+	);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	await component.alsoKnownAsAdd(
+		request.pathParams.identity,
+		request.body.alias,
+		contextIds[ContextIdKeys.Organization]
+	);
+
+	return {
+		statusCode: HttpStatusCode.noContent
+	};
+}
+
+/**
+ * Remove an identity alias.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityAlsoKnownAsRemove(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityAlsoKnownAsRemoveRequest
+): Promise<INoContentResponse> {
+	Guards.object<IIdentityAlsoKnownAsRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.object<IIdentityAlsoKnownAsRemoveRequest["pathParams"]>(
+		ROUTES_SOURCE,
+		nameof(request.pathParams),
+		request.pathParams
+	);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams.identity),
+		request.pathParams.identity
+	);
+	Guards.stringValue(ROUTES_SOURCE, nameof(request.pathParams.alias), request.pathParams.alias);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	await component.alsoKnownAsRemove(
+		request.pathParams.identity,
+		request.pathParams.alias,
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1049,11 +1348,6 @@ export async function identityVerifiableCredentialCreate(
 	componentName: string,
 	request: IIdentityVerifiableCredentialCreateRequest
 ): Promise<IIdentityVerifiableCredentialCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiableCredentialCreateRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1075,14 +1369,22 @@ export async function identityVerifiableCredentialCreate(
 		request.pathParams.verificationMethodId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verifiableCredentialCreate(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
 		request.body.credentialId,
 		request.body.subject,
-		request.body.revocationIndex,
-		httpRequestContext.userIdentity
+		{
+			revocationIndex: request.body.revocationIndex,
+			expirationDate: Coerce.dateTime(request.body.expirationDate),
+			jwtHeaderFields: request.body.jwtHeaderFields,
+			jwtPayloadFields: request.body.jwtPayloadFields
+		},
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1102,21 +1404,55 @@ export async function identityVerifiableCredentialVerify(
 	componentName: string,
 	request: IIdentityVerifiableCredentialVerifyRequest
 ): Promise<IIdentityVerifiableCredentialVerifyResponse> {
-	Guards.object<IIdentityVerifiableCredentialVerifyRequest>(
+	Guards.object<IIdentityVerifiableCredentialVerifyDocumentRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
 		request
 	);
+
 	Guards.object<IIdentityVerifiableCredentialVerifyRequest["query"]>(
 		ROUTES_SOURCE,
 		nameof(request.query),
 		request.query
 	);
-	Guards.stringValue(ROUTES_SOURCE, nameof(request.query.jwt), request.query.jwt);
 
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
-	const result = await component.verifiableCredentialVerify(request.query.jwt);
+	const result = await component.verifiableCredentialVerify(request.query?.jwt);
+
+	return {
+		body: result
+	};
+}
+
+/**
+ * Verify a verifiable credential document.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityVerifiableCredentialVerifyDocument(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityVerifiableCredentialVerifyDocumentRequest
+): Promise<IIdentityVerifiableCredentialVerifyResponse> {
+	Guards.object<IIdentityVerifiableCredentialVerifyDocumentRequest>(
+		ROUTES_SOURCE,
+		nameof(request),
+		request
+	);
+
+	Guards.object<IIdentityVerifiableCredentialVerifyDocumentRequest["body"]>(
+		ROUTES_SOURCE,
+		nameof(request.body),
+		request.body
+	);
+	Guards.object<IDidVerifiableCredential>(ROUTES_SOURCE, nameof(request.body), request.body);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	const result = await component.verifiableCredentialVerify(request.body);
 
 	return {
 		body: result
@@ -1135,11 +1471,6 @@ export async function identityVerifiableCredentialRevoke(
 	componentName: string,
 	request: IIdentityVerifiableCredentialRevokeRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiableCredentialRevokeRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1159,12 +1490,15 @@ export async function identityVerifiableCredentialRevoke(
 	const revocationIndex = Coerce.number(request.pathParams.revocationIndex);
 	Guards.integer(ROUTES_SOURCE, nameof(request.pathParams.revocationIndex), revocationIndex);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.verifiableCredentialRevoke(
 		request.pathParams.identity,
 		revocationIndex,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1184,11 +1518,6 @@ export async function identityVerifiableCredentialUnrevoke(
 	componentName: string,
 	request: IIdentityVerifiableCredentialUnrevokeRequest
 ): Promise<INoContentResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiableCredentialUnrevokeRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1208,12 +1537,15 @@ export async function identityVerifiableCredentialUnrevoke(
 	const revocationIndex = Coerce.number(request.pathParams.revocationIndex);
 	Guards.integer(ROUTES_SOURCE, nameof(request.pathParams.revocationIndex), revocationIndex);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	await component.verifiableCredentialUnrevoke(
 		request.pathParams.identity,
 		revocationIndex,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1233,11 +1565,6 @@ export async function identityVerifiablePresentationCreate(
 	componentName: string,
 	request: IIdentityVerifiablePresentationCreateRequest
 ): Promise<IIdentityVerifiablePresentationCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityVerifiablePresentationCreateRequest>(
 		ROUTES_SOURCE,
 		nameof(request),
@@ -1259,6 +1586,9 @@ export async function identityVerifiablePresentationCreate(
 		request.pathParams.verificationMethodId
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.verifiablePresentationCreate(
@@ -1267,8 +1597,12 @@ export async function identityVerifiablePresentationCreate(
 		request.body.contexts,
 		request.body.types,
 		request.body.verifiableCredentials,
-		request.body.expiresInMinutes,
-		httpRequestContext.userIdentity
+		{
+			expirationDate: Coerce.dateTime(request.body.expirationDate),
+			jwtHeaderFields: request.body.jwtHeaderFields,
+			jwtPayloadFields: request.body.jwtPayloadFields
+		},
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {
@@ -1310,6 +1644,34 @@ export async function identityVerifiablePresentationVerify(
 }
 
 /**
+ * Verify a verifiable presentation document.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityVerifiablePresentationVerifyDocument(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityVerifiablePresentationVerifyDocumentRequest
+): Promise<IIdentityVerifiablePresentationVerifyResponse> {
+	Guards.object<IIdentityVerifiablePresentationVerifyDocumentRequest>(
+		ROUTES_SOURCE,
+		nameof(request),
+		request
+	);
+	Guards.object<IDidVerifiablePresentation>(ROUTES_SOURCE, nameof(request.body), request.body);
+
+	const component = ComponentFactory.get<IIdentityComponent>(componentName);
+
+	const result = await component.verifiablePresentationVerify(request.body);
+
+	return {
+		body: result
+	};
+}
+
+/**
  * Create an identity proof.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
@@ -1321,11 +1683,6 @@ export async function identityProofCreate(
 	componentName: string,
 	request: IIdentityProofCreateRequest
 ): Promise<IIdentityProofCreateResponse> {
-	Guards.stringValue(
-		ROUTES_SOURCE,
-		nameof(httpRequestContext.userIdentity),
-		httpRequestContext.userIdentity
-	);
 	Guards.object<IIdentityProofCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IIdentityProofCreateRequest["pathParams"]>(
 		ROUTES_SOURCE,
@@ -1348,13 +1705,16 @@ export async function identityProofCreate(
 		request.body
 	);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
+
 	const component = ComponentFactory.get<IIdentityComponent>(componentName);
 
 	const result = await component.proofCreate(
-		request.pathParams.identity,
+		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
 		request.body.proofType,
 		request.body.document,
-		httpRequestContext.userIdentity
+		contextIds[ContextIdKeys.Organization]
 	);
 
 	return {

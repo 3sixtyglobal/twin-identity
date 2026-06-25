@@ -4,7 +4,7 @@ Response to get an identity details.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 
@@ -18,12 +18,12 @@ The identity of the profile, this is the authenticated user identity.
 
 #### publicProfile?
 
-> `optional` **publicProfile**: `Partial`\<`IJsonLdDocument`\>
+> `optional` **publicProfile?**: `Partial`\<`IJsonLdDocument`\>
 
 The public profile data.
 
 #### privateProfile?
 
-> `optional` **privateProfile**: `Partial`\<`IJsonLdDocument`\>
+> `optional` **privateProfile?**: `Partial`\<`IJsonLdDocument`\>
 
 The private profile data.

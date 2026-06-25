@@ -15,8 +15,8 @@ import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Jwk } from "@twin.org/web";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the verification method add command for the CLI.
@@ -47,8 +47,12 @@ export function buildCommandVerificationMethodAdd(): Command {
 		.option(
 			I18n.formatMessage("commands.verification-method-add.options.id.param"),
 			I18n.formatMessage("commands.verification-method-add.options.id.description")
+		)
+		.option(
+			I18n.formatMessage("commands.verification-method-add.options.addressIndex.param"),
+			I18n.formatMessage("commands.verification-method-add.options.addressIndex.description"),
+			"0"
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -96,6 +100,8 @@ export function buildCommandVerificationMethodAdd(): Command {
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  * @param opts.explorer The explorer URL.
+ * @param opts.network The network to use for connector.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  */
 export async function actionCommandVerificationMethodAdd(
 	opts: {
@@ -103,6 +109,7 @@ export async function actionCommandVerificationMethodAdd(
 		did: string;
 		type: DidVerificationMethodType;
 		id?: string;
+		addressIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
@@ -115,6 +122,7 @@ export async function actionCommandVerificationMethodAdd(
 		"type",
 		opts.type
 	) as DidVerificationMethodType;
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -133,6 +141,10 @@ export async function actionCommandVerificationMethodAdd(
 			opts?.id
 		);
 	}
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verification-method-add.labels.addressIndex"),
+		addressIndex
+	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -143,10 +155,11 @@ export async function actionCommandVerificationMethodAdd(
 	setupVault();
 
 	const vaultSeedId = "local-seed";
-	const localIdentity = "local";
+
+	const vmParts = DocumentHelper.parseId(did);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
-	await vaultConnector.setSecret(`${localIdentity}/${vaultSeedId}`, Converter.bytesToBase64(seed));
+	await vaultConnector.setSecret(`${vmParts.id}/${vaultSeedId}`, Converter.bytesToBase64(seed));
 
 	const walletConnector = setupWalletConnector(
 		{ nodeEndpoint, vaultSeedId, network },
@@ -155,7 +168,7 @@ export async function actionCommandVerificationMethodAdd(
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 
@@ -167,7 +180,7 @@ export async function actionCommandVerificationMethodAdd(
 	CLIDisplay.spinnerStart();
 
 	const verificationMethod = await identityConnector.addVerificationMethod(
-		localIdentity,
+		vmParts.id,
 		did,
 		type,
 		opts?.id
@@ -177,18 +190,23 @@ export async function actionCommandVerificationMethodAdd(
 
 	const keyParts = DocumentHelper.parseId(verificationMethod.id);
 
-	const keyPair = await vaultConnector.getKey(`${localIdentity}/${keyParts.fragment}`);
-	const privateKeyBase64 = Converter.bytesToBase64Url(keyPair.privateKey);
-	const publicKeyBase64 = Is.uint8Array(keyPair.publicKey)
+	const keyPair = await vaultConnector.getKey(`${vmParts.id}/${keyParts.fragment}`);
+	const privateKeyBase64Url = Converter.bytesToBase64Url(keyPair?.privateKey ?? new Uint8Array());
+	const publicKeyBase64Url = Is.uint8Array(keyPair.publicKey)
 		? Converter.bytesToBase64Url(keyPair.publicKey)
 		: "";
 
-	const privateKeyHex = Converter.bytesToHex(keyPair.privateKey, true);
+	const privateKeyBase64 = Converter.bytesToBase64(keyPair?.privateKey ?? new Uint8Array());
+	const publicKeyBase64 = Is.uint8Array(keyPair.publicKey)
+		? Converter.bytesToBase64(keyPair.publicKey)
+		: "";
+
+	const privateKeyHex = Converter.bytesToHex(keyPair?.privateKey ?? new Uint8Array(), true);
 	const publicKeyHex = Is.uint8Array(keyPair.publicKey)
 		? Converter.bytesToHex(keyPair.publicKey, true)
 		: "";
 
-	const jwk = await Jwk.fromEd25519Private(keyPair.privateKey);
+	const jwk = await Jwk.fromEd25519Private(keyPair?.privateKey ?? new Uint8Array());
 	const kid = await Jwk.generateKid(jwk);
 
 	if (opts.console) {
@@ -198,6 +216,15 @@ export async function actionCommandVerificationMethodAdd(
 		);
 
 		CLIDisplay.value(I18n.formatMessage("commands.verification-method-add.labels.kid"), kid);
+		CLIDisplay.value(
+			I18n.formatMessage("commands.verification-method-add.labels.privateKeyBase64Url"),
+			privateKeyBase64Url
+		);
+		CLIDisplay.value(
+			I18n.formatMessage("commands.verification-method-add.labels.publicKeyBase64Url"),
+			publicKeyBase64Url
+		);
+
 		CLIDisplay.value(
 			I18n.formatMessage("commands.verification-method-add.labels.privateKeyBase64"),
 			privateKeyBase64
@@ -223,8 +250,15 @@ export async function actionCommandVerificationMethodAdd(
 		await CLIUtils.writeJsonFile(
 			opts.json,
 			{
-				kid,
-				...jwk
+				verificationMethodId: verificationMethod.id,
+				privateKeyJwk: {
+					kid,
+					...jwk
+				},
+				privateKeyHex,
+				publicKeyHex,
+				privateKeyBase64,
+				publicKeyBase64
 			},
 			opts.mergeJson
 		);
@@ -235,8 +269,16 @@ export async function actionCommandVerificationMethodAdd(
 			[
 				`DID_VERIFICATION_METHOD_ID="${verificationMethod.id}"`,
 				`DID_VERIFICATION_METHOD_KID="${kid}"`,
-				`DID_VERIFICATION_METHOD_PRIVATE_KEY="${privateKeyHex}"`,
-				`DID_VERIFICATION_METHOD_PUBLIC_KEY="${publicKeyHex}"`
+				`DID_VERIFICATION_METHOD_JWK_KTY="${jwk.kty}"`,
+				`DID_VERIFICATION_METHOD_JWK_USE="${jwk.use}"`,
+				`DID_VERIFICATION_METHOD_JWK_ALG="${jwk.alg}"`,
+				`DID_VERIFICATION_METHOD_JWK_CRV="${jwk.crv}"`,
+				`DID_VERIFICATION_METHOD_JWK_X="${jwk.x}"`,
+				`DID_VERIFICATION_METHOD_JWK_D="${jwk.d}"`,
+				`DID_VERIFICATION_METHOD_PRIVATE_KEY_HEX="${privateKeyHex}"`,
+				`DID_VERIFICATION_METHOD_PUBLIC_KEY_HEX="${publicKeyHex}"`,
+				`DID_VERIFICATION_METHOD_PRIVATE_KEY_BASE64="${privateKeyBase64}"`,
+				`DID_VERIFICATION_METHOD_PUBLIC_KEY_BASE64="${publicKeyBase64}"`
 			],
 			opts.mergeEnv
 		);
@@ -245,7 +287,7 @@ export async function actionCommandVerificationMethodAdd(
 	if (opts.connector === IdentityConnectorTypes.Iota) {
 		const didUrn = Urn.fromValidString(did);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 		CLIDisplay.value(
 			I18n.formatMessage("commands.common.labels.explore"),
 			`${StringHelper.trimTrailingSlashes(explorerEndpoint)}/object/${objectId}?network=${network}`

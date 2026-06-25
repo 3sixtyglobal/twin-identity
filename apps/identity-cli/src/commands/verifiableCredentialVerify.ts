@@ -1,5 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import path from "node:path";
 import {
 	CLIDisplay,
 	CLIOptions,
@@ -7,12 +8,13 @@ import {
 	CLIUtils,
 	type CliOutputOptions
 } from "@twin.org/cli-core";
-import { I18n, Is } from "@twin.org/core";
+import { GeneralError, I18n, Is } from "@twin.org/core";
+import type { IDidVerifiableCredential } from "@twin.org/standards-w3c-did";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the verifiable credential verify command for the CLI.
@@ -24,11 +26,14 @@ export function buildCommandVerifiableCredentialVerify(): Command {
 		.name("verifiable-credential-verify")
 		.summary(I18n.formatMessage("commands.verifiable-credential-verify.summary"))
 		.description(I18n.formatMessage("commands.verifiable-credential-verify.description"))
-		.requiredOption(
+		.option(
 			I18n.formatMessage("commands.verifiable-credential-verify.options.jwt.param"),
 			I18n.formatMessage("commands.verifiable-credential-verify.options.jwt.description")
+		)
+		.option(
+			I18n.formatMessage("commands.verifiable-credential-verify.options.json-ld.param"),
+			I18n.formatMessage("commands.verifiable-credential-verify.options.json-ld.description")
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -65,25 +70,52 @@ export function buildCommandVerifiableCredentialVerify(): Command {
  * Action the verifiable credential verify command.
  * @param opts The options for the command.
  * @param opts.jwt The JSON web token for the verifiable credential.
+ * @param opts.jsonLd The filename of a JSON-LD verifiable credential to verify.
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  */
 export async function actionCommandVerifiableCredentialVerify(
 	opts: {
-		jwt: string;
+		jwt?: string;
+		jsonLd?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
 	} & CliOutputOptions
 ): Promise<void> {
-	const jwt: string = CLIParam.stringValue("jwt", opts.jwt);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
 			? CLIParam.stringValue("network", opts.network)
 			: undefined;
 
-	CLIDisplay.value(I18n.formatMessage("commands.verifiable-credential-verify.labels.jwt"), jwt);
+	let credential: string | IDidVerifiableCredential;
+
+	if (Is.stringValue(opts.jwt)) {
+		const jwt = CLIParam.stringValue("jwt", opts.jwt);
+		CLIDisplay.value(I18n.formatMessage("commands.verifiable-credential-verify.labels.jwt"), jwt);
+		credential = jwt;
+	} else if (Is.stringValue(opts.jsonLd)) {
+		const jsonLdPath = path.resolve(CLIParam.stringValue("json-ld", opts.jsonLd));
+		CLIDisplay.value(
+			I18n.formatMessage("commands.verifiable-credential-verify.labels.jsonLd"),
+			jsonLdPath
+		);
+		const jsonData = await CLIUtils.readJsonFile<IDidVerifiableCredential>(jsonLdPath);
+		if (Is.undefined(jsonData)) {
+			throw new GeneralError(
+				"commands",
+				"commands.verifiable-credential-verify.jsonLdFileNotFound"
+			);
+		}
+		credential = jsonData;
+	} else {
+		throw new GeneralError(
+			"commands",
+			"commands.verifiable-credential-verify.noCredentialProvided"
+		);
+	}
+
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -104,7 +136,7 @@ export async function actionCommandVerifiableCredentialVerify(
 
 	CLIDisplay.spinnerStart();
 
-	const verification = await identityConnector.checkVerifiableCredential(jwt);
+	const verification = await identityConnector.checkVerifiableCredential(credential);
 
 	const isVerified = Is.notEmpty(verification.verifiableCredential);
 	const isRevoked = verification.revoked;

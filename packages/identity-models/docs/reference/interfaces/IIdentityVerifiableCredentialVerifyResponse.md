@@ -4,7 +4,7 @@ Response to verifying a verifiable credential.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `object`
 
@@ -18,6 +18,6 @@ Has the credential been revoked.
 
 #### verifiableCredential?
 
-> `optional` **verifiableCredential**: `IDidVerifiableCredential`
+> `optional` **verifiableCredential?**: `IDidVerifiableCredential`
 
 The verifiable credential that was verified.

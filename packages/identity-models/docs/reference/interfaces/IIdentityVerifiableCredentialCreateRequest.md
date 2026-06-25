@@ -4,7 +4,7 @@ Request to create a verifiable credential.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -24,7 +24,7 @@ The verification method id to use.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 
@@ -32,7 +32,7 @@ The data for the request.
 
 #### credentialId?
 
-> `optional` **credentialId**: `string`
+> `optional` **credentialId?**: `string`
 
 The id of the credential.
 
@@ -44,6 +44,32 @@ The credential subject to store in the verifiable credential.
 
 #### revocationIndex?
 
-> `optional` **revocationIndex**: `number`
+> `optional` **revocationIndex?**: `number`
 
 The bitmap revocation index of the credential, if undefined will not have revocation status.
+
+#### expirationDate?
+
+> `optional` **expirationDate?**: `string`
+
+The date the verifiable credential is valid until.
+
+#### jwtHeaderFields?
+
+> `optional` **jwtHeaderFields?**: `object`
+
+Additional fields to include in the JWT when creating the verifiable credential in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`
+
+#### jwtPayloadFields?
+
+> `optional` **jwtPayloadFields?**: `object`
+
+Additional fields to include in the JWT payload when creating the verifiable credential in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`

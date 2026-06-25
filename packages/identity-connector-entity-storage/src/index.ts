@@ -1,11 +1,11 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-export * from "./entities/identityDocument";
-export * from "./entities/identityProfile";
-export * from "./entityStorageIdentityConnector";
-export * from "./entityStorageIdentityProfileConnector";
-export * from "./entityStorageIdentityResolverConnector";
-export * from "./models/IEntityStorageIdentityConnectorConstructorOptions";
-export * from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions";
-export * from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions";
-export * from "./schema";
+export * from "./entities/identityDocument.js";
+export * from "./entities/identityProfile.js";
+export * from "./entityStorageIdentityConnector.js";
+export * from "./entityStorageIdentityProfileConnector.js";
+export * from "./entityStorageIdentityResolverConnector.js";
+export * from "./models/IEntityStorageIdentityConnectorConstructorOptions.js";
+export * from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions.js";
+export * from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions.js";
+export * from "./schema.js";

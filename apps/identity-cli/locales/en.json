@@ -1,10 +1,25 @@
 {
 	"error": {
 		"commands": {
+			"verifiable-presentation-create": {
+				"noCredentialsProvided": "Either --jwt or --json-ld must be provided with at least one credential.",
+				"jsonLdFileNotFound": "The JSON-LD credential file was not found."
+			},
+			"verifiable-credential-verify": {
+				"noCredentialProvided": "Either --jwt or --json-ld must be provided.",
+				"jsonLdFileNotFound": "The JSON-LD file was not found."
+			},
+			"verifiable-presentation-verify": {
+				"noPresentationProvided": "Either --jwt or --json-ld must be provided.",
+				"jsonLdFileNotFound": "The JSON-LD file was not found."
+			},
 			"verifiable-credential-create": {
 				"subjectJsonFileNotFound": "The subject JSON file was not found."
 			},
 			"proof-create": {
+				"documentJsonFileNotFound": "The document JSON file was not found."
+			},
+			"proof-verify": {
 				"documentJsonFileNotFound": "The document JSON file was not found.",
 				"proofJsonFileNotFound": "The proof JSON file was not found."
 			}
@@ -18,6 +33,10 @@
 				"seed": {
 					"param": "--seed '<'seed'>'",
 					"description": "The seed for the controller address in hex or base64 used to create the DID, or start with ! to read environment variable."
+				},
+				"controller": {
+					"param": "--controller '<'controller'>'",
+					"description": "The controller for the DID, or start with ! to read environment variable."
 				},
 				"addressIndex": {
 					"param": "--address-index '<'index'>'",
@@ -67,6 +86,10 @@
 				"id": {
 					"param": "--id '<'id'>'",
 					"description": "The optional id of verification method to add, if not provided one will be generated."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -75,11 +98,14 @@
 			"labels": {
 				"verificationMethodType": "Verification Method Type",
 				"verificationMethodId": "Verification Method Id",
+				"privateKeyBase64Url": "Private Key Base64 Url",
+				"publicKeyBase64Url": "Public Key Base64 Url",
 				"privateKeyBase64": "Private Key Base64",
 				"publicKeyBase64": "Public Key Base64",
 				"privateKeyHex": "Private Key Hex",
 				"publicKeyHex": "Public Key Hex",
-				"kid": "Key Id"
+				"kid": "Key Id",
+				"addressIndex": "Address Index"
 			}
 		},
 		"verification-method-remove": {
@@ -90,20 +116,21 @@
 					"param": "--seed '<'seed'>'",
 					"description": "The seed for the private key for the controller address of the document in hex or base64, or start with ! to read environment variable."
 				},
-				"did": {
-					"param": "--did '<'did'>'",
-					"description": "The identifier to remove the verification method from, or start with ! to read environment variable."
-				},
 				"id": {
 					"param": "--id '<'id'>'",
 					"description": "The id of verification method to remove."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"removingVerificationMethod": "Removing Verification Method"
 			},
 			"labels": {
-				"verificationMethodId": "Verification Method Id"
+				"verificationMethodId": "Verification Method Id",
+				"addressIndex": "Address Index"
 			}
 		},
 		"service-add": {
@@ -129,6 +156,10 @@
 				"endpoint": {
 					"param": "--endpoint '<'endpoint'>'",
 					"description": "The service endpoint to add."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
@@ -137,7 +168,8 @@
 			"labels": {
 				"serviceId": "Service Id",
 				"serviceType": "Service Type",
-				"serviceEndpoint": "Service Endpoint"
+				"serviceEndpoint": "Service Endpoint",
+				"addressIndex": "Address Index"
 			}
 		},
 		"service-remove": {
@@ -151,21 +183,91 @@
 				"id": {
 					"param": "--id '<'id'>'",
 					"description": "The id of service to remove."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"removingService": "Removing Service"
 			},
 			"labels": {
-				"serviceId": "Service Id"
+				"serviceId": "Service Id",
+				"addressIndex": "Address Index"
+			}
+		},
+		"verifiable-presentation-create": {
+			"summary": "Create a verifiable presentation.",
+			"description": "Create a verifiable presentation.",
+			"options": {
+				"verification-method-id": {
+					"param": "--verification-method-id '<'verification-method-id'>'",
+					"description": "The full verification method id including did, or start with ! to read environment variable."
+				},
+				"private-key": {
+					"param": "--private-key '<'private-key'>'",
+					"description": "The private key for the verification method id, in either hex or base64 form, or start with ! to read environment variable."
+				},
+				"presentation-id": {
+					"param": "--presentation-id '<'presentation-id'>'",
+					"description": "The presentation id which uniquely identifies the presentation."
+				},
+				"jwt": {
+					"param": "--jwt '<'jwt'>'",
+					"description": "Comma-separated list of verifiable credential JWTs to include in the presentation, or start with ! to read environment variable."
+				},
+				"json-ld": {
+					"param": "--json-ld '<'json-ld'>'",
+					"description": "Comma-separated list of JSON-LD filenames containing verifiable credentials to include in the presentation."
+				},
+				"expiration-date": {
+					"param": "--expiration-date '<'ISO Date'>'",
+					"description": "The expiration date for the presentation."
+				}
+			},
+			"progress": {
+				"creatingVerifiablePresentation": "Creating Verifiable Presentation",
+				"loadingCredentialData": "Loading Credential Data"
+			},
+			"labels": {
+				"verificationMethodId": "Verification Method Id",
+				"presentationId": "Presentation Id",
+				"jwt": "JWT Credentials",
+				"jsonLd": "JSON-LD Credentials",
+				"verifiablePresentation": "Verifiable Presentation",
+				"expirationDate": "Expiration Date"
+			}
+		},
+		"verifiable-presentation-verify": {
+			"summary": "Verify a verifiable presentation.",
+			"description": "Verify a verifiable presentation.",
+			"options": {
+				"jwt": {
+					"param": "--jwt '<'jwt'>'",
+					"description": "The verifiable presentation as a JSON web token to verify, or start with ! to read environment variable."
+				},
+				"json-ld": {
+					"param": "--json-ld '<'json-ld'>'",
+					"description": "A JSON-LD file containing the verifiable presentation to verify."
+				}
+			},
+			"progress": {
+				"verifyingPresentation": "Verifying Presentation"
+			},
+			"labels": {
+				"jwt": "JWT",
+				"jsonLd": "JSON-LD",
+				"isVerified": "Is Verified",
+				"isRevoked": "Is Revoked"
 			}
 		},
 		"verifiable-credential-create": {
 			"summary": "Create a verifiable credential.",
 			"description": "Create a verifiable credential.",
 			"options": {
-				"id": {
-					"param": "--id '<'id'>'",
+				"verification-method-id": {
+					"param": "--verification-method-id '<'verification-method-id'>'",
 					"description": "The full verification method id including did, or start with ! to read environment variable."
 				},
 				"private-key": {
@@ -183,6 +285,10 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index in the issuing document to use if revoking the credential."
+				},
+				"expiration-date": {
+					"param": "--expiration-date '<'ISO Date'>'",
+					"description": "The expiration date for the credential."
 				}
 			},
 			"progress": {
@@ -194,7 +300,8 @@
 				"credentialId": "Credential Id",
 				"subjectJson": "Subject JSON",
 				"revocationIndex": "Revocation Index",
-				"verifiableCredential": "Verifiable Credential"
+				"verifiableCredential": "Verifiable Credential",
+				"expirationDate": "Expiration Date"
 			}
 		},
 		"verifiable-credential-verify": {
@@ -204,6 +311,10 @@
 				"jwt": {
 					"param": "--jwt '<'jwt'>'",
 					"description": "The verifiable credential as a JSON web token to verify, or start with ! to read environment variable."
+				},
+				"json-ld": {
+					"param": "--json-ld '<'json-ld'>'",
+					"description": "A JSON-LD file containing the verifiable credential to verify."
 				}
 			},
 			"progress": {
@@ -211,6 +322,7 @@
 			},
 			"labels": {
 				"jwt": "JWT",
+				"jsonLd": "JSON-LD",
 				"isVerified": "Is Verified",
 				"isRevoked": "Is Revoked"
 			}
@@ -230,13 +342,18 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index of the credential revoke."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"revokingCredential": "Revoking Credential Index"
 			},
 			"labels": {
-				"revocationIndex": "Revocation Index"
+				"revocationIndex": "Revocation Index",
+				"addressIndex": "Address Index"
 			}
 		},
 		"verifiable-credential-unrevoke": {
@@ -254,13 +371,18 @@
 				"revocation-index": {
 					"param": "--revocation-index '<'revocation-index'>'",
 					"description": "The revocation index of the credential unrevoke."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
 				}
 			},
 			"progress": {
 				"unrevokingCredential": "Unrevoking Credential Index"
 			},
 			"labels": {
-				"revocationIndex": "Revocation Index"
+				"revocationIndex": "Revocation Index",
+				"addressIndex": "Address Index"
 			}
 		},
 		"proof-create": {
@@ -310,6 +432,64 @@
 				"isVerified": "Is Verified"
 			}
 		},
+		"also-known-as-add": {
+			"summary": "Add an alias (alsoKnownAs) to a DID.",
+			"description": "Add an alias (alsoKnownAs) to a DID.",
+			"options": {
+				"seed": {
+					"param": "--seed '<'seed'>'",
+					"description": "The seed for the private key for the controller address of the document in hex or base64, or start with ! to read environment variable."
+				},
+				"did": {
+					"param": "--did '<'did'>'",
+					"description": "The identifier to add the alias to, or start with ! to read environment variable."
+				},
+				"alias": {
+					"param": "--alias '<'alias'>'",
+					"description": "The alias (alsoKnownAs) value to add."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
+				}
+			},
+			"progress": {
+				"addingAlsoKnownAs": "Adding Alias (alsoKnownAs)"
+			},
+			"labels": {
+				"alias": "Alias (alsoKnownAs)",
+				"addressIndex": "Address Index"
+			}
+		},
+		"also-known-as-remove": {
+			"summary": "Remove an alias (alsoKnownAs) from a DID.",
+			"description": "Remove an alias (alsoKnownAs) from a DID.",
+			"options": {
+				"seed": {
+					"param": "--seed '<'seed'>'",
+					"description": "The seed for the private key for the controller address of the document in hex or base64, or start with ! to read environment variable."
+				},
+				"did": {
+					"param": "--did '<'did'>'",
+					"description": "The identifier to remove the alias from, or start with ! to read environment variable."
+				},
+				"alias": {
+					"param": "--alias '<'alias'>'",
+					"description": "The alias (alsoKnownAs) value to remove."
+				},
+				"addressIndex": {
+					"param": "--address-index '<'index'>'",
+					"description": "The address index to use for the identity controller."
+				}
+			},
+			"progress": {
+				"removingAlsoKnownAs": "Removing Alias (alsoKnownAs)"
+			},
+			"labels": {
+				"alias": "Alias (alsoKnownAs)",
+				"addressIndex": "Address Index"
+			}
+		},
 		"common": {
 			"options": {
 				"connector": {
@@ -323,6 +503,10 @@
 				"network": {
 					"param": "--network '<'network'>'",
 					"description": "The network to use for the identity operation."
+				},
+				"explorer": {
+					"param": "--explorer '<'url'>'",
+					"description": "The url for the explorer endpoint, or an environment variable name containing the url."
 				}
 			},
 			"labels": {
@@ -330,7 +514,6 @@
 				"node": "Node",
 				"explorer": "Explorer",
 				"explore": "Explore",
-				"connector": "Connector",
 				"network": "Network"
 			}
 		}

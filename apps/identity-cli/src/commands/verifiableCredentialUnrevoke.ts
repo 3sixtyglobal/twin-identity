@@ -7,8 +7,8 @@ import { VaultConnectorFactory } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the verifiable credential unrevoke command for the CLI.
@@ -33,8 +33,14 @@ export function buildCommandVerifiableCredentialUnrevoke(): Command {
 			I18n.formatMessage(
 				"commands.verifiable-credential-unrevoke.options.revocation-index.description"
 			)
+		)
+		.option(
+			I18n.formatMessage("commands.verifiable-credential-unrevoke.options.addressIndex.param"),
+			I18n.formatMessage(
+				"commands.verifiable-credential-unrevoke.options.addressIndex.description"
+			),
+			"0"
 		);
-
 	command
 		.addOption(
 			new Option(
@@ -68,11 +74,13 @@ export function buildCommandVerifiableCredentialUnrevoke(): Command {
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  * @param opts.network The network to use for connector.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  */
 export async function actionCommandVerifiableCredentialUnrevoke(opts: {
 	seed: string;
 	did: string;
 	revocationIndex: string;
+	addressIndex?: string;
 	connector?: IdentityConnectorTypes;
 	node: string;
 	network?: string;
@@ -80,6 +88,7 @@ export async function actionCommandVerifiableCredentialUnrevoke(opts: {
 	const seed: Uint8Array = CLIParam.hexBase64("seed", opts.seed);
 	const did: string = CLIParam.stringValue("did", opts.did);
 	const revocationIndex: number = CLIParam.integer("revocation-index", opts.revocationIndex);
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -90,6 +99,10 @@ export async function actionCommandVerifiableCredentialUnrevoke(opts: {
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-unrevoke.labels.revocationIndex"),
 		revocationIndex
+	);
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verifiable-credential-unrevoke.labels.addressIndex"),
+		addressIndex
 	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
@@ -112,7 +125,7 @@ export async function actionCommandVerifiableCredentialUnrevoke(opts: {
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 

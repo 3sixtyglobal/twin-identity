@@ -4,7 +4,7 @@ Request to remove an identity.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 

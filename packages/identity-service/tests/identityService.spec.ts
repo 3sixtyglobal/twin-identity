@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { I18n, RandomHelper } from "@twin.org/core";
+import { RandomHelper } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -23,32 +23,34 @@ import {
 	initSchema as initSchemaVault
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import { IdentityResolverService } from "../src/identityResolverService";
-import { IdentityService } from "../src/identityService";
+import { IdentityResolverService } from "../src/identityResolverService.js";
+import { IdentityService } from "../src/identityService.js";
 
 export const TEST_IDENTITY_ID = "test-identity";
 export const TEST_CONTROLLER = "test-controller";
 
 let vaultKeyEntityStorageConnector: MemoryEntityStorageConnector<VaultKey>;
 let identityDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
+let vaultSecretEntityStorageConnector: MemoryEntityStorageConnector<VaultSecret>;
 
 describe("IdentityService", () => {
 	beforeAll(async () => {
-		I18n.addDictionary("en", await import("../locales/en.json"));
-
 		initSchemaVault();
 		initSchemaIdentity();
 
 		identityDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
-			entitySchema: nameof<IdentityDocument>()
+			entitySchema: nameof<IdentityDocument>(),
+			config: { storageKey: "identity-document" }
 		});
 
 		vaultKeyEntityStorageConnector = new MemoryEntityStorageConnector<VaultKey>({
-			entitySchema: nameof<VaultKey>()
+			entitySchema: nameof<VaultKey>(),
+			config: { storageKey: "vault-keys" }
 		});
 
-		const vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
-			entitySchema: nameof<VaultSecret>()
+		vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
+			entitySchema: nameof<VaultSecret>(),
+			config: { storageKey: "vault-secrets" }
 		});
 
 		EntityStorageConnectorFactory.register(
@@ -81,6 +83,12 @@ describe("IdentityService", () => {
 			);
 
 		vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
+	});
+
+	afterAll(async () => {
+		await identityDocumentEntityStorage.teardown();
+		await vaultKeyEntityStorageConnector.teardown();
+		await vaultSecretEntityStorageConnector.teardown();
 	});
 
 	test("Can create identity service", () => {
@@ -122,7 +130,7 @@ describe("IdentityService", () => {
 			id: "did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#hGHGs0DxLAWcgzx0QjTbzJc3PO-NMqSFAPcdgzx_qQo",
 			controller:
 				"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101",
-			type: "JsonWebKey",
+			type: "JsonWebKey2020",
 			publicKeyJwk: {
 				alg: "EdDSA",
 				kty: "OKP",
@@ -199,7 +207,7 @@ describe("IdentityService", () => {
 		const verificationMethod = await service.verificationMethodCreate(
 			"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101",
 			DidVerificationMethodType.AssertionMethod,
-			undefined,
+			"my-id",
 			TEST_CONTROLLER
 		);
 
@@ -211,16 +219,21 @@ describe("IdentityService", () => {
 				"@type": "Person",
 				name: "Jane Doe"
 			},
-			5,
+			{ revocationIndex: 5 },
 			TEST_CONTROLLER
 		);
 
 		expect(vc).toEqual({
 			verifiableCredential: {
-				"@context": ["https://www.w3.org/ns/credentials/v2", "https://schema.org"],
+				"@context": [
+					"https://www.w3.org/2018/credentials/v1",
+					"https://schema.org",
+					"https://w3id.org/security/data-integrity/v2"
+				],
 				id: "https://example.com/credentials/3732",
-				type: ["VerifiableCredential", "Person"],
+				type: "VerifiableCredential",
 				credentialSubject: {
+					"@type": "Person",
 					name: "Jane Doe"
 				},
 				issuer:
@@ -230,9 +243,19 @@ describe("IdentityService", () => {
 					id: "did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#revocation",
 					type: "BitstringStatusList",
 					revocationBitmapIndex: "5"
+				},
+				proof: {
+					created: "2020-01-01T00:00:00.000Z",
+					cryptosuite: "eddsa-jcs-2022",
+					proofPurpose: "assertionMethod",
+					proofValue:
+						"z4PUfbrBmpdZ4VNKWm6zkS7cjn2a7Qu6TupNHo923zYTWcncr5h7uJwJL6EUJyhCBTTrfZYA9wrto39ggnFhfNkiG",
+					type: "DataIntegrityProof",
+					verificationMethod:
+						"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#my-id"
 				}
 			},
-			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI2hHSEdzMER4TEFXY2d6eDBRalRiekpjM1BPLU5NcVNGQVBjZGd6eF9xUW8iLCJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjIiLCJodHRwczovL3NjaGVtYS5vcmciXSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlBlcnNvbiJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjoiSmFuZSBEb2UifSwiY3JlZGVudGlhbFN0YXR1cyI6eyJpZCI6ImRpZDplbnRpdHktc3RvcmFnZToweDAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEjcmV2b2NhdGlvbiIsInR5cGUiOiJCaXRzdHJpbmdTdGF0dXNMaXN0IiwicmV2b2NhdGlvbkJpdG1hcEluZGV4IjoiNSJ9fX0.k09un1ysCcvOqgG-hqhZskQxsUapS6azaIlue-9a7OqfPobG5K29UlI3_LvHN21G4k5qKGMQZi11TwU1QHDYCw"
+			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI215LWlkIiwidHlwIjoiSldUIiwiYWxnIjoiRWREU0EifQ.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vc2NoZW1hLm9yZyJdLCJ0eXBlIjoiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJAdHlwZSI6IlBlcnNvbiIsIm5hbWUiOiJKYW5lIERvZSJ9LCJjcmVkZW50aWFsU3RhdHVzIjp7ImlkIjoiZGlkOmVudGl0eS1zdG9yYWdlOjB4MDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMSNyZXZvY2F0aW9uIiwidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3QiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiI1In19fQ.b2cSnHw-4Llz4hU4I-kbq7sKWVVqA-bDkMN1IuWxDcW7bLpvIozgADAELPxOukWDNFXOM1-ZByXz9Dwgj3HABg"
 		});
 	});
 });

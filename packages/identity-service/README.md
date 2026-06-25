@@ -1,6 +1,6 @@
-# TWIN Identity Service
+# TWIN Identity
 
-Implementation of the identity service.
+The identity-service package defines service-side identity contracts and REST endpoint behaviour so applications can expose identity capabilities through stable interfaces. It helps backend services remain consistent with shared models and supports predictable integration for client and connector implementations.
 
 ## Installation
 

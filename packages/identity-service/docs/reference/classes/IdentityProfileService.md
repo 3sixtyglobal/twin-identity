@@ -38,27 +38,33 @@ The dependencies for the identity profile service.
 
 ## Properties
 
-### NAMESPACE
+### CLASS\_NAME {#class_name}
 
-> `readonly` `static` **NAMESPACE**: `string` = `"identity-profile"`
-
-The namespace supported by the identity profile service.
-
-***
-
-### CLASS\_NAME
-
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
 
-#### Implementation of
-
-`IIdentityProfileComponent.CLASS_NAME`
-
 ## Methods
 
-### create()
+### className() {#classname}
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityProfileComponent.className`
+
+***
+
+### create() {#create}
 
 > **create**(`publicProfile?`, `privateProfile?`, `identity?`): `Promise`\<`void`\>
 
@@ -88,7 +94,7 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been created.
 
 #### Implementation of
 
@@ -96,7 +102,7 @@ Nothing.
 
 ***
 
-### get()
+### get() {#get}
 
 > **get**(`publicPropertyNames?`, `privatePropertyNames?`, `identity?`): `Promise`\<\{ `identity`: `string`; `publicProfile?`: `Partial`\<`T`\>; `privateProfile?`: `Partial`\<`U`\>; \}\>
 
@@ -134,7 +140,7 @@ The items identity and the properties.
 
 ***
 
-### getPublic()
+### getPublic() {#getpublic}
 
 > **getPublic**(`identity`, `propertyNames?`): `Promise`\<`Partial`\<`T`\>\>
 
@@ -166,7 +172,7 @@ The items properties.
 
 ***
 
-### update()
+### update() {#update}
 
 > **update**(`publicProfile?`, `privateProfile?`, `identity?`): `Promise`\<`void`\>
 
@@ -196,7 +202,7 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been updated.
 
 #### Implementation of
 
@@ -204,7 +210,7 @@ Nothing.
 
 ***
 
-### remove()
+### remove() {#remove}
 
 > **remove**(`identity?`): `Promise`\<`void`\>
 
@@ -222,7 +228,7 @@ The identity to perform the profile operation on.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the profile has been removed.
 
 #### Implementation of
 
@@ -230,9 +236,9 @@ Nothing.
 
 ***
 
-### list()
+### list() {#list}
 
-> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `pageSize?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+> **list**(`publicFilters?`, `publicPropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 Get a list of the requested types.
 
@@ -256,7 +262,7 @@ The public properties to get for the profile, defaults to all.
 
 The cursor for paged requests.
 
-##### pageSize?
+##### limit?
 
 `number`
 

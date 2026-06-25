@@ -28,7 +28,7 @@ The options for the identity connector.
 
 ## Properties
 
-### NAMESPACE
+### NAMESPACE {#namespace}
 
 > `readonly` `static` **NAMESPACE**: `string` = `"entity-storage"`
 
@@ -36,19 +36,33 @@ The namespace supported by the identity connector.
 
 ***
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
-> `readonly` **CLASS\_NAME**: `string`
+> `readonly` `static` **CLASS\_NAME**: `string`
 
 Runtime name for the class.
 
-#### Implementation of
-
-`IIdentityResolverConnector.CLASS_NAME`
-
 ## Methods
 
-### resolveDocument()
+### className() {#classname}
+
+> **className**(): `string`
+
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
+
+#### Implementation of
+
+`IIdentityResolverConnector.className`
+
+***
+
+### resolveDocument() {#resolvedocument}
 
 > **resolveDocument**(`documentId`): `Promise`\<`IDidDocument`\>
 

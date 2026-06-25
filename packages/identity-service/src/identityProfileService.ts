@@ -8,7 +8,8 @@ import {
 	type IIdentityProfileConnector
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
-import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdentityProfileServiceConstructorOptions";
+import { IdentityService } from "./identityService.js";
+import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdentityProfileServiceConstructorOptions.js";
 
 /**
  * Class which implements the identity profile contract.
@@ -16,17 +17,11 @@ import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdenti
 export class IdentityProfileService<
 	T extends IJsonLdDocument = IJsonLdDocument,
 	U extends IJsonLdDocument = IJsonLdDocument
-> implements IIdentityProfileComponent<T, U>
-{
-	/**
-	 * The namespace supported by the identity profile service.
-	 */
-	public static readonly NAMESPACE: string = "identity-profile";
-
+> implements IIdentityProfileComponent<T, U> {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityProfileService>();
+	public static readonly CLASS_NAME: string = nameof<IdentityProfileService>();
 
 	/**
 	 * The identity profile connector.
@@ -45,22 +40,35 @@ export class IdentityProfileService<
 	}
 
 	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityService.CLASS_NAME;
+	}
+
+	/**
 	 * Create the profile properties for an identity.
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been created.
 	 */
 	public async create(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			await this._identityProfileConnector.create(identity, publicProfile, privateProfile);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, IdentityProfileService.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "createFailed", { identity }, error);
+			throw new GeneralError(
+				IdentityProfileService.CLASS_NAME,
+				"createFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -80,7 +88,7 @@ export class IdentityProfileService<
 		publicProfile?: Partial<T>;
 		privateProfile?: Partial<U>;
 	}> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			const result = await this._identityProfileConnector.get(
@@ -89,7 +97,7 @@ export class IdentityProfileService<
 				privatePropertyNames
 			);
 			if (Is.undefined(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(IdentityProfileService.CLASS_NAME, "notFound", identity);
 			}
 			return {
 				identity,
@@ -97,10 +105,10 @@ export class IdentityProfileService<
 				privateProfile: result.privateProfile
 			};
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, IdentityProfileService.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "getFailed", undefined, error);
+			throw new GeneralError(IdentityProfileService.CLASS_NAME, "getFailed", undefined, error);
 		}
 	}
 
@@ -111,19 +119,24 @@ export class IdentityProfileService<
 	 * @returns The items properties.
 	 */
 	public async getPublic(identity: string, propertyNames?: (keyof T)[]): Promise<Partial<T>> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			const result = await this._identityProfileConnector.get(identity, propertyNames);
 			if (Is.undefined(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(IdentityProfileService.CLASS_NAME, "notFound", identity);
 			}
 			return result.publicProfile;
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, IdentityProfileService.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "getPublicFailed", undefined, error);
+			throw new GeneralError(
+				IdentityProfileService.CLASS_NAME,
+				"getPublicFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -132,44 +145,54 @@ export class IdentityProfileService<
 	 * @param publicProfile The public profile data as JSON-LD.
 	 * @param privateProfile The private profile data as JSON-LD.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			const result = await this._identityProfileConnector.get(identity);
 			if (Is.undefined(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(IdentityProfileService.CLASS_NAME, "notFound", identity);
 			}
 			await this._identityProfileConnector.update(identity, publicProfile, privateProfile);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, IdentityProfileService.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "updateFailed", { identity }, error);
+			throw new GeneralError(
+				IdentityProfileService.CLASS_NAME,
+				"updateFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
 	/**
 	 * Delete the profile for an identity.
 	 * @param identity The identity to perform the profile operation on.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(identity?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(identity), identity);
+		Guards.stringValue(IdentityProfileService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			const result = await this._identityProfileConnector.get(identity);
 			if (Is.undefined(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "notFound", identity);
+				throw new NotFoundError(IdentityProfileService.CLASS_NAME, "notFound", identity);
 			}
 			await this._identityProfileConnector.remove(identity);
 		} catch (error) {
-			if (BaseError.someErrorClass(error, this.CLASS_NAME)) {
+			if (BaseError.someErrorClass(error, IdentityProfileService.CLASS_NAME)) {
 				throw error;
 			}
-			throw new GeneralError(this.CLASS_NAME, "removeFailed", { identity }, error);
+			throw new GeneralError(
+				IdentityProfileService.CLASS_NAME,
+				"removeFailed",
+				{ identity },
+				error
+			);
 		}
 	}
 
@@ -178,7 +201,7 @@ export class IdentityProfileService<
 	 * @param publicFilters The filters to apply to the identities public profiles.
 	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
 	 * @param cursor The cursor for paged requests.
-	 * @param pageSize The maximum number of items in a page.
+	 * @param limit The maximum number of items in a page.
 	 * @returns The list of items and cursor for paging.
 	 */
 	public async list(
@@ -188,7 +211,7 @@ export class IdentityProfileService<
 		}[],
 		publicPropertyNames?: (keyof T)[],
 		cursor?: string,
-		pageSize?: number
+		limit?: number
 	): Promise<{
 		/**
 		 * The identities.
@@ -202,16 +225,17 @@ export class IdentityProfileService<
 		try {
 			// We don't want to return private profile for this type of query
 			// as it would expose the values to the REST api
-			return this._identityProfileConnector.list(
+			const result = await this._identityProfileConnector.list(
 				publicFilters,
 				undefined,
 				publicPropertyNames,
 				undefined,
 				cursor,
-				pageSize
+				limit
 			);
+			return result;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "listFailed", undefined, error);
+			throw new GeneralError(IdentityProfileService.CLASS_NAME, "listFailed", undefined, error);
 		}
 	}
 }

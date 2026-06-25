@@ -8,7 +8,7 @@ Interface describing a contract which provides identity operations.
 
 ## Methods
 
-### identityResolve()
+### identityResolve() {#identityresolve}
 
 > **identityResolve**(`identity`): `Promise`\<`IDidDocument`\>
 

@@ -16,8 +16,8 @@ import { VaultConnectorFactory, VaultKeyType } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the proof create command for the CLI.
@@ -79,6 +79,7 @@ export function buildCommandProofCreate(): Command {
  * @param opts The options for the command.
  * @param opts.id The id of the verification method to use for the credential.
  * @param opts.privateKey The private key for the verification method.
+ * @param opts.documentFilename The filename of the document to create the proof for.
  * @param opts.data The data to create the proof for.
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
@@ -119,13 +120,11 @@ export async function actionCommandProofCreate(
 
 	setupVault();
 
-	const localIdentity = "local";
-
 	const vmParts = DocumentHelper.parseId(id);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
 	await vaultConnector.addKey(
-		`${localIdentity}/${vmParts.fragment}`,
+		`${vmParts.id}/${vmParts.fragment}`,
 		VaultKeyType.Ed25519,
 		privateKey,
 		new Uint8Array()
@@ -146,7 +145,7 @@ export async function actionCommandProofCreate(
 		throw new GeneralError("commands", "commands.proof-create.documentJsonFileNotFound");
 	}
 	const proof = await identityConnector.createProof(
-		localIdentity,
+		vmParts.id,
 		id,
 		ProofTypes.DataIntegrityProof,
 		document

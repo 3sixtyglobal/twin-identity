@@ -4,7 +4,7 @@ Request to create a verification method.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -18,7 +18,7 @@ The identity to create the verification method for.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 
@@ -32,6 +32,6 @@ The type of the verification method to create.
 
 #### verificationMethodId?
 
-> `optional` **verificationMethodId**: `string`
+> `optional` **verificationMethodId?**: `string`
 
 The optional id for the verification method, will be allocated if not supplied.

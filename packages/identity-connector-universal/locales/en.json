@@ -1,7 +1,12 @@
 {
+	"health": {
+		"universalResolverConnector": {
+			"healthDescription": "Connectivity and availability of the universal resolver \"{endpoint}\"",
+			"resolverHealthCheckFailed": "Failed to check universal resolver health status \"{endpoint}\""
+		}
+	},
 	"error": {
 		"universalResolverConnector": {
-			"documentNotFound": "The document could not be found",
 			"resolveDocumentFailed": "Resolving the document failed \"{documentId}\""
 		}
 	}

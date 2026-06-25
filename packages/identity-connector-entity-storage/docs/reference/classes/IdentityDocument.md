@@ -14,7 +14,7 @@ Class describing the identity document.
 
 ## Properties
 
-### id
+### id {#id}
 
 > **id**: `string`
 
@@ -22,7 +22,7 @@ The identity of the document.
 
 ***
 
-### document
+### document {#document}
 
 > **document**: `IDidDocument`
 
@@ -30,7 +30,7 @@ The DID document.
 
 ***
 
-### signature
+### signature {#signature}
 
 > **signature**: `string`
 
@@ -38,7 +38,7 @@ The signature of the document.
 
 ***
 
-### controller
+### controller {#controller}
 
 > **controller**: `string`
 

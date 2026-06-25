@@ -39,5 +39,20 @@ export interface IIdentityVerifiableCredentialCreateRequest {
 		 * The bitmap revocation index of the credential, if undefined will not have revocation status.
 		 */
 		revocationIndex?: number;
+
+		/**
+		 * The date the verifiable credential is valid until.
+		 */
+		expirationDate?: string;
+
+		/**
+		 * Additional fields to include in the JWT when creating the verifiable credential in jwt format.
+		 */
+		jwtHeaderFields?: { [id: string]: string };
+
+		/**
+		 * Additional fields to include in the JWT payload when creating the verifiable credential in jwt format.
+		 */
+		jwtPayloadFields?: { [id: string]: string };
 	};
 }

@@ -1,0 +1,95 @@
+# Class: Did
+
+Helper methods for parsing and validating DID identifiers.
+
+## Constructors
+
+### Constructor
+
+> **new Did**(): `Did`
+
+#### Returns
+
+`Did`
+
+## Properties
+
+### CLASS\_NAME {#class_name}
+
+> `readonly` `static` **CLASS\_NAME**: `string`
+
+Runtime name for the class.
+
+## Methods
+
+### parse() {#parse}
+
+> `static` **parse**(`id`): `object`
+
+Parse an id into its constituent parts.
+
+#### Parameters
+
+##### id
+
+`string`
+
+The id to parse.
+
+#### Returns
+
+`object`
+
+The parsed id.
+
+##### method
+
+> **method**: `string`
+
+##### network?
+
+> `optional` **network?**: `string`
+
+##### id
+
+> **id**: `string`
+
+#### Throws
+
+GeneralError if the id is not valid.
+
+***
+
+### guard() {#guard}
+
+> `static` **guard**(`source`, `property`, `value`): `asserts value is string`
+
+Guard a string as a DID.
+
+#### Parameters
+
+##### source
+
+`string`
+
+The source of the error.
+
+##### property
+
+`string`
+
+The name of the property.
+
+##### value
+
+`unknown`
+
+The value to assert as a valid DID.
+
+#### Returns
+
+`asserts value is string`
+
+#### Throws
+
+GuardError If the value does not match the assertion.

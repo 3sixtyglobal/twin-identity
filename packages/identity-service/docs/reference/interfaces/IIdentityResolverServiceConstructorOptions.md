@@ -4,9 +4,9 @@ Options for the identity resolver service constructor.
 
 ## Properties
 
-### fallbackResolverConnectorType?
+### fallbackResolverConnectorType? {#fallbackresolverconnectortype}
 
-> `optional` **fallbackResolverConnectorType**: `string`
+> `optional` **fallbackResolverConnectorType?**: `string`
 
 Fallback connector type to use if the namespace connector is not available.
 
@@ -18,8 +18,8 @@ universal
 
 ***
 
-### config?
+### config? {#config}
 
-> `optional` **config**: [`IIdentityResolverServiceConfig`](IIdentityResolverServiceConfig.md)
+> `optional` **config?**: [`IIdentityResolverServiceConfig`](IIdentityResolverServiceConfig.md)
 
 The configuration for the identity service.

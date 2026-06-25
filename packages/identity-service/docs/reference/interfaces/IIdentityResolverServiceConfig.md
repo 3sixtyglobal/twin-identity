@@ -4,8 +4,8 @@ Configuration for the Identity Resolver Service.
 
 ## Properties
 
-### defaultNamespace?
+### defaultNamespace? {#defaultnamespace}
 
-> `optional` **defaultNamespace**: `string`
+> `optional` **defaultNamespace?**: `string`
 
-What is the default connector to use for Identity. If not provided the first connector from the factory will be used.
+The default connector namespace to use for identity resolution. If not provided, the first registered connector is used.

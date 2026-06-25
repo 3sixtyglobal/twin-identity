@@ -28,27 +28,41 @@ The options for the identity connector.
 
 ## Properties
 
-### NAMESPACE
+### CLASS\_NAME {#class_name}
+
+> `readonly` `static` **CLASS\_NAME**: `string`
+
+Runtime name for the class.
+
+***
+
+### NAMESPACE {#namespace}
 
 > `readonly` `static` **NAMESPACE**: `string` = `"entity-storage"`
 
 The namespace supported by the identity connector.
 
-***
+## Methods
 
-### CLASS\_NAME
+### className() {#classname}
 
-> `readonly` **CLASS\_NAME**: `string`
+> **className**(): `string`
 
-Runtime name for the class.
+Returns the class name of the component.
+
+#### Returns
+
+`string`
+
+The class name of the component.
 
 #### Implementation of
 
-`IIdentityConnector.CLASS_NAME`
+`IIdentityConnector.className`
 
-## Methods
+***
 
-### createDocument()
+### createDocument() {#createdocument}
 
 > **createDocument**(`controller`): `Promise`\<`IDidDocument`\>
 
@@ -74,7 +88,7 @@ The created document.
 
 ***
 
-### removeDocument()
+### removeDocument() {#removedocument}
 
 > **removeDocument**(`controller`, `documentId`): `Promise`\<`void`\>
 
@@ -98,7 +112,7 @@ The id of the document to remove.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the document has been removed.
 
 #### Implementation of
 
@@ -106,7 +120,7 @@ Nothing.
 
 ***
 
-### addVerificationMethod()
+### addVerificationMethod() {#addverificationmethod}
 
 > **addVerificationMethod**(`controller`, `documentId`, `verificationMethodType`, `verificationMethodId?`): `Promise`\<`IDidDocumentVerificationMethod`\>
 
@@ -158,7 +172,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ***
 
-### removeVerificationMethod()
+### removeVerificationMethod() {#removeverificationmethod}
 
 > **removeVerificationMethod**(`controller`, `verificationMethodId`): `Promise`\<`void`\>
 
@@ -182,7 +196,7 @@ The id of the verification method.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the verification method has been removed.
 
 #### Throws
 
@@ -198,7 +212,7 @@ NotSupportedError if the platform does not support multiple revocable keys.
 
 ***
 
-### addService()
+### addService() {#addservice}
 
 > **addService**(`controller`, `documentId`, `serviceId`, `serviceType`, `serviceEndpoint`): `Promise`\<`IDidService`\>
 
@@ -226,15 +240,15 @@ The id of the service.
 
 ##### serviceType
 
-The type of the service.
+`string` \| `string`[]
 
-`string` | `string`[]
+The type of the service.
 
 ##### serviceEndpoint
 
-The endpoint for the service.
+`string` \| `string`[]
 
-`string` | `string`[]
+The endpoint for the service.
 
 #### Returns
 
@@ -252,7 +266,7 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### removeService()
+### removeService() {#removeservice}
 
 > **removeService**(`controller`, `serviceId`): `Promise`\<`void`\>
 
@@ -276,7 +290,7 @@ The id of the service.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the service has been removed.
 
 #### Throws
 
@@ -288,9 +302,103 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### createVerifiableCredential()
+### addAlsoKnownAs() {#addalsoknownas}
 
-> **createVerifiableCredential**(`controller`, `verificationMethodId`, `id`, `subject`, `revocationIndex?`): `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredential`; `jwt`: `string`; \}\>
+> **addAlsoKnownAs**(`controller`, `documentId`, `alias`): `Promise`\<`void`\>
+
+Add an alias to the alsoKnownAs property on the document.
+If the alias is already present the operation is a no-op.
+
+#### Parameters
+
+##### controller
+
+`string`
+
+The controller of the identity who can make changes.
+
+##### documentId
+
+`string`
+
+The id of the document to update.
+
+##### alias
+
+`string`
+
+The alias to add. Must be a Url or Urn (typically another DID).
+
+#### Returns
+
+`Promise`\<`void`\>
+
+A promise that resolves when the alias has been added.
+
+#### Throws
+
+GeneralError if the alias is not a Url or Urn.
+
+#### Throws
+
+NotFoundError if the id can not be resolved.
+
+#### Implementation of
+
+`IIdentityConnector.addAlsoKnownAs`
+
+***
+
+### removeAlsoKnownAs() {#removealsoknownas}
+
+> **removeAlsoKnownAs**(`controller`, `documentId`, `alias`): `Promise`\<`void`\>
+
+Remove an alias from the alsoKnownAs property on the document.
+If the alias is not present the operation is a no-op.
+
+#### Parameters
+
+##### controller
+
+`string`
+
+The controller of the identity who can make changes.
+
+##### documentId
+
+`string`
+
+The id of the document to update.
+
+##### alias
+
+`string`
+
+The alias to remove. Must be a Url or Urn.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+A promise that resolves when the alias has been removed.
+
+#### Throws
+
+GeneralError if the alias is not a Url or Urn.
+
+#### Throws
+
+NotFoundError if the id can not be resolved.
+
+#### Implementation of
+
+`IIdentityConnector.removeAlsoKnownAs`
+
+***
+
+### createVerifiableCredential() {#createverifiablecredential}
+
+> **createVerifiableCredential**(`controller`, `verificationMethodId`, `id`, `subject`, `options?`): `Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredentialV1`; `jwt`: `string`; \}\>
 
 Create a verifiable credential for a verification method.
 
@@ -310,9 +418,9 @@ The verification method id to use.
 
 ##### id
 
-The id of the credential.
+`string` \| `undefined`
 
-`undefined` | `string`
+The id of the credential.
 
 ##### subject
 
@@ -320,15 +428,37 @@ The id of the credential.
 
 The credential subject to store in the verifiable credential.
 
-##### revocationIndex?
+##### options?
+
+Additional options for creating the verifiable credential.
+
+###### revocationIndex?
 
 `number`
 
 The bitmap revocation index of the credential, if undefined will not have revocation status.
 
+###### expirationDate?
+
+`Date`
+
+The date the verifiable credential is valid until.
+
+###### jwtHeaderFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to add to the JWT header.
+
+###### jwtPayloadFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to add to the JWT payload.
+
 #### Returns
 
-`Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredential`; `jwt`: `string`; \}\>
+`Promise`\<\{ `verifiableCredential`: `IDidVerifiableCredentialV1`; `jwt`: `string`; \}\>
 
 The created verifiable credential and its token.
 
@@ -342,17 +472,17 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### checkVerifiableCredential()
+### checkVerifiableCredential() {#checkverifiablecredential}
 
-> **checkVerifiableCredential**(`credentialJwt`): `Promise`\<\{ `revoked`: `boolean`; `verifiableCredential?`: `IDidVerifiableCredential`; \}\>
+> **checkVerifiableCredential**(`credential`): `Promise`\<\{ `revoked`: `boolean`; `verifiableCredential?`: `IDidVerifiableCredential`; \}\>
 
 Check a verifiable credential is valid.
 
 #### Parameters
 
-##### credentialJwt
+##### credential
 
-`string`
+`string` \| `IDidVerifiableCredential`
 
 The credential to verify.
 
@@ -368,7 +498,7 @@ The credential stored in the jwt and the revocation status.
 
 ***
 
-### revokeVerifiableCredentials()
+### revokeVerifiableCredentials() {#revokeverifiablecredentials}
 
 > **revokeVerifiableCredentials**(`controller`, `issuerDocumentId`, `credentialIndices`): `Promise`\<`void`\>
 
@@ -398,7 +528,7 @@ The revocation bitmap index or indices to revoke.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credentials have been revoked.
 
 #### Implementation of
 
@@ -406,7 +536,7 @@ Nothing.
 
 ***
 
-### unrevokeVerifiableCredentials()
+### unrevokeVerifiableCredentials() {#unrevokeverifiablecredentials}
 
 > **unrevokeVerifiableCredentials**(`controller`, `issuerDocumentId`, `credentialIndices`): `Promise`\<`void`\>
 
@@ -436,7 +566,7 @@ The revocation bitmap index or indices to un revoke.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the credentials have been unrevoked.
 
 #### Implementation of
 
@@ -444,9 +574,9 @@ Nothing.
 
 ***
 
-### createVerifiablePresentation()
+### createVerifiablePresentation() {#createverifiablepresentation}
 
-> **createVerifiablePresentation**(`controller`, `verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `expiresInMinutes?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentation`; `jwt`: `string`; \}\>
+> **createVerifiablePresentation**(`controller`, `verificationMethodId`, `presentationId`, `contexts`, `types`, `verifiableCredentials`, `options?`): `Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentationV1`; `jwt`: `string`; \}\>
 
 Create a verifiable presentation from the supplied verifiable credentials.
 
@@ -466,37 +596,53 @@ The method to associate with the presentation.
 
 ##### presentationId
 
-The id of the presentation.
+`string` \| `undefined`
 
-`undefined` | `string`
+The id of the presentation.
 
 ##### contexts
 
-The contexts for the data stored in the verifiable credential.
+`IJsonLdContextDefinitionRoot` \| `undefined`
 
-`undefined` | `IJsonLdContextDefinitionRoot`
+The contexts for the data stored in the verifiable credential.
 
 ##### types
 
-The types for the data stored in the verifiable credential.
+`string` \| `string`[] \| `undefined`
 
-`undefined` | `string` | `string`[]
+The types for the data stored in the verifiable credential.
 
 ##### verifiableCredentials
 
-(`string` \| `IDidVerifiableCredential`)[]
+(`string` \| `IDidVerifiableCredentialV1`)[]
 
 The credentials to use for creating the presentation in jwt format.
 
-##### expiresInMinutes?
+##### options?
 
-`number`
+Additional options for creating the verifiable presentation.
 
-The time in minutes for the presentation to expire.
+###### expirationDate?
+
+`Date`
+
+The date the verifiable presentation is valid until.
+
+###### jwtHeaderFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to add to the JWT header.
+
+###### jwtPayloadFields?
+
+\{\[`id`: `string`\]: `string`; \}
+
+Additional fields to add to the JWT payload.
 
 #### Returns
 
-`Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentation`; `jwt`: `string`; \}\>
+`Promise`\<\{ `verifiablePresentation`: `IDidVerifiablePresentationV1`; `jwt`: `string`; \}\>
 
 The created verifiable presentation and its token.
 
@@ -510,23 +656,23 @@ NotFoundError if the id can not be resolved.
 
 ***
 
-### checkVerifiablePresentation()
+### checkVerifiablePresentation() {#checkverifiablepresentation}
 
-> **checkVerifiablePresentation**(`presentationJwt`): `Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentation`; `issuers?`: `IDidDocument`[]; \}\>
+> **checkVerifiablePresentation**(`presentation`): `Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentationV1`; `issuers?`: `IDidDocument`[]; \}\>
 
 Check a verifiable presentation is valid.
 
 #### Parameters
 
-##### presentationJwt
+##### presentation
 
-`string`
+`string` \| `IDidVerifiablePresentation`
 
 The presentation to verify.
 
 #### Returns
 
-`Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentation`; `issuers?`: `IDidDocument`[]; \}\>
+`Promise`\<\{ `revoked`: `boolean`; `verifiablePresentation?`: `IDidVerifiablePresentationV1`; `issuers?`: `IDidDocument`[]; \}\>
 
 The presentation stored in the jwt and the revocation status.
 
@@ -536,11 +682,13 @@ The presentation stored in the jwt and the revocation status.
 
 ***
 
-### createProof()
+### createProof() {#createproof}
 
 > **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
 
 Create a proof for arbitrary data with the specified verification method.
+This method uses async signing to ensure the private key never leaves the vault,
+with algorithm validation to ensure key type compatibility.
 
 #### Parameters
 
@@ -574,13 +722,21 @@ The unsecure document to create the proof for.
 
 The proof.
 
+#### Throws
+
+NotFoundError if the identity or method is not found.
+
+#### Throws
+
+GeneralError if algorithm doesn't match key type or proof creation fails.
+
 #### Implementation of
 
 `IIdentityConnector.createProof`
 
 ***
 
-### verifyProof()
+### verifyProof() {#verifyproof}
 
 > **verifyProof**(`document`, `proof`): `Promise`\<`boolean`\>
 

@@ -4,7 +4,7 @@ Configuration for the Universal Resolver Connector.
 
 ## Properties
 
-### endpoint
+### endpoint {#endpoint}
 
 > **endpoint**: `string`
 

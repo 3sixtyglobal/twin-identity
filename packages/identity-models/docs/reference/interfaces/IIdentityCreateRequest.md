@@ -4,14 +4,14 @@ Request to create an identity.
 
 ## Properties
 
-### body?
+### body? {#body}
 
-> `optional` **body**: `object`
+> `optional` **body?**: `object`
 
 The data for the request.
 
 #### namespace?
 
-> `optional` **namespace**: `string`
+> `optional` **namespace?**: `string`
 
 The optional namespace to create the identity in.

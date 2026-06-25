@@ -4,7 +4,7 @@ Request to create a verifiable presentation.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -24,7 +24,7 @@ The verification method id to use.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 
@@ -32,19 +32,19 @@ The data for the request.
 
 #### presentationId?
 
-> `optional` **presentationId**: `string`
+> `optional` **presentationId?**: `string`
 
 The id of the presentation.
 
 #### contexts?
 
-> `optional` **contexts**: `IJsonLdContextDefinitionRoot`
+> `optional` **contexts?**: `IJsonLdContextDefinitionRoot`
 
 The context to use for the presentation.
 
 #### types?
 
-> `optional` **types**: `string` \| `string`[]
+> `optional` **types?**: `string` \| `string`[]
 
 The types of the presentation.
 
@@ -54,8 +54,28 @@ The types of the presentation.
 
 The verifiable credentials to include in the presentation.
 
-#### expiresInMinutes?
+#### expirationDate?
 
-> `optional` **expiresInMinutes**: `number`
+> `optional` **expirationDate?**: `string`
 
-The expiration time for the presentation.
+The expiration date/time for the presentation.
+
+#### jwtHeaderFields?
+
+> `optional` **jwtHeaderFields?**: `object`
+
+Additional fields to include in the JWT header when creating the verifiable presentation in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`
+
+#### jwtPayloadFields?
+
+> `optional` **jwtPayloadFields?**: `object`
+
+Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format.
+
+##### Index Signature
+
+\[`id`: `string`\]: `string`

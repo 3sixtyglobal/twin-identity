@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
-import { DocumentHelper } from "../../src/utils/documentHelper";
+import { DocumentHelper } from "../../src/utils/documentHelper.js";
 
 describe("DocumentHelper", () => {
 	test("Can fail when a document has no verification method", () => {

@@ -4,7 +4,7 @@ Request to remove a verification method.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 

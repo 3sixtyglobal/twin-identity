@@ -47,8 +47,18 @@ export interface IIdentityVerifiablePresentationCreateRequest {
 		verifiableCredentials: (string | IDidVerifiableCredential)[];
 
 		/**
-		 * The expiration time for the presentation.
+		 * The expiration date/time for the presentation.
 		 */
-		expiresInMinutes?: number;
+		expirationDate?: string;
+
+		/**
+		 * Additional fields to include in the JWT header when creating the verifiable presentation in jwt format.
+		 */
+		jwtHeaderFields?: { [id: string]: string };
+
+		/**
+		 * Additional fields to include in the JWT payload when creating the verifiable presentation in jwt format.
+		 */
+		jwtPayloadFields?: { [id: string]: string };
 	};
 }

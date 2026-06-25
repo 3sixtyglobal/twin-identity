@@ -8,21 +8,17 @@ import {
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
-import type { IIdentityResolverServiceConstructorOptions } from "./models/IIdentityResolverServiceConstructorOptions";
+import { IdentityService } from "./identityService.js";
+import type { IIdentityResolverServiceConstructorOptions } from "./models/IIdentityResolverServiceConstructorOptions.js";
 
 /**
  * Class which implements the identity resolver contract.
  */
 export class IdentityResolverService implements IIdentityResolverComponent {
 	/**
-	 * The namespace supported by the identity service.
-	 */
-	public static readonly NAMESPACE: string = "identity-resolver";
-
-	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<IdentityResolverService>();
+	public static readonly CLASS_NAME: string = nameof<IdentityResolverService>();
 
 	/**
 	 * The default namespace for the connector to use.
@@ -39,15 +35,24 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	/**
 	 * Create a new instance of IdentityResolverService.
 	 * @param options The options for the service.
+	 * @throws GeneralError if no connectors are registered.
 	 */
 	constructor(options?: IIdentityResolverServiceConstructorOptions) {
 		const names = IdentityResolverConnectorFactory.names();
 		if (names.length === 0) {
-			throw new GeneralError(this.CLASS_NAME, "noConnectors");
+			throw new GeneralError(IdentityResolverService.CLASS_NAME, "noConnectors");
 		}
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
 		this._fallbackResolverConnectorType = options?.fallbackResolverConnectorType ?? "universal";
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return IdentityService.CLASS_NAME;
 	}
 
 	/**
@@ -56,7 +61,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	 * @returns The resolved document.
 	 */
 	public async identityResolve(identity: string): Promise<IDidDocument> {
-		Urn.guard(this.CLASS_NAME, nameof(identity), identity);
+		Urn.guard(IdentityResolverService.CLASS_NAME, nameof(identity), identity);
 
 		try {
 			const identityResolverConnector = this.getConnectorByUri(identity);
@@ -65,7 +70,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 			return document;
 		} catch (error) {
 			throw new GeneralError(
-				this.CLASS_NAME,
+				IdentityResolverService.CLASS_NAME,
 				"identityResolveFailed",
 				{
 					identity
@@ -79,6 +84,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	 * Get the connector from the namespace.
 	 * @param namespace The namespace for the identity.
 	 * @returns The connector.
+	 * @throws GeneralError if the connector is not found.
 	 * @internal
 	 */
 	private getConnectorByNamespace(namespace?: string): IIdentityResolverConnector {
@@ -93,7 +99,7 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 				this._fallbackResolverConnectorType
 			);
 			if (Is.empty(connector)) {
-				throw new GeneralError(this.CLASS_NAME, "connectorNotFound", {
+				throw new GeneralError(IdentityResolverService.CLASS_NAME, "connectorNotFound", {
 					namespace: namespaceMethod
 				});
 			}
@@ -106,13 +112,14 @@ export class IdentityResolverService implements IIdentityResolverComponent {
 	 * Get the connector from the uri.
 	 * @param id The id of the identity in urn format.
 	 * @returns The connector.
+	 * @throws GeneralError if the namespace does not match or the connector is not found.
 	 * @internal
 	 */
 	private getConnectorByUri(id: string): IIdentityResolverConnector {
 		const idUri = Urn.fromValidString(id);
 
 		if (idUri.namespaceIdentifier() !== "did") {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
+			throw new GeneralError(IdentityResolverService.CLASS_NAME, "namespaceMismatch", {
 				namespace: "did",
 				id
 			});

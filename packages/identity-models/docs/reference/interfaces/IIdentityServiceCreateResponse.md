@@ -4,7 +4,7 @@ Response to creating a service.
 
 ## Properties
 
-### body
+### body {#body}
 
 > **body**: `IDidService`
 

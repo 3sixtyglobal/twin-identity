@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { I18n, RandomHelper } from "@twin.org/core";
+import { RandomHelper } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -23,32 +23,34 @@ import {
 	initSchema as initSchemaVault
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import { IdentityResolverService } from "../src/identityResolverService";
-import { IdentityService } from "../src/identityService";
+import { IdentityResolverService } from "../src/identityResolverService.js";
+import { IdentityService } from "../src/identityService.js";
 
 export const TEST_IDENTITY_ID = "test-identity";
 export const TEST_CONTROLLER = "test-controller";
 
 let vaultKeyEntityStorageConnector: MemoryEntityStorageConnector<VaultKey>;
 let identityDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
+let vaultSecretEntityStorageConnector: MemoryEntityStorageConnector<VaultSecret>;
 
 describe("IdentityResolverService", () => {
 	beforeAll(async () => {
-		I18n.addDictionary("en", await import("../locales/en.json"));
-
 		initSchemaVault();
 		initSchemaIdentity();
 
 		identityDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
-			entitySchema: nameof<IdentityDocument>()
+			entitySchema: nameof<IdentityDocument>(),
+			config: { storageKey: "identity-document" }
 		});
 
 		vaultKeyEntityStorageConnector = new MemoryEntityStorageConnector<VaultKey>({
-			entitySchema: nameof<VaultKey>()
+			entitySchema: nameof<VaultKey>(),
+			config: { storageKey: "vault-keys" }
 		});
 
-		const vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
-			entitySchema: nameof<VaultSecret>()
+		vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
+			entitySchema: nameof<VaultSecret>(),
+			config: { storageKey: "vault-secrets" }
 		});
 
 		EntityStorageConnectorFactory.register(
@@ -81,6 +83,12 @@ describe("IdentityResolverService", () => {
 			);
 
 		vi.useFakeTimers().setSystemTime(new Date("2020-01-01"));
+	});
+
+	afterAll(async () => {
+		await identityDocumentEntityStorage.teardown();
+		await vaultKeyEntityStorageConnector.teardown();
+		await vaultSecretEntityStorageConnector.teardown();
 	});
 
 	test("Can create identity resolver service", () => {

@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import { Factory } from "@twin.org/core";
-import type { IIdentityResolverConnector } from "../models/IIdentityResolverConnector";
+import type { IIdentityResolverConnector } from "../models/IIdentityResolverConnector.js";
 
 /**
  * Factory for creating identity resolver connectors.

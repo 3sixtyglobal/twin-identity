@@ -7,8 +7,8 @@ import { VaultConnectorFactory } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the verification method remove command for the CLI.
@@ -27,8 +27,12 @@ export function buildCommandVerificationMethodRemove(): Command {
 		.requiredOption(
 			I18n.formatMessage("commands.verification-method-remove.options.id.param"),
 			I18n.formatMessage("commands.verification-method-remove.options.id.description")
+		)
+		.option(
+			I18n.formatMessage("commands.verification-method-remove.options.addressIndex.param"),
+			I18n.formatMessage("commands.verification-method-remove.options.addressIndex.description"),
+			"0"
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -75,10 +79,12 @@ export function buildCommandVerificationMethodRemove(): Command {
  * @param opts.node The node URL.
  * @param opts.explorer The explorer URL.
  * @param opts.network The network to use for connector.
+ * @param opts.addressIndex The address index to use for key derivation (if applicable).
  */
 export async function actionCommandVerificationMethodRemove(opts: {
 	seed: string;
 	id: string;
+	addressIndex?: string;
 	connector?: IdentityConnectorTypes;
 	node: string;
 	network?: string;
@@ -86,6 +92,7 @@ export async function actionCommandVerificationMethodRemove(opts: {
 }): Promise<void> {
 	const seed: Uint8Array = CLIParam.hexBase64("seed", opts.seed);
 	const id: string = CLIParam.stringValue("id", opts.id);
+	const addressIndex: number = CLIParam.integer("addressIndex", opts.addressIndex ?? "0", false, 0);
 	const nodeEndpoint: string = CLIParam.url("node", opts.node);
 	const network: string | undefined =
 		opts.connector === IdentityConnectorTypes.Iota
@@ -94,9 +101,14 @@ export async function actionCommandVerificationMethodRemove(opts: {
 	const explorerEndpoint: string = CLIParam.url("explorer", opts.explorer);
 
 	CLIDisplay.value(
-		I18n.formatMessage("commands.verification-method-add.labels.verificationMethodId"),
+		I18n.formatMessage("commands.verification-method-remove.labels.verificationMethodId"),
 		id
 	);
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verification-method-remove.labels.addressIndex"),
+		addressIndex
+	);
+
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -119,7 +131,7 @@ export async function actionCommandVerificationMethodRemove(opts: {
 	WalletConnectorFactory.register("wallet", () => walletConnector);
 
 	const identityConnector = setupIdentityConnector(
-		{ nodeEndpoint, network, vaultSeedId },
+		{ nodeEndpoint, network, addressIndex, vaultSeedId },
 		opts.connector
 	);
 
@@ -138,7 +150,7 @@ export async function actionCommandVerificationMethodRemove(opts: {
 	if (opts.connector === IdentityConnectorTypes.Iota) {
 		const didUrn = Urn.fromValidString(did);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 		CLIDisplay.value(
 			I18n.formatMessage("commands.common.labels.explore"),
 			`${StringHelper.trimTrailingSlashes(explorerEndpoint)}/object/${objectId}?network=${network}`

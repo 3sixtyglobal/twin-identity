@@ -1,6 +1,5 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { I18n } from "@twin.org/core";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
 import { IdentityConnectorFactory } from "@twin.org/identity-models";
@@ -12,42 +11,45 @@ import {
 	type VaultSecret
 } from "@twin.org/vault-connector-entity-storage";
 import { VaultConnectorFactory } from "@twin.org/vault-models";
-import type { IdentityDocument } from "../src/entities/identityDocument";
-import type { IdentityProfile } from "../src/entities/identityProfile";
-import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector";
-import { EntityStorageIdentityProfileConnector } from "../src/entityStorageIdentityProfileConnector";
-import { initSchema } from "../src/schema";
+import type { IdentityDocument } from "../src/entities/identityDocument.js";
+import type { IdentityProfile } from "../src/entities/identityProfile.js";
+import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector.js";
+import { EntityStorageIdentityProfileConnector } from "../src/entityStorageIdentityProfileConnector.js";
+import { initSchema } from "../src/schema.js";
 
 export const TEST_IDENTITY_ID = "test-identity";
 export const TEST_CONTROLLER = "test-controller";
 
 let vaultKeyEntityStorageConnector: MemoryEntityStorageConnector<VaultKey>;
+let vaultSecretEntityStorageConnector: MemoryEntityStorageConnector<VaultSecret>;
 let identityDocumentEntityStorage: MemoryEntityStorageConnector<IdentityDocument>;
 let identityProfileEntityStorage: MemoryEntityStorageConnector<IdentityProfile>;
 
 describe("EntityStorageIdentityProfileConnector", () => {
 	beforeAll(async () => {
-		I18n.addDictionary("en", await import("../locales/en.json"));
-
 		initSchemaVault();
 		initSchema();
 	});
 
 	beforeEach(async () => {
 		identityDocumentEntityStorage = new MemoryEntityStorageConnector<IdentityDocument>({
-			entitySchema: nameof<IdentityDocument>()
+			entitySchema: nameof<IdentityDocument>(),
+			config: { storageKey: "identity-document" }
 		});
 
 		identityProfileEntityStorage = new MemoryEntityStorageConnector<IdentityProfile>({
-			entitySchema: nameof<IdentityProfile>()
+			entitySchema: nameof<IdentityProfile>(),
+			config: { storageKey: "identity-profile" }
 		});
 
 		vaultKeyEntityStorageConnector = new MemoryEntityStorageConnector<VaultKey>({
-			entitySchema: nameof<VaultKey>()
+			entitySchema: nameof<VaultKey>(),
+			config: { storageKey: "vault-keys" }
 		});
 
-		const vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
-			entitySchema: nameof<VaultSecret>()
+		vaultSecretEntityStorageConnector = new MemoryEntityStorageConnector<VaultSecret>({
+			entitySchema: nameof<VaultSecret>(),
+			config: { storageKey: "vault-secrets" }
 		});
 
 		EntityStorageConnectorFactory.register(
@@ -63,9 +65,15 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		IdentityConnectorFactory.register("identity", () => new EntityStorageIdentityConnector());
 	});
 
+	afterEach(async () => {
+		await identityDocumentEntityStorage.teardown();
+		await identityProfileEntityStorage.teardown();
+		await vaultKeyEntityStorageConnector.teardown();
+		await vaultSecretEntityStorageConnector.teardown();
+	});
+
 	test("Can fail to get an identity when connector fails", async () => {
 		identityProfileEntityStorage.get = vi.fn().mockImplementation(() => {
-			// eslint-disable-next-line no-restricted-syntax
 			throw new Error("Test Error");
 		});
 
@@ -74,10 +82,8 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		await expect(service.get("foo")).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "entityStorageIdentityProfileConnector.getFailed",
-			inner: { name: "Error", message: "Test Error" }
+			cause: { name: "Error", message: "Test Error" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.getFailed")).toEqual(true);
 	});
 
 	test("Can fail to get an identity when it doesn't exist", async () => {
@@ -85,11 +91,9 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 		await expect(service.get("foo")).rejects.toMatchObject({
 			name: "NotFoundError",
-			message: "entityStorageIdentityProfileConnector.getFailed",
+			message: "entityStorageIdentityProfileConnector.identityNotFound",
 			properties: { notFoundId: "foo" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.getFailed")).toEqual(true);
 	});
 
 	test("Can get an identity", async () => {
@@ -201,7 +205,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 	test("Can fail to update an identity when connector fails", async () => {
 		identityProfileEntityStorage.get = vi.fn().mockImplementation(() => {
-			// eslint-disable-next-line no-restricted-syntax
 			throw new Error("Test Error");
 		});
 
@@ -210,12 +213,8 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		await expect(service.update(TEST_IDENTITY_ID, [])).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "entityStorageIdentityProfileConnector.updateFailed",
-			inner: { name: "Error", message: "Test Error" }
+			cause: { name: "Error", message: "Test Error" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.updateFailed")).toEqual(
-			true
-		);
 	});
 
 	test("Can fail to update an identity when it doesn't exist", async () => {
@@ -227,10 +226,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			message: "entityStorageIdentityProfileConnector.notFound",
 			properties: { notFoundId: TEST_IDENTITY_ID }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.updateFailed")).toEqual(
-			true
-		);
 	});
 
 	test("Can update an identity", async () => {
@@ -248,7 +243,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			url: "http://www.janedoe.com"
 		});
 
-		const profile = identityProfileEntityStorage.getStore();
+		const profile = await identityProfileEntityStorage.getStore();
 		expect(profile?.[0].publicProfile).toEqual({
 			"@context": "https://schema.org",
 			"@type": "Person",
@@ -267,7 +262,7 @@ describe("EntityStorageIdentityProfileConnector", () => {
 			url: "http://www.janedoe.com2"
 		});
 
-		const profile2 = identityProfileEntityStorage.getStore();
+		const profile2 = await identityProfileEntityStorage.getStore();
 		expect(profile2?.[0].identity).toEqual(identityResult.id);
 		expect(profile2?.[0].publicProfile).toEqual({
 			"@context": "https://schema.org",
@@ -281,7 +276,6 @@ describe("EntityStorageIdentityProfileConnector", () => {
 
 	test("Can fail get a list of identities when connector fails", async () => {
 		identityProfileEntityStorage.query = vi.fn().mockImplementation(() => {
-			// eslint-disable-next-line no-restricted-syntax
 			throw new Error("Test Error");
 		});
 
@@ -290,10 +284,8 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		await expect(service.list()).rejects.toMatchObject({
 			name: "GeneralError",
 			message: "entityStorageIdentityProfileConnector.listFailed",
-			inner: { name: "Error", message: "Test Error" }
+			cause: { name: "Error", message: "Test Error" }
 		});
-
-		expect(I18n.hasMessage("error.entityStorageIdentityProfileConnector.listFailed")).toEqual(true);
 	});
 
 	test("Can get a list of identities including private properties", async () => {

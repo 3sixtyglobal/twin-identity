@@ -6,15 +6,25 @@ Configuration for the IOTA Identity Connector.
 
 - `IIotaConfig`
 
-## Extended by
-
-- [`IIotaIdentityResolverConnectorConfig`](IIotaIdentityResolverConnectorConfig.md)
-
 ## Properties
 
-### walletAddressIndex?
+### walletAccountIndex? {#walletaccountindex}
 
-> `optional` **walletAddressIndex**: `number`
+> `optional` **walletAccountIndex?**: `number`
+
+The wallet account index to use for funding and controlling the identity.
+
+#### Default
+
+```ts
+0
+```
+
+***
+
+### walletAddressIndex? {#walletaddressindex}
+
+> `optional` **walletAddressIndex?**: `number`
 
 The wallet address index to use for funding and controlling the identity.
 
@@ -26,9 +36,9 @@ The wallet address index to use for funding and controlling the identity.
 
 ***
 
-### identityPkgId?
+### identityPkgId? {#identitypkgid}
 
-> `optional` **identityPkgId**: `string`
+> `optional` **identityPkgId?**: `string`
 
 The package ID for the identity contract on the network.
 If not provided, a default value will be used based on the detected network type.
@@ -37,9 +47,9 @@ For devnet: "0x03242ae6b87406bd0eb5d669fbe874ed4003694c0be9c6a9ee7c315e6461a553"
 
 ***
 
-### standardGasPrice?
+### standardGasPrice? {#standardgasprice}
 
-> `optional` **standardGasPrice**: `number`
+> `optional` **standardGasPrice?**: `number`
 
 The standard gas price in nanos per computation unit for gas station transactions.
 (1 Nano = 0.000000001 IOTA)

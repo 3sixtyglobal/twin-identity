@@ -4,7 +4,7 @@ Request to create a service.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -18,7 +18,7 @@ The identity to create the service for.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 

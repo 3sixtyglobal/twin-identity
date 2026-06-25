@@ -1,16 +1,17 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import { HealthStatus } from "@twin.org/core";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
-	TEST_IDENTITY_ID,
+	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK
-} from "./setupTestEnv";
-import { IotaIdentityConnector } from "../src/iotaIdentityConnector";
-import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector";
-import type { IIotaIdentityResolverConnectorConfig } from "../src/models/IIotaIdentityResolverConnectorConfig";
-import type { IIotaIdentityResolverConnectorConstructorOptions } from "../src/models/IIotaIdentityResolverConnectorConstructorOptions";
+} from "./setupTestEnv.js";
+import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
+import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector.js";
+import type { IIotaIdentityResolverConnectorConfig } from "../src/models/IIotaIdentityResolverConnectorConfig.js";
+import type { IIotaIdentityResolverConnectorConstructorOptions } from "../src/models/IIotaIdentityResolverConnectorConstructorOptions.js";
 
 describe("IotaIdentityResolverConnector", () => {
 	let testDocumentId: string;
@@ -28,7 +29,7 @@ describe("IotaIdentityResolverConnector", () => {
 		});
 
 		// Create a test document to resolve
-		const testDocument = await identityConnector.createDocument(TEST_IDENTITY_ID);
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
 		testDocumentId = testDocument.id;
 	});
 
@@ -84,6 +85,38 @@ describe("IotaIdentityResolverConnector", () => {
 				}
 			})
 		);
+	});
+
+	test("can get health status", async () => {
+		const identityResolverConnector = new IotaIdentityResolverConnector({
+			config: {
+				clientOptions: TEST_CLIENT_OPTIONS,
+				network: TEST_NETWORK
+			}
+		});
+
+		const health = await identityResolverConnector.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(IotaIdentityResolverConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Ok);
+	});
+
+	test("can get health status error when node is unreachable", async () => {
+		const identityResolverConnector = new IotaIdentityResolverConnector({
+			config: {
+				clientOptions: { url: "http://localhost:1" },
+				network: TEST_NETWORK
+			}
+		});
+
+		const health = await identityResolverConnector.health();
+
+		expect(health).toBeDefined();
+		expect(health.length).toBeGreaterThan(0);
+		expect(health[0].source).toEqual(IotaIdentityResolverConnector.CLASS_NAME);
+		expect(health[0].status).toEqual(HealthStatus.Error);
 	});
 
 	test("can fail to resolve a document with no id", async () => {

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { EntitySchemaFactory, EntitySchemaHelper } from "@twin.org/entity";
 import { nameof } from "@twin.org/nameof";
-import { IdentityDocument } from "./entities/identityDocument";
-import { IdentityProfile } from "./entities/identityProfile";
+import { IdentityDocument } from "./entities/identityDocument.js";
+import { IdentityProfile } from "./entities/identityProfile.js";
 
 /**
  * Initialize the schema for the identity entity storage connector.

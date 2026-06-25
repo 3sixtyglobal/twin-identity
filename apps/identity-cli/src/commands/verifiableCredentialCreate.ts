@@ -15,8 +15,8 @@ import { VaultConnectorFactory, VaultKeyType } from "@twin.org/vault-models";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the verifiable credential create command for the CLI.
@@ -29,8 +29,12 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 		.summary(I18n.formatMessage("commands.verifiable-credential-create.summary"))
 		.description(I18n.formatMessage("commands.verifiable-credential-create.description"))
 		.requiredOption(
-			I18n.formatMessage("commands.verifiable-credential-create.options.id.param"),
-			I18n.formatMessage("commands.verifiable-credential-create.options.id.description")
+			I18n.formatMessage(
+				"commands.verifiable-credential-create.options.verification-method-id.param"
+			),
+			I18n.formatMessage(
+				"commands.verifiable-credential-create.options.verification-method-id.description"
+			)
 		)
 		.requiredOption(
 			I18n.formatMessage("commands.verifiable-credential-create.options.private-key.param"),
@@ -45,12 +49,17 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 			I18n.formatMessage("commands.verifiable-credential-create.options.subject-json.description")
 		)
 		.option(
+			I18n.formatMessage("commands.verifiable-credential-create.options.expiration-date.param"),
+			I18n.formatMessage(
+				"commands.verifiable-credential-create.options.expiration-date.description"
+			)
+		)
+		.option(
 			I18n.formatMessage("commands.verifiable-credential-create.options.revocation-index.param"),
 			I18n.formatMessage(
 				"commands.verifiable-credential-create.options.revocation-index.description"
 			)
 		);
-
 	CLIOptions.output(command, {
 		noConsole: true,
 		json: true,
@@ -86,27 +95,32 @@ export function buildCommandVerifiableCredentialCreate(): Command {
 /**
  * Action the verifiable credential create command.
  * @param opts The options for the command.
- * @param opts.id The id of the verification method to use for the credential.
+ * @param opts.verificationMethodId The id of the verification method to use for the credential.
  * @param opts.privateKey The private key for the verification method.
  * @param opts.credentialId The id of the credential.
  * @param opts.subjectJson The JSON data for the subject.
+ * @param opts.expirationDate The expiration date for the credential.
  * @param opts.revocationIndex The revocation index for the credential.
  * @param opts.connector The connector to perform the operations with.
  * @param opts.node The node URL.
  */
 export async function actionCommandVerifiableCredentialCreate(
 	opts: {
-		id: string;
+		verificationMethodId: string;
 		privateKey: string;
 		credentialId?: string;
 		subjectJson: string;
+		expirationDate?: string;
 		revocationIndex?: string;
 		connector?: IdentityConnectorTypes;
 		node: string;
 		network?: string;
 	} & CliOutputOptions
 ): Promise<void> {
-	const id: string = CLIParam.stringValue("id", opts.id);
+	const verificationMethodId: string = CLIParam.stringValue(
+		"verification-method-id",
+		opts.verificationMethodId
+	);
 	const privateKey: Uint8Array = CLIParam.hexBase64("private-key", opts.privateKey);
 	const credentialId: string = CLIParam.stringValue("credential-id", opts.credentialId);
 	const subjectJson: string = path.resolve(CLIParam.stringValue("subject-json", opts.subjectJson));
@@ -119,7 +133,7 @@ export async function actionCommandVerifiableCredentialCreate(
 
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.verificationMethodId"),
-		id
+		verificationMethodId
 	);
 	CLIDisplay.value(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.credentialId"),
@@ -133,6 +147,10 @@ export async function actionCommandVerifiableCredentialCreate(
 		I18n.formatMessage("commands.verifiable-credential-create.labels.revocationIndex"),
 		revocationIndex
 	);
+	CLIDisplay.value(
+		I18n.formatMessage("commands.verifiable-credential-create.labels.expirationDate"),
+		opts.expirationDate
+	);
 	CLIDisplay.value(I18n.formatMessage("commands.common.labels.node"), nodeEndpoint);
 	if (Is.stringValue(network)) {
 		CLIDisplay.value(I18n.formatMessage("commands.common.labels.network"), network);
@@ -141,13 +159,11 @@ export async function actionCommandVerifiableCredentialCreate(
 
 	setupVault();
 
-	const localIdentity = "local";
-
-	const vmParts = DocumentHelper.parseId(id);
+	const vmParts = DocumentHelper.parseId(verificationMethodId);
 
 	const vaultConnector = VaultConnectorFactory.get("vault");
 	await vaultConnector.addKey(
-		`${localIdentity}/${vmParts.fragment}`,
+		`${vmParts.id}/${vmParts.fragment}`,
 		VaultKeyType.Ed25519,
 		privateKey,
 		new Uint8Array()
@@ -181,11 +197,14 @@ export async function actionCommandVerifiableCredentialCreate(
 	CLIDisplay.spinnerStart();
 
 	const verifiableCredential = await identityConnector.createVerifiableCredential(
-		localIdentity,
-		id,
+		vmParts.id,
+		verificationMethodId,
 		credentialId,
 		jsonData,
-		revocationIndex
+		{
+			revocationIndex,
+			expirationDate: Coerce.dateTime(opts.expirationDate)
+		}
 	);
 
 	CLIDisplay.spinnerStop();
@@ -203,7 +222,10 @@ export async function actionCommandVerifiableCredentialCreate(
 	if (Is.stringValue(opts?.json)) {
 		await CLIUtils.writeJsonFile(
 			opts.json,
-			{ verifiableCredentialJwt: verifiableCredential.jwt },
+			{
+				verifiableCredentialJwt: verifiableCredential.jwt,
+				verifiableCredential: verifiableCredential.verifiableCredential
+			},
 			opts.mergeJson
 		);
 	}

@@ -14,7 +14,7 @@ Helper methods for verification.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -22,21 +22,21 @@ Runtime name for the class.
 
 ## Methods
 
-### verifyJwt()
+### verifyJwt() {#verifyjwt}
 
 > `static` **verifyJwt**\<`T`, `U`\>(`resolver`, `jwt`): `Promise`\<\{ `header`: `T`; `payload`: `U`; \}\>
 
-Verified the JWT.
+Verify the JWT and return the decoded header and payload.
 
 #### Type Parameters
 
 ##### T
 
-`T` *extends* `IJwtHeader`
+`T` *extends* `JWTHeaderParameters`
 
 ##### U
 
-`U` *extends* `IJwtPayload`
+`U` *extends* `JWTPayload`
 
 #### Parameters
 
@@ -56,15 +56,15 @@ The token to verify.
 
 `Promise`\<\{ `header`: `T`; `payload`: `U`; \}\>
 
-The decoded payload.
+The decoded header and payload.
 
 ***
 
-### verifyProof()
+### verifyProof() {#verifyproof}
 
 > `static` **verifyProof**(`resolver`, `secureDocument`): `Promise`\<`boolean`\>
 
-Verified the proof for the document e.g. verifiable credential.
+Verify the proof for the document.
 
 #### Parameters
 
@@ -84,4 +84,4 @@ The secure document to verify.
 
 `Promise`\<`boolean`\>
 
-True if the verification is successful.
+True if all proofs in the document are verified successfully.

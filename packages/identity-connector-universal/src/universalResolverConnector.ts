@@ -1,13 +1,13 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { GeneralError, Guards, StringHelper } from "@twin.org/core";
+import { GeneralError, Guards, HealthStatus, StringHelper, type IHealth } from "@twin.org/core";
 import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
 import { FetchHelper, HttpMethod } from "@twin.org/web";
-import type { IUniversalResolverResult } from "./models/api/IUniversalResolverResult";
-import type { IUniversalResolverConnectorConfig } from "./models/IUniversalResolverConnectorConfig";
-import type { IUniversalResolverConnectorConstructorOptions } from "./models/IUniversalResolverConnectorConstructorOptions";
+import type { IUniversalResolverResult } from "./models/api/IUniversalResolverResult.js";
+import type { IUniversalResolverConnectorConfig } from "./models/IUniversalResolverConnectorConfig.js";
+import type { IUniversalResolverConnectorConstructorOptions } from "./models/IUniversalResolverConnectorConstructorOptions.js";
 
 /**
  * Class for performing identity operations on a universal resolver.
@@ -21,7 +21,7 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	/**
 	 * Runtime name for the class.
 	 */
-	public readonly CLASS_NAME: string = nameof<UniversalResolverConnector>();
+	public static readonly CLASS_NAME: string = nameof<UniversalResolverConnector>();
 
 	/**
 	 * The url for the resolver.
@@ -34,15 +34,74 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	 * @param options The options for the identity connector.
 	 */
 	constructor(options: IUniversalResolverConnectorConstructorOptions) {
-		Guards.object(this.CLASS_NAME, nameof(options), options);
+		Guards.object(UniversalResolverConnector.CLASS_NAME, nameof(options), options);
 		Guards.object<IUniversalResolverConnectorConfig>(
-			this.CLASS_NAME,
+			UniversalResolverConnector.CLASS_NAME,
 			nameof(options.config),
 			options.config
 		);
-		Guards.stringValue(this.CLASS_NAME, nameof(options.config.endpoint), options.config.endpoint);
+		Guards.stringValue(
+			UniversalResolverConnector.CLASS_NAME,
+			nameof(options.config.endpoint),
+			options.config.endpoint
+		);
 
 		this._resolverEndpoint = options.config.endpoint;
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return UniversalResolverConnector.CLASS_NAME;
+	}
+
+	/**
+	 * Returns the health status of the component.
+	 * @returns The health status of the component.
+	 */
+	public async health(): Promise<IHealth[]> {
+		try {
+			const response = await FetchHelper.fetch(
+				UniversalResolverConnector.CLASS_NAME,
+				`${StringHelper.trimTrailingSlashes(this._resolverEndpoint)}/1.0/identifiers/did:iota:0`,
+				HttpMethod.GET
+			);
+
+			const body = await response.text();
+
+			if (!body.includes("invalid method id")) {
+				return [
+					{
+						source: UniversalResolverConnector.CLASS_NAME,
+						status: HealthStatus.Error,
+						description: "healthDescription",
+						message: "resolverHealthCheckFailed",
+						data: { endpoint: this._resolverEndpoint }
+					}
+				];
+			}
+
+			return [
+				{
+					source: UniversalResolverConnector.CLASS_NAME,
+					status: HealthStatus.Ok,
+					description: "healthDescription",
+					data: { endpoint: this._resolverEndpoint }
+				}
+			];
+		} catch {
+			return [
+				{
+					source: UniversalResolverConnector.CLASS_NAME,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "resolverHealthCheckFailed",
+					data: { endpoint: this._resolverEndpoint }
+				}
+			];
+		}
 	}
 
 	/**
@@ -54,14 +113,19 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 	public async resolveDocument(documentId: string): Promise<IDidDocument> {
 		try {
 			const result = await FetchHelper.fetchJson<never, IUniversalResolverResult>(
-				this.CLASS_NAME,
+				UniversalResolverConnector.CLASS_NAME,
 				`${StringHelper.trimTrailingSlashes(this._resolverEndpoint)}/1.0/identifiers/${encodeURIComponent(documentId)}`,
 				HttpMethod.GET
 			);
 
 			return result.didDocument;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "resolveDocumentFailed", { documentId }, error);
+			throw new GeneralError(
+				UniversalResolverConnector.CLASS_NAME,
+				"resolveDocumentFailed",
+				{ documentId },
+				error
+			);
 		}
 	}
 }

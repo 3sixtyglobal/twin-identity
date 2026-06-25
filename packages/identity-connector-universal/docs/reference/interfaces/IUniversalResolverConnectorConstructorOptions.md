@@ -4,7 +4,7 @@ Options for the Universal Resolver Connector constructor.
 
 ## Properties
 
-### config
+### config {#config}
 
 > **config**: [`IUniversalResolverConnectorConfig`](IUniversalResolverConnectorConfig.md)
 

@@ -1,11 +1,11 @@
-# TWIN Identity Service Models
+# TWIN Identity
 
-Models which define the structure of the service implementations.
+The identity-models package provides shared identity models and contracts that establish a consistent structure for identity workflows across the repository. It helps reduce integration friction between services, connectors, and clients by defining a common representation of identity entities and related payloads.
 
 ## Installation
 
 ```shell
-npm install @twin.org/identity-service-models
+npm install @twin.org/identity-models
 ```
 
 ## Examples

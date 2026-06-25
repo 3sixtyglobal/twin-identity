@@ -14,7 +14,7 @@ Helper methods for documents.
 
 ## Properties
 
-### CLASS\_NAME
+### CLASS\_NAME {#class_name}
 
 > `readonly` `static` **CLASS\_NAME**: `string`
 
@@ -22,7 +22,7 @@ Runtime name for the class.
 
 ## Methods
 
-### parseId()
+### parseId() {#parseid}
 
 > `static` **parseId**(`documentId`): `object`
 
@@ -48,11 +48,11 @@ The parsed document id.
 
 ##### fragment
 
-> **fragment**: `undefined` \| `string`
+> **fragment**: `string` \| `undefined`
 
 ***
 
-### joinId()
+### joinId() {#joinid}
 
 > `static` **joinId**(`documentId`, `fragment?`): `string`
 
@@ -80,7 +80,7 @@ The full id.
 
 ***
 
-### getVerificationMethod()
+### getVerificationMethod() {#getverificationmethod}
 
 > `static` **getVerificationMethod**(`didDocument`, `methodName`, `methodType?`): `IDidDocumentVerificationMethod`
 
@@ -118,9 +118,9 @@ Error if the method is not found.
 
 ***
 
-### getJwk()
+### getJwk() {#getjwk}
 
-> `static` **getJwk**(`didDocument`, `methodName`, `methodType?`): `IJwk`
+> `static` **getJwk**(`didDocument`, `methodName`, `methodType?`): `JWK`
 
 Gets a JWK from a DID document verification method.
 
@@ -146,7 +146,7 @@ The type of the method, defaults to verificationMethod.
 
 #### Returns
 
-`IJwk`
+`JWK`
 
 The JWK if found.
 

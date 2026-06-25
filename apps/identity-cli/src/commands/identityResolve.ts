@@ -11,8 +11,8 @@ import { I18n, Is, StringHelper, Urn } from "@twin.org/core";
 import { setupWalletConnector } from "@twin.org/wallet-cli";
 import { WalletConnectorFactory } from "@twin.org/wallet-models";
 import { Command, Option } from "commander";
-import { setupIdentityResolverConnector, setupVault } from "./setupCommands";
-import { IdentityConnectorTypes } from "../models/identityConnectorTypes";
+import { setupIdentityResolverConnector, setupVault } from "./setupCommands.js";
+import { IdentityConnectorTypes } from "../models/identityConnectorTypes.js";
 
 /**
  * Build the identity resolve command for the CLI.
@@ -133,7 +133,7 @@ export async function actionCommandIdentityResolve(
 	if (opts.connector === IdentityConnectorTypes.Iota) {
 		const didUrn = Urn.fromValidString(document.id);
 		const didParts = didUrn.parts();
-		const objectId = didParts[3];
+		const objectId = didParts[didParts.length - 1];
 		CLIDisplay.value(
 			I18n.formatMessage("commands.common.labels.explore"),
 			`${StringHelper.trimTrailingSlashes(explorerEndpoint)}/object/${objectId}?network=${network}`

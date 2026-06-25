@@ -26,7 +26,7 @@ export const tagsIdentityResolver: ITag[] = [
 ];
 
 /**
- * The REST routes for identity.
+ * The REST routes for identity resolution.
  * @param baseRouteName Prefix to prepend to the paths.
  * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
  * @returns The generated routes.
@@ -79,8 +79,7 @@ export function generateRestRoutesIdentityResolver(
 					}
 				]
 			}
-		],
-		skipAuth: true
+		]
 	};
 
 	return [identityResolveRoute];

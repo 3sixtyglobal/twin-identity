@@ -4,9 +4,9 @@ Options for the IOTA Identity Connector constructor.
 
 ## Properties
 
-### vaultConnectorType?
+### vaultConnectorType? {#vaultconnectortype}
 
-> `optional` **vaultConnectorType**: `string`
+> `optional` **vaultConnectorType?**: `string`
 
 The vault connector type for the private keys.
 
@@ -18,7 +18,7 @@ vault
 
 ***
 
-### config
+### config {#config}
 
 > **config**: [`IIotaIdentityConnectorConfig`](IIotaIdentityConnectorConfig.md)
 
