@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.9.0](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.0...identity-connector-iota-v0.9.0) (2026-06-25)
+
+
+### Features
+
+* release to production ([dabf4c5](https://github.com/iotaledger/twin-identity/commit/dabf4c5bb19e04c09bfbc8533f23dc9d42b35e4c))
+* release to production ([8450ad7](https://github.com/iotaledger/twin-identity/commit/8450ad727e0c4d665f2ce483e41798c2ff5b7d55))
+* release to production ([#161](https://github.com/iotaledger/twin-identity/issues/161)) ([ad151fa](https://github.com/iotaledger/twin-identity/commit/ad151facfcaadc1d183d935a6db525379d48002f))
+
 ## [0.9.0-next.1](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.0-next.0...identity-connector-iota-v0.9.0-next.1) (2026-06-23)
 
 

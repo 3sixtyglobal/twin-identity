@@ -1,6 +1,6 @@
 {
 	"name": "@twin.org/identity-connector-iota",
-	"version": "0.9.0-next.1",
+	"version": "0.9.1-next.0",
 	"description": "Connector for running identity and DID workflows against IOTA network infrastructure.",
 	"repository": {
 		"type": "git",
@@ -39,7 +39,7 @@
 		"@twin.org/data-json-ld": "next",
 		"@twin.org/dlt-iota": "next",
 		"@twin.org/entity": "next",
-		"@twin.org/identity-models": "0.9.0-next.1",
+		"@twin.org/identity-models": "0.9.1-next.0",
 		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/vault-models": "next",
