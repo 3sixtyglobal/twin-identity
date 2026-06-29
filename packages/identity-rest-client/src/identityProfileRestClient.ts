@@ -16,6 +16,7 @@ import type {
 	IIdentityProfileUpdateRequest
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
+import { HttpMethod } from "@twin.org/web";
 
 /**
  * Client for performing identity profile operations through REST endpoints.
@@ -55,7 +56,7 @@ export class IdentityProfileRestClient<
 	 * @returns A promise that resolves when the profile has been created.
 	 */
 	public async create(publicProfile?: T, privateProfile?: U): Promise<void> {
-		await this.fetch<IIdentityProfileCreateRequest, never>("", "POST", {
+		await this.fetch<IIdentityProfileCreateRequest, never>("/", HttpMethod.POST, {
 			body: {
 				publicProfile,
 				privateProfile
@@ -79,7 +80,7 @@ export class IdentityProfileRestClient<
 	}> {
 		const response = await this.fetch<IIdentityProfileGetRequest, IIdentityProfileGetResponse>(
 			"/",
-			"GET",
+			HttpMethod.GET,
 			{
 				query: {
 					publicPropertyNames: HttpParameterHelper.arrayToString(publicPropertyNames),
@@ -107,7 +108,7 @@ export class IdentityProfileRestClient<
 		const response = await this.fetch<
 			IIdentityProfileGetPublicRequest,
 			IIdentityProfileGetPublicResponse
-		>("/:identity/public", "GET", {
+		>("/:identity/public", HttpMethod.GET, {
 			pathParams: {
 				identity
 			},
@@ -126,7 +127,7 @@ export class IdentityProfileRestClient<
 	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(publicProfile?: T, privateProfile?: U): Promise<void> {
-		await this.fetch<IIdentityProfileUpdateRequest, never>("/", "PUT", {
+		await this.fetch<IIdentityProfileUpdateRequest, never>("/", HttpMethod.PUT, {
 			body: {
 				publicProfile,
 				privateProfile
@@ -139,7 +140,7 @@ export class IdentityProfileRestClient<
 	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(): Promise<void> {
-		await this.fetch<never, never>("/", "DELETE");
+		await this.fetch<never, never>("/", HttpMethod.DELETE);
 	}
 
 	/**
@@ -173,7 +174,7 @@ export class IdentityProfileRestClient<
 	}> {
 		const response = await this.fetch<IIdentityProfileListRequest, IIdentityProfileListResponse>(
 			"/query",
-			"GET",
+			HttpMethod.GET,
 			{
 				query: {
 					publicFilters: HttpParameterHelper.arrayToString(

@@ -10,6 +10,7 @@ import type {
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
+import { HttpMethod } from "@twin.org/web";
 
 /**
  * Client for performing identity resolution through REST endpoints.
@@ -49,7 +50,7 @@ export class IdentityResolverRestClient
 
 		const response = await this.fetch<IIdentityResolveRequest, IIdentityResolveResponse>(
 			"/:identity",
-			"GET",
+			HttpMethod.GET,
 			{
 				pathParams: {
 					identity: documentId
