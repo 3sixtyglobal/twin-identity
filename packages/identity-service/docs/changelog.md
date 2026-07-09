@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.1-next.3](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.1-next.2...identity-service-v0.9.1-next.3) (2026-07-09)
+
+
+### Features
+
+* rest enhancements ([f2307ff](https://github.com/iotaledger/twin-identity/commit/f2307ff6605ba87ac5bf991bdaa69ac7d8bbd56d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.1-next.2 to 0.9.1-next.3
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.9.1-next.2 to 0.9.1-next.3
+
 ## [0.9.1-next.2](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.1-next.1...identity-service-v0.9.1-next.2) (2026-06-29)
 
 

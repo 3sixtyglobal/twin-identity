@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.1-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.1-next.2...identity-connector-iota-v0.9.1-next.3) (2026-07-09)
+
+
+### Features
+
+* cache DID resolution in IotaIdentityConnector to cut redundant network round trips ([#168](https://github.com/iotaledger/twin-identity/issues/168)) ([de07c9a](https://github.com/iotaledger/twin-identity/commit/de07c9a3d5b4af05b64a505977c120f1fb73b44c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.1-next.2 to 0.9.1-next.3
+
 ## [0.9.1-next.2](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.1-next.1...identity-connector-iota-v0.9.1-next.2) (2026-06-29)
 
 
