@@ -328,9 +328,9 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			if (Is.object(this._config.gasStation)) {
 				await this.executeGasStationTransaction(controller, deleteBuilder, "update");
+			} else {
+				await deleteBuilder.buildAndExecute(identityClient);
 			}
-
-			await deleteBuilder.buildAndExecute(identityClient);
 
 			AsyncCache.remove(this.ownDidCacheKey(documentId));
 		} catch (error) {

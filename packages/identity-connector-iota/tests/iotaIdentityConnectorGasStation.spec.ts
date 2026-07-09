@@ -262,6 +262,69 @@ describe("IotaIdentityConnector with Gas Station", () => {
 		}, 30000);
 	});
 
+	describe("Document Removal with Gas Station", () => {
+		test("removeDocument resolves cleanly under gas station config, without a redundant second submission", async () => {
+			const connector = new IotaIdentityConnector({ config: gasStationConfig });
+			const document = await connector.createDocument(TEST_USER_IDENTITY);
+
+			// removeDocument used to submit the delete transaction via the gas
+			// station AND then unconditionally again via a direct buildAndExecute call on
+			// the same (by then already wasm-consumed) builder. That crashed deep in the
+			// wasm-bindgen ↔ JS boundary while marshaling the redundant call's result — a
+			// crash that never rejected the promise removeDocument returned, only escaped
+			// as a process-level uncaught exception, so removeDocument hung forever from
+			// the caller's perspective. This regression-locks both halves of that fix: the
+			// call must now settle (not hang) and must not raise an uncaught exception.
+			const uncaughtErrors: Error[] = [];
+			const captureUncaught = (error: Error): void => {
+				uncaughtErrors.push(error);
+			};
+			process.on("uncaughtException", captureUncaught);
+
+			try {
+				const removeOutcome = (async (): Promise<"resolved" | "rejected"> => {
+					try {
+						await connector.removeDocument(TEST_USER_IDENTITY, document.id);
+						return "resolved";
+					} catch {
+						return "rejected";
+					}
+				})();
+
+				const TIMEOUT = Symbol("timeout");
+				let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+				const timeoutOutcome = new Promise<typeof TIMEOUT>(resolve => {
+					timeoutHandle = setTimeout(() => resolve(TIMEOUT), 20000);
+				});
+				const raceResult = await Promise.race([removeOutcome, timeoutOutcome]);
+				clearTimeout(timeoutHandle);
+
+				// The call must settle — and specifically resolve, not merely avoid hanging.
+				expect(raceResult).toBe("resolved");
+
+				// No stray uncaught exception from a redundant second submission.
+				expect(uncaughtErrors).toHaveLength(0);
+			} finally {
+				process.off("uncaughtException", captureUncaught);
+			}
+
+			// The deletion must have genuinely happened on-chain — confirm the identity is
+			// actually gone, not just that removeDocument returned without error.
+			const regularConnector = new IotaIdentityConnector({ config: regularConfig });
+			await expect(
+				regularConnector.addVerificationMethod(
+					TEST_USER_IDENTITY,
+					document.id,
+					DidVerificationMethodType.AssertionMethod,
+					"postDeleteProbe"
+				)
+			).rejects.toMatchObject({
+				name: "GeneralError",
+				message: "iotaIdentityConnector.addVerificationMethodFailed"
+			});
+		}, 45000);
+	});
+
 	describe("Gas Station Error Handling", () => {
 		test("Should handle gas station unavailable gracefully", async () => {
 			const invalidGasStationConfig: IIotaIdentityConnectorConfig = {
