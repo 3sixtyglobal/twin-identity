@@ -713,7 +713,7 @@ The presentation stored in the jwt and the revocation status.
 
 ### createProof() {#createproof}
 
-> **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
+> **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`, `resolvedDocument?`): `Promise`\<`IProof`\>
 
 Create a proof for arbitrary data with the specified verification method.
 
@@ -742,6 +742,12 @@ The type of proof to create.
 `IJsonLdNodeObject`
 
 The unsecure document to create the proof for.
+
+##### resolvedDocument?
+
+`IotaDocument`
+
+Optional already-resolved document for the DID, so a caller that just resolved it (e.g. createVerifiableCredential) skips a redundant re-resolve. Resolves it itself if omitted.
 
 #### Returns
 

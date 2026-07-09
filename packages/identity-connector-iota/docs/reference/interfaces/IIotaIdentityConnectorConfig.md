@@ -60,3 +60,20 @@ This should match the protocol's reference gas price.
 ```ts
 1000
 ```
+
+***
+
+### didResolutionCacheTtlMs? {#didresolutioncachettlms}
+
+> `optional` **didResolutionCacheTtlMs?**: `number`
+
+TTL in ms for caching DID documents resolved for the connector's own sign/mutate
+operations (create/update/revoke on an identity this connector controls). 0 disables
+caching. Does not affect proof or credential verification of third-party claims, which
+is never cached by this connector.
+
+#### Default
+
+```ts
+30000
+```
