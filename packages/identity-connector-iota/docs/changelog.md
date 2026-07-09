@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.1-next.4](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.1-next.3...identity-connector-iota-v0.9.1-next.4) (2026-07-09)
+
+
+### Bug Fixes
+
+* avoid removeDocument double-submitting its delete transaction when gasStation is configured ([#172](https://github.com/iotaledger/twin-identity/issues/172)) ([f8edd9a](https://github.com/iotaledger/twin-identity/commit/f8edd9ab6631c7648ae5614d2d78d3831f312f7a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.1-next.3 to 0.9.1-next.4
+
 ## [0.9.1-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.1-next.2...identity-connector-iota-v0.9.1-next.3) (2026-07-09)
 
 
