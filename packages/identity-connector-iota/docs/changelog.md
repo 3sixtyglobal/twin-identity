@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.1-next.5](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.1-next.4...identity-connector-iota-v0.9.1-next.5) (2026-07-17)
+
+
+### Bug Fixes
+
+* align gas station reservation with the transaction's declared gas budget ([#175](https://github.com/iotaledger/twin-identity/issues/175)) ([66df7ac](https://github.com/iotaledger/twin-identity/commit/66df7ac8353907fa9fedb16eeedf9edcab9063d1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.1-next.4 to 0.9.1-next.5
+
 ## [0.9.1-next.4](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.1-next.3...identity-connector-iota-v0.9.1-next.4) (2026-07-09)
 
 

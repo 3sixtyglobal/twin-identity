@@ -44,7 +44,7 @@ export class CLI extends CLIBase {
 			{
 				title: "TWIN Identity",
 				appName: "twin-identity",
-				version: "0.9.1-next.4", // x-release-please-version
+				version: "0.9.1-next.5", // x-release-please-version
 				icon: "🌍",
 				supportsEnvFiles: true,
 				overrideOutputWidth: options?.overrideOutputWidth,
