@@ -325,6 +325,91 @@ describe("IotaIdentityConnector with Gas Station", () => {
 		}, 45000);
 	});
 
+	describe("Gas Station Budget Consistency (bug-174)", () => {
+		test("createDocument succeeds under gas station when gasBudget is unset, because the reservation now matches the declared budget", async () => {
+			const noBudgetGasStationConfig: IIotaIdentityConnectorConfig = {
+				clientOptions: TEST_CLIENT_OPTIONS,
+				vaultMnemonicId: TEST_MNEMONIC_NAME,
+				network: TEST_NETWORK,
+				// gasBudget deliberately omitted — the one difference from
+				// `gasStationConfig` above, and the only way this bug ever manifested:
+				// every other test in this file sets gasBudget explicitly, which masks
+				// the divergence between the connector's own default (1B) and
+				// dlt-iota's reservation default (50M) that existed before the fix.
+				gasStation: {
+					gasStationUrl: TEST_GAS_STATION_URL,
+					gasStationAuthToken: TEST_GAS_STATION_AUTH_TOKEN
+				}
+			};
+
+			const connector = new IotaIdentityConnector({ config: noBudgetGasStationConfig });
+
+			// Capture the real request sent to the gas station's /v1/reserve_gas
+			// endpoint. This still calls through to the genuine fetch implementation
+			// (matching this file's live convention) — it only observes the request,
+			// it does not fake the response.
+			let reservedGasBudget: number | undefined;
+			const realFetch = globalThis.fetch;
+			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+				const url = typeof input === "string" ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+					reservedGasBudget = JSON.parse(init.body).gas_budget;
+				}
+				return realFetch(input, init);
+			});
+
+			let document: IDidDocument;
+			try {
+				document = await connector.createDocument(TEST_USER_IDENTITY);
+			} finally {
+				fetchSpy.mockRestore();
+			}
+
+			expect(document).toBeDefined();
+			expect(document.id.includes("did:iota:")).toBe(true);
+
+			// The budget the connector resolved in its constructor and stamps onto the
+			// transaction via .withGasBudget(...); deliberately not pinned to a literal
+			// so a future default change keeps this invariant assertion valid.
+			const declaredTransactionGasBudget = (connector as unknown as { _gasBudget: number })
+				._gasBudget;
+
+			expect(declaredTransactionGasBudget).toBeGreaterThan(0);
+			expect(reservedGasBudget).toBe(declaredTransactionGasBudget);
+		}, 30000);
+
+		test("explicit gasBudget in config still reserves and declares the same, explicit amount", async () => {
+			// Uses the file's existing `gasStationConfig` fixture, which sets
+			// gasBudget: TEST_GAS_BUDGET explicitly — confirms the fix didn't disturb
+			// the already-working explicit-budget case, only the previously-broken
+			// unset-budget case above.
+			const connector = new IotaIdentityConnector({ config: gasStationConfig });
+
+			let reservedGasBudget: number | undefined;
+			const realFetch = globalThis.fetch;
+			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+				const url = typeof input === "string" ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+					reservedGasBudget = JSON.parse(init.body).gas_budget;
+				}
+				return realFetch(input, init);
+			});
+
+			try {
+				await expect(connector.createDocument(TEST_USER_IDENTITY)).resolves.toBeDefined();
+			} finally {
+				fetchSpy.mockRestore();
+			}
+
+			const declaredTransactionGasBudget = (connector as unknown as { _gasBudget: number })
+				._gasBudget;
+
+			expect(declaredTransactionGasBudget).toBe(TEST_GAS_BUDGET);
+			expect(reservedGasBudget).toBe(TEST_GAS_BUDGET);
+			expect(reservedGasBudget).toBe(declaredTransactionGasBudget);
+		}, 30000);
+	});
+
 	describe("Gas Station Error Handling", () => {
 		test("Should handle gas station unavailable gracefully", async () => {
 			const invalidGasStationConfig: IIotaIdentityConnectorConfig = {

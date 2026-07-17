@@ -2074,7 +2074,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				this._walletAddressIndex
 			);
 
-			const gasReservation = await Iota.reserveGas(this._config);
+			// Reserve exactly the budget this transaction will declare via
+			// this._gasBudget (see the constructor), instead of letting Iota.reserveGas
+			// re-derive its own default from this._config — otherwise the two can
+			// diverge whenever gasBudget is left unset in config.
+			const gasReservation = await Iota.reserveGas({
+				...this._config,
+				gasBudget: this._gasBudget
+			});
 
 			const gasCoinsWithStringVersions = gasReservation.gasCoins.map(coin => ({
 				objectId: coin.objectId,
