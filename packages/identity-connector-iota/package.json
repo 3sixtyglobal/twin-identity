@@ -32,7 +32,7 @@
 		"dist:no-test": "npm run clean && npm run build && npm run test:build"
 	},
 	"dependencies": {
-		"@iota/identity-wasm": "1.9.7-beta.1",
+		"@iota/identity-wasm": "1.9.6-beta.1",
 		"@iota/iota-sdk": "1.15.0",
 		"@twin.org/core": "next",
 		"@twin.org/crypto": "next",

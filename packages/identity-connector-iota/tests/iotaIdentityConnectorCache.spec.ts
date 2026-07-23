@@ -247,7 +247,6 @@ describe("IotaIdentityConnector — resolveOwnDidCached rejects instead of hangi
 	test("an empty resolveDid result rejects immediately instead of caching a nullish value", async () => {
 		const resolveDidSpy = vi
 			.spyOn(IdentityClient.prototype, "resolveDid")
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 			.mockResolvedValueOnce(undefined as unknown as IotaDocument);
 
 		await expect(
