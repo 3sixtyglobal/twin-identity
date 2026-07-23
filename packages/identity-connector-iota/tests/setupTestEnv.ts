@@ -143,7 +143,9 @@ async function ensureFundsForAddress(identity: string, address: string): Promise
 		);
 
 		const currentBalance = await Iota.getBalance(TEST_IOTA_CONFIG, address);
-		console.debug(`[ensureFundsForAddress] Address ${address} has balance: ${currentBalance}`);
+		console.debug(
+			`[ensureFundsForAddress] Address ${TEST_EXPLORER_URL}address/${address}?network=${TEST_NETWORK} has balance: ${currentBalance}`
+		);
 
 		if (!success) {
 			console.warn(
