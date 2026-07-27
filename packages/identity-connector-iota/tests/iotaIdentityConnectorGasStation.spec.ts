@@ -262,6 +262,154 @@ describe("IotaIdentityConnector with Gas Station", () => {
 		}, 30000);
 	});
 
+	describe("Document Removal with Gas Station", () => {
+		test("removeDocument resolves cleanly under gas station config, without a redundant second submission", async () => {
+			const connector = new IotaIdentityConnector({ config: gasStationConfig });
+			const document = await connector.createDocument(TEST_USER_IDENTITY);
+
+			// removeDocument used to submit the delete transaction via the gas
+			// station AND then unconditionally again via a direct buildAndExecute call on
+			// the same (by then already wasm-consumed) builder. That crashed deep in the
+			// wasm-bindgen ↔ JS boundary while marshaling the redundant call's result — a
+			// crash that never rejected the promise removeDocument returned, only escaped
+			// as a process-level uncaught exception, so removeDocument hung forever from
+			// the caller's perspective. This regression-locks both halves of that fix: the
+			// call must now settle (not hang) and must not raise an uncaught exception.
+			const uncaughtErrors: Error[] = [];
+			const captureUncaught = (error: Error): void => {
+				uncaughtErrors.push(error);
+			};
+			process.on("uncaughtException", captureUncaught);
+
+			try {
+				const removeOutcome = (async (): Promise<"resolved" | "rejected"> => {
+					try {
+						await connector.removeDocument(TEST_USER_IDENTITY, document.id);
+						return "resolved";
+					} catch {
+						return "rejected";
+					}
+				})();
+
+				const TIMEOUT = Symbol("timeout");
+				let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+				const timeoutOutcome = new Promise<typeof TIMEOUT>(resolve => {
+					timeoutHandle = setTimeout(() => resolve(TIMEOUT), 20000);
+				});
+				const raceResult = await Promise.race([removeOutcome, timeoutOutcome]);
+				clearTimeout(timeoutHandle);
+
+				// The call must settle — and specifically resolve, not merely avoid hanging.
+				expect(raceResult).toBe("resolved");
+
+				// No stray uncaught exception from a redundant second submission.
+				expect(uncaughtErrors).toHaveLength(0);
+			} finally {
+				process.off("uncaughtException", captureUncaught);
+			}
+
+			// The deletion must have genuinely happened on-chain — confirm the identity is
+			// actually gone, not just that removeDocument returned without error.
+			const regularConnector = new IotaIdentityConnector({ config: regularConfig });
+			await expect(
+				regularConnector.addVerificationMethod(
+					TEST_USER_IDENTITY,
+					document.id,
+					DidVerificationMethodType.AssertionMethod,
+					"postDeleteProbe"
+				)
+			).rejects.toMatchObject({
+				name: "GeneralError",
+				message: "iotaIdentityConnector.addVerificationMethodFailed"
+			});
+		}, 45000);
+	});
+
+	describe("Gas Station Budget Consistency (bug-174)", () => {
+		test("createDocument succeeds under gas station when gasBudget is unset, because the reservation now matches the declared budget", async () => {
+			const noBudgetGasStationConfig: IIotaIdentityConnectorConfig = {
+				clientOptions: TEST_CLIENT_OPTIONS,
+				vaultMnemonicId: TEST_MNEMONIC_NAME,
+				network: TEST_NETWORK,
+				// gasBudget deliberately omitted — the one difference from
+				// `gasStationConfig` above, and the only way this bug ever manifested:
+				// every other test in this file sets gasBudget explicitly, which masks
+				// the divergence between the connector's own default (1B) and
+				// dlt-iota's reservation default (50M) that existed before the fix.
+				gasStation: {
+					gasStationUrl: TEST_GAS_STATION_URL,
+					gasStationAuthToken: TEST_GAS_STATION_AUTH_TOKEN
+				}
+			};
+
+			const connector = new IotaIdentityConnector({ config: noBudgetGasStationConfig });
+
+			// Capture the real request sent to the gas station's /v1/reserve_gas
+			// endpoint. This still calls through to the genuine fetch implementation
+			// (matching this file's live convention) — it only observes the request,
+			// it does not fake the response.
+			let reservedGasBudget: number | undefined;
+			const realFetch = globalThis.fetch;
+			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+				const url = typeof input === "string" ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+					reservedGasBudget = JSON.parse(init.body).gas_budget;
+				}
+				return realFetch(input, init);
+			});
+
+			let document: IDidDocument;
+			try {
+				document = await connector.createDocument(TEST_USER_IDENTITY);
+			} finally {
+				fetchSpy.mockRestore();
+			}
+
+			expect(document).toBeDefined();
+			expect(document.id.includes("did:iota:")).toBe(true);
+
+			// The budget the connector resolved in its constructor and stamps onto the
+			// transaction via .withGasBudget(...); deliberately not pinned to a literal
+			// so a future default change keeps this invariant assertion valid.
+			const declaredTransactionGasBudget = (connector as unknown as { _gasBudget: number })
+				._gasBudget;
+
+			expect(declaredTransactionGasBudget).toBeGreaterThan(0);
+			expect(reservedGasBudget).toBe(declaredTransactionGasBudget);
+		}, 30000);
+
+		test("explicit gasBudget in config still reserves and declares the same, explicit amount", async () => {
+			// Uses the file's existing `gasStationConfig` fixture, which sets
+			// gasBudget: TEST_GAS_BUDGET explicitly — confirms the fix didn't disturb
+			// the already-working explicit-budget case, only the previously-broken
+			// unset-budget case above.
+			const connector = new IotaIdentityConnector({ config: gasStationConfig });
+
+			let reservedGasBudget: number | undefined;
+			const realFetch = globalThis.fetch;
+			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+				const url = typeof input === "string" ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+					reservedGasBudget = JSON.parse(init.body).gas_budget;
+				}
+				return realFetch(input, init);
+			});
+
+			try {
+				await expect(connector.createDocument(TEST_USER_IDENTITY)).resolves.toBeDefined();
+			} finally {
+				fetchSpy.mockRestore();
+			}
+
+			const declaredTransactionGasBudget = (connector as unknown as { _gasBudget: number })
+				._gasBudget;
+
+			expect(declaredTransactionGasBudget).toBe(TEST_GAS_BUDGET);
+			expect(reservedGasBudget).toBe(TEST_GAS_BUDGET);
+			expect(reservedGasBudget).toBe(declaredTransactionGasBudget);
+		}, 30000);
+	});
+
 	describe("Gas Station Error Handling", () => {
 		test("Should handle gas station unavailable gracefully", async () => {
 			const invalidGasStationConfig: IIotaIdentityConnectorConfig = {

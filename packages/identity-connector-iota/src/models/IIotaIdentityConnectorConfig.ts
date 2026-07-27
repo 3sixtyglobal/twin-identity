@@ -33,4 +33,13 @@ export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	 * @default 1000
 	 */
 	standardGasPrice?: number;
+
+	/**
+	 * TTL in ms for caching DID documents resolved for the connector's own sign/mutate
+	 * operations (create/update/revoke on an identity this connector controls). 0 disables
+	 * caching. Does not affect proof or credential verification of third-party claims, which
+	 * is never cached by this connector.
+	 * @default 30000
+	 */
+	didResolutionCacheTtlMs?: number;
 }

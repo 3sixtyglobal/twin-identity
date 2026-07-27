@@ -39,6 +39,7 @@ import type {
 } from "@iota/iota-interaction-ts/node/transaction_internal.js";
 import {
 	ArrayHelper,
+	AsyncCache,
 	BaseError,
 	Converter,
 	GeneralError,
@@ -150,6 +151,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	private readonly _standardGasPrice: bigint;
 
 	/**
+	 * TTL in ms for caching DID documents resolved for this connector's own sign/mutate
+	 * operations. 0 disables caching (see resolveOwnDidCached). Never applied to proof or
+	 * credential verification of third-party claims.
+	 * @internal
+	 */
+	private readonly _didResolutionCacheTtlMs: number;
+
+	/**
 	 * Create a new instance of IotaIdentityConnector.
 	 * @param options The options for the identity connector.
 	 */
@@ -173,6 +182,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		this._walletAccountIndex = options.config.walletAccountIndex ?? 0;
 		this._walletAddressIndex = options.config.walletAddressIndex ?? 0;
 		this._standardGasPrice = BigInt(this._config.standardGasPrice ?? 1000);
+		this._didResolutionCacheTtlMs = this._config.didResolutionCacheTtlMs ?? 30_000;
 
 		Iota.populateConfig(this._config);
 	}
@@ -318,9 +328,11 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			if (Is.object(this._config.gasStation)) {
 				await this.executeGasStationTransaction(controller, deleteBuilder, "update");
+			} else {
+				await deleteBuilder.buildAndExecute(identityClient);
 			}
 
-			await deleteBuilder.buildAndExecute(identityClient);
+			AsyncCache.remove(this.ownDidCacheKey(documentId));
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -359,10 +371,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		let tempKeyId;
 		try {
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
-			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, documentId);
 
 			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
 			const identityOnChain = identity.toFullFledged();
@@ -439,7 +448,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				documentId
+			);
 
 			return method.toJSON() as IDidDocumentVerificationMethod;
 		} catch (error) {
@@ -491,11 +506,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
-
-			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, idParts.id);
 
 			const methods = document.methods();
 			const method = methods.find(
@@ -526,7 +537,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				idParts.id
+			);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -562,10 +579,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
-			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, documentId);
 
 			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
 			const identityOnChain = identity.toFullFledged();
@@ -591,7 +605,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				documentId
+			);
 
 			return service.toJSON() as unknown as IDidService;
 		} catch (error) {
@@ -622,11 +642,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
-
-			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, idParts.id);
 
 			const services = document.service();
 			const service = services.find(s => this.stringifyIdentityValue(s.id()) === serviceId);
@@ -648,7 +664,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				idParts.id
+			);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -683,10 +705,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
-			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, documentId);
 
 			const existing = document.alsoKnownAs();
 			if (existing.includes(alias)) {
@@ -710,7 +729,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				documentId
+			);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -745,10 +770,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(documentId));
-			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, documentId);
 
 			const existing = document.alsoKnownAs();
 			if (!existing.includes(alias)) {
@@ -772,7 +794,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				documentId
+			);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -839,11 +867,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const identityClient = await this.getIdentityClient();
-			const issuerDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
-
-			if (Is.undefined(issuerDocument)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
-			}
+			const issuerDocument = await this.resolveOwnDidCached(identityClient, idParts.id);
 
 			const methods = issuerDocument.methods();
 			const method = methods.find(
@@ -940,7 +964,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				controller,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(vc)
+				JsonLdHelper.toNodeObject(vc),
+				issuerDocument
 			);
 
 			// Promote the proof's @context to the VC root so JSON-LD processors can resolve DataIntegrity terms (proofValue, cryptosuite, etc.)
@@ -1062,15 +1087,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(issuerDocumentId));
-
-			if (Is.undefined(document)) {
-				throw new NotFoundError(
-					IotaIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					issuerDocumentId
-				);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, issuerDocumentId);
 
 			const serviceId = `${this.stringifyIdentityValue(document.id())}#revocation`;
 			const revocationService = document
@@ -1101,7 +1118,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				issuerDocumentId
+			);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -1135,15 +1158,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
-			const document = await identityClient.resolveDid(IotaDID.parse(issuerDocumentId));
-
-			if (Is.undefined(document)) {
-				throw new NotFoundError(
-					IotaIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					issuerDocumentId
-				);
-			}
+			const document = await this.resolveOwnDidCached(identityClient, issuerDocumentId);
 
 			const serviceId = `${this.stringifyIdentityValue(document.id())}#revocation`;
 			const revocationService = document
@@ -1177,7 +1192,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "missingControllerToken");
 			}
 
-			await this.executeDocumentUpdate(controller, identityOnChain, document, controllerToken);
+			await this.executeDocumentUpdate(
+				controller,
+				identityOnChain,
+				document,
+				controllerToken,
+				issuerDocumentId
+			);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -1256,11 +1277,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			}
 
 			const identityClient = await this.getIdentityClient();
-			const holderDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
-
-			if (Is.undefined(holderDocument)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
-			}
+			const holderDocument = await this.resolveOwnDidCached(identityClient, idParts.id);
 
 			const methods = holderDocument.methods();
 			const method = methods.find(
@@ -1365,7 +1382,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				controller,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiablePresentation)
+				JsonLdHelper.toNodeObject(verifiablePresentation),
+				holderDocument
 			);
 
 			// Promote the proof's @context to the VP root so JSON-LD processors can resolve DataIntegrity terms
@@ -1523,6 +1541,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
+	 * @param resolvedDocument Optional already-resolved document for the DID, so a caller that just resolved it (e.g. createVerifiableCredential) skips a redundant re-resolve. Resolves it itself if omitted.
 	 * @returns The proof.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws GeneralError if proof creation fails or the algorithm does not match the key type.
@@ -1531,7 +1550,8 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		controller: string,
 		verificationMethodId: string,
 		proofType: ProofTypes,
-		unsecureDocument: IJsonLdNodeObject
+		unsecureDocument: IJsonLdNodeObject,
+		resolvedDocument?: IotaDocument
 	): Promise<IProof> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(
@@ -1550,6 +1570,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			nameof(unsecureDocument),
 			unsecureDocument
 		);
+		if (!Is.undefined(resolvedDocument)) {
+			Guards.object<IotaDocument>(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(resolvedDocument),
+				resolvedDocument
+			);
+		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -1561,11 +1588,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const identityClient = await this.getIdentityClient();
-			const document = await identityClient.resolveDid(IotaDID.parse(idParts.id));
-
+			let document = resolvedDocument;
 			if (Is.undefined(document)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
+				const identityClient = await this.getIdentityClient();
+				document = await this.resolveOwnDidCached(identityClient, idParts.id);
 			}
 
 			const methods = document.methods();
@@ -1712,6 +1738,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @internal
 	 */
 	private async getIdentityClient(controller?: string): Promise<IdentityClient> {
+		// Deliberately built fresh on every call, not memoized: IdentityClient.create() below
+		// calls client.__destroy_into_raw() on the read-only client it's given (a wasm-bindgen
+		// move, not a borrow) — reusing the same instance across calls passes an
+		// already-destroyed handle into WASM on the second use ("null pointer passed to rust").
 		const iotaClient = Iota.createClient(this._config);
 		const identityClientReadOnly = await IdentityClientReadOnly.create(
 			// @ts-expect-error IotaClient has a mismatch with the library types
@@ -1744,6 +1774,57 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			this._walletAddressIndex
 		);
 		return IdentityClient.create(identityClientReadOnly, signer);
+	}
+
+	/**
+	 * Cache key for a DID resolved for this connector's own sign/mutate operations (role 1).
+	 * Deliberately namespaced ("own") and never shared with proof/credential verification of
+	 * third-party claims (role 2/3), which this connector never caches.
+	 * @param did The DID being resolved.
+	 * @returns The cache key.
+	 * @internal
+	 */
+	private ownDidCacheKey(did: string): string {
+		return `${IotaIdentityConnector.CLASS_NAME}:own:${this._config.network}:${did}`;
+	}
+
+	/**
+	 * Resolve a DID for this connector's own sign/mutate operations, cached for
+	 * didResolutionCacheTtlMs (0 disables caching and resolves fresh every call). Only ever used
+	 * for the connector's own create/update/revoke paths — never for verifyProof or credential/
+	 * presentation verification, which must stay uncached.
+	 * @param identityClient The identity client to resolve with.
+	 * @param did The DID to resolve.
+	 * @returns The resolved document.
+	 * @throws NotFoundError if the DID could not be resolved.
+	 * @internal
+	 */
+	private async resolveOwnDidCached(
+		identityClient: IdentityClient,
+		did: string
+	): Promise<IotaDocument> {
+		// The empty check lives inside this callback, not after awaiting resolveOwnDidCached's
+		// result, so a not-found DID throws (and is never cached) instead of settling as an
+		// empty result. AsyncCache.exec tells "already resolved" apart from "still resolving"
+		// purely by whether the stored result/error is nullish — caching an empty result would
+		// leave that cache entry permanently indistinguishable from "in progress" for the rest
+		// of its TTL, and any later caller queued behind it would await forever.
+		const resolved = await AsyncCache.exec<IotaDocument>(
+			this.ownDidCacheKey(did),
+			this._didResolutionCacheTtlMs,
+			async () => {
+				const document = await identityClient.resolveDid(IotaDID.parse(did));
+				if (Is.undefined(document)) {
+					throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", did);
+				}
+				return document;
+			}
+		);
+		// Return a deep clone, not the cached instance itself: several role-1 callers mutate the
+		// resolved document in place (insertMethod, setAlsoKnownAs, revokeCredentials, ...) before
+		// evicting the cache entry on success. Without cloning, two calls against the same DID
+		// overlapping within the TTL window would share and mutate the same object.
+		return resolved.clone();
 	}
 
 	/**
@@ -1925,6 +2006,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 	 * @param identityOnChain The on-chain identity to update.
 	 * @param document The document to update.
 	 * @param controllerToken The controller token.
+	 * @param did The DID being updated, so its role-1 cache entry can be evicted on success.
 	 * @returns The execution result.
 	 * @internal
 	 */
@@ -1932,25 +2014,36 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		controller: string,
 		identityOnChain: OnChainIdentity,
 		document: IotaDocument,
-		controllerToken: ControllerToken
+		controllerToken: ControllerToken,
+		did: string
 	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(identityOnChain), identityOnChain);
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(document), document);
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(controllerToken), controllerToken);
+		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(did), did);
 
 		const updateBuilder = identityOnChain
 			.updateDidDocument(document.clone(), controllerToken)
 			.withGasBudget(BigInt(this._gasBudget));
 
+		// `did` is passed through from the caller — the exact string already used to populate the
+		// role-1 cache via resolveOwnDidCached — rather than re-derived from `document.id()`, so
+		// eviction is guaranteed to hit the same cache key that was populated.
+		// Both branches are captured into `result` (instead of returning directly) so eviction
+		// runs after either one succeeds, and a throw from either skips it automatically.
+		let result: TransactionOutput<Transaction<OnChainIdentity>>;
 		if (Is.object(this._config.gasStation)) {
-			return this.executeGasStationTransaction(controller, updateBuilder, "update");
+			result = await this.executeGasStationTransaction(controller, updateBuilder, "update");
+		} else {
+			const identityClient = await this.getIdentityClient(controller);
+			const executionResult = await updateBuilder.buildAndExecute(identityClient);
+			result = executionResult as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 		}
 
-		const identityClient = await this.getIdentityClient(controller);
-		return updateBuilder.buildAndExecute(identityClient) as unknown as TransactionOutput<
-			Transaction<OnChainIdentity>
-		>;
+		AsyncCache.remove(this.ownDidCacheKey(did));
+
+		return result;
 	}
 
 	/**
@@ -1981,7 +2074,14 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				this._walletAddressIndex
 			);
 
-			const gasReservation = await Iota.reserveGas(this._config);
+			// Reserve exactly the budget this transaction will declare via
+			// this._gasBudget (see the constructor), instead of letting Iota.reserveGas
+			// re-derive its own default from this._config — otherwise the two can
+			// diverge whenever gasBudget is left unset in config.
+			const gasReservation = await Iota.reserveGas({
+				...this._config,
+				gasBudget: this._gasBudget
+			});
 
 			const gasCoinsWithStringVersions = gasReservation.gasCoins.map(coin => ({
 				objectId: coin.objectId,

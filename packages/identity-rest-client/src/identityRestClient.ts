@@ -46,6 +46,7 @@ import {
 	type IProof,
 	ProofTypes
 } from "@twin.org/standards-w3c-did";
+import { HttpMethod } from "@twin.org/web";
 
 /**
  * Client for performing identity through to REST endpoints.
@@ -80,7 +81,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	public async identityCreate(namespace?: string): Promise<IDidDocument> {
 		const response = await this.fetch<IIdentityCreateRequest, IIdentityCreateResponse>(
 			"/",
-			"POST",
+			HttpMethod.POST,
 			{
 				body: {
 					namespace
@@ -98,7 +99,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	 */
 	public async identityRemove(identity: string): Promise<void> {
 		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
-		await this.fetch<IIdentityRemoveRequest, INoContentResponse>("/:identity", "DELETE", {
+		await this.fetch<IIdentityRemoveRequest, INoContentResponse>("/:identity", HttpMethod.DELETE, {
 			pathParams: {
 				identity
 			}
@@ -129,7 +130,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		const response = await this.fetch<
 			IIdentityVerificationMethodCreateRequest,
 			IIdentityVerificationMethodCreateResponse
-		>("/:identity/verification-method", "POST", {
+		>("/:identity/verification-method", HttpMethod.POST, {
 			pathParams: {
 				identity
 			},
@@ -160,7 +161,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityVerificationMethodRemoveRequest, INoContentResponse>(
 			"/:identity/verification-method/:verificationMethodId",
-			"DELETE",
+			HttpMethod.DELETE,
 			{
 				pathParams: {
 					identity: idParts.id,
@@ -205,7 +206,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		const response = await this.fetch<
 			IIdentityServiceCreateRequest,
 			IIdentityServiceCreateResponse
-		>("/:identity/service", "POST", {
+		>("/:identity/service", HttpMethod.POST, {
 			pathParams: {
 				identity
 			},
@@ -232,7 +233,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityServiceRemoveRequest, INoContentResponse>(
 			"/:identity/service/:serviceId",
-			"DELETE",
+			HttpMethod.DELETE,
 			{
 				pathParams: {
 					identity: idParts.id,
@@ -257,7 +258,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityAlsoKnownAsCreateRequest, INoContentResponse>(
 			"/:identity/alias",
-			"POST",
+			HttpMethod.POST,
 			{
 				pathParams: {
 					identity: documentId
@@ -284,7 +285,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityAlsoKnownAsRemoveRequest, INoContentResponse>(
 			"/:identity/alias/:alias",
-			"DELETE",
+			HttpMethod.DELETE,
 			{
 				pathParams: {
 					identity: documentId,
@@ -340,7 +341,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		const response = await this.fetch<
 			IIdentityVerifiableCredentialCreateRequest,
 			IIdentityVerifiableCredentialCreateResponse
-		>("/:identity/verifiable-credential", "POST", {
+		>("/:identity/verifiable-credential", HttpMethod.POST, {
 			pathParams: {
 				identity: idParts.id,
 				verificationMethodId: idParts.fragment ?? ""
@@ -376,7 +377,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			const response = await this.fetch<
 				IIdentityVerifiableCredentialVerifyDocumentRequest,
 				IIdentityVerifiableCredentialVerifyResponse
-			>("/verifiable-credential/verify/document", "POST", { body: credential });
+			>("/verifiable-credential/verify/document", HttpMethod.POST, { body: credential });
 
 			return response.body;
 		}
@@ -385,7 +386,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		const response = await this.fetch<
 			IIdentityVerifiableCredentialVerifyRequest,
 			IIdentityVerifiableCredentialVerifyResponse
-		>("/verifiable-credential/verify", "GET", { query: { jwt: credential } });
+		>("/verifiable-credential/verify", HttpMethod.GET, { query: { jwt: credential } });
 
 		return response.body;
 	}
@@ -405,7 +406,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityVerifiableCredentialRevokeRequest, INoContentResponse>(
 			"/:identity/verifiable-credential/revoke/:revocationIndex",
-			"GET",
+			HttpMethod.GET,
 			{
 				pathParams: {
 					identity: issuerId,
@@ -430,7 +431,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityVerifiableCredentialUnrevokeRequest, INoContentResponse>(
 			"/:identity/verifiable-credential/unrevoke/:revocationIndex",
-			"GET",
+			HttpMethod.GET,
 			{
 				pathParams: {
 					identity: issuerId,
@@ -497,7 +498,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		const response = await this.fetch<
 			IIdentityVerifiablePresentationCreateRequest,
 			IIdentityVerifiablePresentationCreateResponse
-		>("/:identity/verifiable-presentation", "POST", {
+		>("/:identity/verifiable-presentation", HttpMethod.POST, {
 			pathParams: {
 				identity: idParts.id,
 				verificationMethodId: idParts.fragment ?? ""
@@ -537,7 +538,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			const response = await this.fetch<
 				IIdentityVerifiablePresentationVerifyDocumentRequest,
 				IIdentityVerifiablePresentationVerifyResponse
-			>("/verifiable-presentation/verify/document", "POST", { body: presentation });
+			>("/verifiable-presentation/verify/document", HttpMethod.POST, { body: presentation });
 
 			return response.body;
 		}
@@ -547,7 +548,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 		const response = await this.fetch<
 			IIdentityVerifiablePresentationVerifyRequest,
 			IIdentityVerifiablePresentationVerifyResponse
-		>("/verifiable-presentation/verify", "POST", {
+		>("/verifiable-presentation/verify", HttpMethod.POST, {
 			query: {
 				jwt: presentation
 			}
@@ -589,7 +590,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		const response = await this.fetch<IIdentityProofCreateRequest, IIdentityProofCreateResponse>(
 			"/:identity/proof",
-			"POST",
+			HttpMethod.POST,
 			{
 				pathParams: {
 					identity: idParts.id,
@@ -622,7 +623,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		const response = await this.fetch<IIdentityProofVerifyRequest, IIdentityProofVerifyResponse>(
 			"/proof/verify",
-			"POST",
+			HttpMethod.POST,
 			{
 				body: {
 					document,
