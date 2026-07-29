@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.9.2-next.1](https://github.com/iotaledger/twin-identity/compare/identity-connector-universal-v0.9.2-next.0...identity-connector-universal-v0.9.2-next.1) (2026-07-29)
+
+
+### Features
+
+* add context id features ([#62](https://github.com/iotaledger/twin-identity/issues/62)) ([e02ecca](https://github.com/iotaledger/twin-identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add mainnet support ([af56a38](https://github.com/iotaledger/twin-identity/commit/af56a382837896cd4e13d5814c0924c46658b99c))
+* add validate-locales ([04d74b4](https://github.com/iotaledger/twin-identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* additional information in health ([03d6190](https://github.com/iotaledger/twin-identity/commit/03d61900358513a5881b2363b0582e1e4ca06e6e))
+* common connector tests ([4f9642c](https://github.com/iotaledger/twin-identity/commit/4f9642ceb09843870909fc6819bf69fb20ef952a))
+* eslint migration to flat config ([fd6246d](https://github.com/iotaledger/twin-identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+* health check ([#124](https://github.com/iotaledger/twin-identity/issues/124)) ([5a55bef](https://github.com/iotaledger/twin-identity/commit/5a55bef0c455f7a305822c96de6ffa19699edc6f))
+* identity key separator use slash ([1319d0d](https://github.com/iotaledger/twin-identity/commit/1319d0d07164a36b3ec279e6421b8835ffefc3d3))
+* improve url construction ([544a435](https://github.com/iotaledger/twin-identity/commit/544a435dadb90b9e29533f4a4ce09725268d04bd))
+* re-use vault keys if available ([5a848d7](https://github.com/iotaledger/twin-identity/commit/5a848d7520829d9c891ec889fd773fbc0ee77ba5))
+* typescript 6 update ([e8806ad](https://github.com/iotaledger/twin-identity/commit/e8806ad6858c37be3c0f54c41cf654023773bef3))
+* update comment ([436e030](https://github.com/iotaledger/twin-identity/commit/436e030e9480bdc4e35b44ad7199a5ccc7a7b31e))
+* update dependencies ([c4d9393](https://github.com/iotaledger/twin-identity/commit/c4d939309ffea6937fe938f6097fd811677ab220))
+* update framework core ([c824497](https://github.com/iotaledger/twin-identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+* use shared store mechanism ([#27](https://github.com/iotaledger/twin-identity/issues/27)) ([ce41f3f](https://github.com/iotaledger/twin-identity/commit/ce41f3fc3da1b206ec06da7ea5b2c968f788804d))
+
+
+### Bug Fixes
+
+* Import path and bump version ([#21](https://github.com/iotaledger/twin-identity/issues/21)) ([ccea845](https://github.com/iotaledger/twin-identity/commit/ccea845bf32562267280bc1b3dde1c9af1a00360))
+* Install sdk-wasm ([#20](https://github.com/iotaledger/twin-identity/issues/20)) ([75ec14e](https://github.com/iotaledger/twin-identity/commit/75ec14e072f8c219863a1c028a3b0783802086e9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.0 to 0.9.2-next.1
+
 ## [0.9.1](https://github.com/iotaledger/twin-identity/compare/identity-connector-universal-v0.9.1...identity-connector-universal-v0.9.1) (2026-07-27)
 
 
