@@ -70,6 +70,32 @@ Short form string.
 
 ***
 
+### long() {#long}
+
+> **long**(`value`): `string`
+
+The long form version of the context ID, expanded from a short version.
+
+#### Parameters
+
+##### value
+
+`string`
+
+The short form context ID value.
+
+#### Returns
+
+`string`
+
+The long form version of the context ID.
+
+#### Implementation of
+
+`IContextIdHandler.long`
+
+***
+
 ### guard() {#guard}
 
 > **guard**(`value`): `void`
