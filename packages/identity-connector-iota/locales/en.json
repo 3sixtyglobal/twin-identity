@@ -52,6 +52,7 @@
 			"unrevokeVerifiableCredentialsFailed": "Unrevoking verifiable credentials failed",
 			"verificationKeyMissing": "The verification key is missing from the vault for method \"{method}\"",
 			"verificationMethodNotFound": "The verification method could not be found",
+			"signatureVerificationFailed": "The document integrity check failed",
 			"verifyProofFailed": "Verifying the signature for the data failed"
 		}
 	}

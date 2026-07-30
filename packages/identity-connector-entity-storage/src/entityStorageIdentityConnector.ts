@@ -938,10 +938,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				credential.proof
 			);
 			const { proof, ...doc } = credential;
-			await this.verifyProof(
+			const credentialVerified = await this.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
 				ArrayHelper.fromObjectOrArray(proof)[0]
 			);
+			if (!credentialVerified) {
+				throw new GeneralError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"signatureVerificationFailed"
+				);
+			}
 			return {
 				revoked: false,
 				verifiableCredential: doc
@@ -1402,7 +1408,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
 			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
 			Guards.objectValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(proofEntry), proofEntry);
-			await this.verifyProof(JsonLdHelper.toNodeObject(doc), proofEntry);
+			const presentationVerified = await this.verifyProof(
+				JsonLdHelper.toNodeObject(doc),
+				proofEntry
+			);
+			if (!presentationVerified) {
+				throw new GeneralError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"signatureVerificationFailed"
+				);
+			}
 			return { revoked: false, verifiablePresentation: doc };
 		}
 

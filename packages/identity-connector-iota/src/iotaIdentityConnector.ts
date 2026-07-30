@@ -1008,10 +1008,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 				credential.proof
 			);
 			const { proof, ...doc } = credential;
-			await this.verifyProof(
+			const credentialVerified = await this.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
 				ArrayHelper.fromObjectOrArray(proof)[0]
 			);
+			if (!credentialVerified) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "signatureVerificationFailed");
+			}
 			return {
 				revoked: false,
 				verifiableCredential: doc
@@ -1436,7 +1439,13 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
 			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
 			Guards.objectValue(IotaIdentityConnector.CLASS_NAME, nameof(proof), proofEntry);
-			await this.verifyProof(JsonLdHelper.toNodeObject(doc), proofEntry);
+			const presentationVerified = await this.verifyProof(
+				JsonLdHelper.toNodeObject(doc),
+				proofEntry
+			);
+			if (!presentationVerified) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "signatureVerificationFailed");
+			}
 			return {
 				revoked: false,
 				verifiablePresentation: doc
