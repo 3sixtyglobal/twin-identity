@@ -5,6 +5,7 @@ Class for performing identity operations on IOTA.
 ## Implements
 
 - `IIdentityResolverConnector`
+- `IHealthProviderComponent`
 
 ## Constructors
 
@@ -64,9 +65,17 @@ The class name of the component.
 
 ### health() {#health}
 
-> **health**(): `Promise`\<`IHealth`[]\>
+> **health**(`lastTimestamp`): `Promise`\<`IHealth`[]\>
 
 Returns the health status of the component.
+
+#### Parameters
+
+##### lastTimestamp
+
+`number`
+
+The Unix timestamp (ms) recorded at the start of the previous cycle.
 
 #### Returns
 
@@ -76,7 +85,7 @@ The health status of the component.
 
 #### Implementation of
 
-`IIdentityResolverConnector.health`
+`IHealthProviderComponent.health`
 
 ***
 

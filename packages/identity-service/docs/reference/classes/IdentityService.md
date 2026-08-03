@@ -5,6 +5,7 @@ Class which implements the identity contract.
 ## Implements
 
 - `IIdentityComponent`
+- `IHealthProviderComponent`
 
 ## Constructors
 
@@ -73,6 +74,88 @@ A promise that resolves when all metrics have been registered.
 #### Implementation of
 
 `IIdentityComponent.start`
+
+***
+
+### healthInit() {#healthinit}
+
+> **healthInit**(`lastTimestamp`, `contextIds`): `Promise`\<`void`\>
+
+Creates a temporary DID document for the health check using the default namespace connector.
+Skipped when called within the configured health interval.
+
+#### Parameters
+
+##### lastTimestamp
+
+`number`
+
+The Unix timestamp (ms) recorded at the start of the previous cycle.
+
+##### contextIds
+
+`IContextIds`
+
+The context IDs accumulated by prior init steps.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Implementation of
+
+`IHealthProviderComponent.healthInit`
+
+***
+
+### health() {#health}
+
+> **health**(`lastTimestamp`): `Promise`\<`IHealth`[]\>
+
+Returns the application health status of the identity service by resolving the DID created
+in healthInit. On cycles where healthInit was skipped, returns the cached result.
+
+#### Parameters
+
+##### lastTimestamp
+
+`number`
+
+The Unix timestamp (ms) recorded at the start of the previous cycle.
+
+#### Returns
+
+`Promise`\<`IHealth`[]\>
+
+The health status of the service.
+
+#### Implementation of
+
+`IHealthProviderComponent.health`
+
+***
+
+### healthTeardown() {#healthteardown}
+
+> **healthTeardown**(`lastTimestamp`): `Promise`\<`void`\>
+
+Removes the DID document created in healthInit using the default namespace connector.
+
+#### Parameters
+
+##### lastTimestamp
+
+`number`
+
+The Unix timestamp (ms) recorded at the start of the previous cycle.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Implementation of
+
+`IHealthProviderComponent.healthTeardown`
 
 ***
 
