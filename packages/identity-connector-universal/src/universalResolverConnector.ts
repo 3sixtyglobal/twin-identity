@@ -1,6 +1,12 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { GeneralError, Guards, HealthStatus, StringHelper, type IHealth } from "@twin.org/core";
+import {
+	HealthCategory,
+	HealthStatus,
+	type IHealth,
+	type IHealthProviderComponent
+} from "@twin.org/api-models";
+import { GeneralError, Guards, StringHelper } from "@twin.org/core";
 import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import type { IDidDocument } from "@twin.org/standards-w3c-did";
@@ -12,7 +18,9 @@ import type { IUniversalResolverConnectorConstructorOptions } from "./models/IUn
 /**
  * Class for performing identity operations on a universal resolver.
  */
-export class UniversalResolverConnector implements IIdentityResolverConnector {
+export class UniversalResolverConnector
+	implements IIdentityResolverConnector, IHealthProviderComponent
+{
 	/**
 	 * The namespace supported by the identity connector.
 	 */
@@ -59,9 +67,10 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 
 	/**
 	 * Returns the health status of the component.
+	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
 	 * @returns The health status of the component.
 	 */
-	public async health(): Promise<IHealth[]> {
+	public async health(lastTimestamp: number): Promise<IHealth[]> {
 		try {
 			const response = await FetchHelper.fetch(
 				UniversalResolverConnector.CLASS_NAME,
@@ -75,6 +84,7 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 				return [
 					{
 						source: UniversalResolverConnector.CLASS_NAME,
+						category: HealthCategory.Connectivity,
 						status: HealthStatus.Error,
 						description: "healthDescription",
 						message: "resolverHealthCheckFailed",
@@ -86,6 +96,7 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 			return [
 				{
 					source: UniversalResolverConnector.CLASS_NAME,
+					category: HealthCategory.Connectivity,
 					status: HealthStatus.Ok,
 					description: "healthDescription",
 					data: { endpoint: this._resolverEndpoint }
@@ -95,6 +106,7 @@ export class UniversalResolverConnector implements IIdentityResolverConnector {
 			return [
 				{
 					source: UniversalResolverConnector.CLASS_NAME,
+					category: HealthCategory.Connectivity,
 					status: HealthStatus.Error,
 					description: "healthDescription",
 					message: "resolverHealthCheckFailed",

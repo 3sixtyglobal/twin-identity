@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HealthStatus } from "@twin.org/core";
+import { HealthStatus } from "@twin.org/api-models";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
@@ -25,7 +25,7 @@ describe("IotaIdentityConnector Health", () => {
 	});
 
 	test("can get health status", async () => {
-		const health = await identityConnector.health();
+		const health = await identityConnector.health(0);
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);
@@ -42,7 +42,7 @@ describe("IotaIdentityConnector Health", () => {
 			}
 		});
 
-		const health = await badConnector.health();
+		const health = await badConnector.health(0);
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);

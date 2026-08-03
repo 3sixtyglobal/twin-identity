@@ -1,16 +1,17 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HealthStatus, Is } from "@twin.org/core";
+import { HealthStatus } from "@twin.org/api-models";
+import { Is } from "@twin.org/core";
 import { DidVerificationMethodType, type IDidDocument } from "@twin.org/standards-w3c-did";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
-	TEST_USER_IDENTITY,
+	TEST_GAS_BUDGET,
+	TEST_GAS_STATION_AUTH_TOKEN,
+	TEST_GAS_STATION_URL,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK,
-	TEST_GAS_STATION_URL,
-	TEST_GAS_STATION_AUTH_TOKEN,
-	TEST_GAS_BUDGET
+	TEST_USER_IDENTITY
 } from "./setupTestEnv.js";
 import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig.js";
@@ -93,7 +94,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 				config: gasStationConfig
 			});
 
-			const health = await connector.health();
+			const health = await connector.health(0);
 
 			expect(health).toBeDefined();
 			expect(health).toHaveLength(2);
@@ -116,7 +117,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 				}
 			});
 
-			const health = await connector.health();
+			const health = await connector.health(0);
 
 			expect(health).toBeDefined();
 			expect(health).toHaveLength(2);

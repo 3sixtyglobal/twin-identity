@@ -34,6 +34,7 @@
 	"dependencies": {
 		"@iota/identity-wasm": "1.9.6-beta.1",
 		"@iota/iota-sdk": "1.15.0",
+		"@twin.org/api-models": "next",
 		"@twin.org/core": "next",
 		"@twin.org/crypto": "next",
 		"@twin.org/data-json-ld": "next",

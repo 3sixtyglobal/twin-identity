@@ -1,12 +1,12 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HealthStatus } from "@twin.org/core";
+import { HealthStatus } from "@twin.org/api-models";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
-	TEST_USER_IDENTITY,
 	TEST_MNEMONIC_NAME,
-	TEST_NETWORK
+	TEST_NETWORK,
+	TEST_USER_IDENTITY
 } from "./setupTestEnv.js";
 import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector.js";
@@ -95,7 +95,7 @@ describe("IotaIdentityResolverConnector", () => {
 			}
 		});
 
-		const health = await identityResolverConnector.health();
+		const health = await identityResolverConnector.health(0);
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);
@@ -111,7 +111,7 @@ describe("IotaIdentityResolverConnector", () => {
 			}
 		});
 
-		const health = await identityResolverConnector.health();
+		const health = await identityResolverConnector.health(0);
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);

@@ -38,20 +38,24 @@ import type {
 	TransactionOutput
 } from "@iota/iota-interaction-ts/node/transaction_internal.js";
 import {
+	HealthCategory,
+	HealthStatus,
+	type IHealth,
+	type IHealthProviderComponent
+} from "@twin.org/api-models";
+import {
 	ArrayHelper,
 	AsyncCache,
 	BaseError,
 	Converter,
 	GeneralError,
 	Guards,
-	HealthStatus,
 	Is,
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
 	Url,
-	Urn,
-	type IHealth
+	Urn
 } from "@twin.org/core";
 import {
 	JsonLdHelper,
@@ -102,7 +106,7 @@ import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIde
  * Private keys are stored in the vault and all signing operations are delegated
  * to the vault connector to prevent key exposure.
  */
-export class IotaIdentityConnector implements IIdentityConnector {
+export class IotaIdentityConnector implements IIdentityConnector, IHealthProviderComponent {
 	/**
 	 * The namespace supported by the identity connector.
 	 */
@@ -197,9 +201,10 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 	/**
 	 * Returns the health status of the component.
+	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
 	 * @returns The health status of the component.
 	 */
-	public async health(): Promise<IHealth[]> {
+	public async health(lastTimestamp: number): Promise<IHealth[]> {
 		const results: IHealth[] = [];
 		const nodeEndpoint = (this._config.clientOptions as { url?: string }).url;
 
@@ -209,6 +214,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 			results.push({
 				source: IotaIdentityConnector.CLASS_NAME,
+				category: HealthCategory.Connectivity,
 				status: Is.stringValue(version) ? HealthStatus.Ok : HealthStatus.Error,
 				description: "healthDescription",
 				message: Is.stringValue(version) ? undefined : "nodeHealthCheckFailed",
@@ -217,6 +223,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 		} catch {
 			results.push({
 				source: IotaIdentityConnector.CLASS_NAME,
+				category: HealthCategory.Connectivity,
 				status: HealthStatus.Error,
 				description: "healthDescription",
 				message: "nodeHealthCheckFailed",
@@ -238,6 +245,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 
 				results.push({
 					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
+					category: HealthCategory.Connectivity,
 					status: isHealthy ? HealthStatus.Ok : HealthStatus.Error,
 					description: "healthDescription",
 					message: isHealthy ? undefined : "healthCheckFailed",
@@ -246,6 +254,7 @@ export class IotaIdentityConnector implements IIdentityConnector {
 			} catch {
 				results.push({
 					source: `${IotaIdentityConnector.CLASS_NAME}GasStation`,
+					category: HealthCategory.Connectivity,
 					status: HealthStatus.Error,
 					description: "healthDescription",
 					message: "healthCheckFailed",

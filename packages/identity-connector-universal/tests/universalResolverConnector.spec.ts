@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HealthStatus } from "@twin.org/core";
+import { HealthStatus } from "@twin.org/api-models";
 import { UniversalResolverConnector } from "../src/universalResolverConnector.js";
 
 describe("UniversalResolverConnector", () => {
@@ -9,7 +9,7 @@ describe("UniversalResolverConnector", () => {
 			config: { endpoint: "http://localhost:18180" }
 		});
 
-		const health = await resolver.health();
+		const health = await resolver.health(0);
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);
@@ -22,7 +22,7 @@ describe("UniversalResolverConnector", () => {
 			config: { endpoint: "http://localhost:1" }
 		});
 
-		const health = await resolver.health();
+		const health = await resolver.health(0);
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);

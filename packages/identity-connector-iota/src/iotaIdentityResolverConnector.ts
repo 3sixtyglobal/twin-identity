@@ -5,14 +5,8 @@ import {
 	type IotaDocument,
 	Resolver
 } from "@iota/identity-wasm/node/index.js";
-import {
-	GeneralError,
-	Guards,
-	HealthStatus,
-	Is,
-	NotFoundError,
-	type IHealth
-} from "@twin.org/core";
+import { HealthStatus, type IHealth, type IHealthProviderComponent } from "@twin.org/api-models";
+import { GeneralError, Guards, Is, NotFoundError } from "@twin.org/core";
 import { Iota } from "@twin.org/dlt-iota";
 import type { IIdentityResolverConnector } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
@@ -24,7 +18,9 @@ import type { IIotaIdentityResolverConnectorConstructorOptions } from "./models/
 /**
  * Class for performing identity operations on IOTA.
  */
-export class IotaIdentityResolverConnector implements IIdentityResolverConnector {
+export class IotaIdentityResolverConnector
+	implements IIdentityResolverConnector, IHealthProviderComponent
+{
 	/**
 	 * The namespace supported by the identity connector.
 	 */
@@ -71,9 +67,10 @@ export class IotaIdentityResolverConnector implements IIdentityResolverConnector
 
 	/**
 	 * Returns the health status of the component.
+	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
 	 * @returns The health status of the component.
 	 */
-	public async health(): Promise<IHealth[]> {
+	public async health(lastTimestamp: number): Promise<IHealth[]> {
 		const nodeEndpoint = (this._config.clientOptions as { url?: string }).url;
 
 		try {

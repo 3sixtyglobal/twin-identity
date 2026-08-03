@@ -1,4 +1,11 @@
 {
+	"health": {
+		"identityService": {
+			"healthDescription": "DID document lifecycle (create, resolve, remove) using the \"{namespace}\" namespace",
+			"createDocumentFailed": "Failed to create the health check identity document",
+			"resolveDocumentFailed": "Failed to resolve the health check identity document"
+		}
+	},
 	"error": {
 		"identityService": {
 			"noConnectors": "There are no connectors registered with the identity factory",

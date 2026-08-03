@@ -1,14 +1,24 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { ComponentFactory, GeneralError, Guards, Is, Urn } from "@twin.org/core";
+import {
+	HealthCategory,
+	HealthStatus,
+	type IHealth,
+	type IHealthProviderComponent
+} from "@twin.org/api-models";
+import type { IContextIds } from "@twin.org/context";
+import { ContextIdKeys, ContextIdStore } from "@twin.org/context";
+import { BaseError, ComponentFactory, GeneralError, Guards, Is, Urn } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
 	IdentityConnectorFactory,
 	IdentityMetricIds,
 	IdentityMetrics,
+	IdentityResolverConnectorFactory,
 	type IIdentityComponent,
-	type IIdentityConnector
+	type IIdentityConnector,
+	type IIdentityResolverConnector
 } from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
@@ -28,7 +38,7 @@ import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServi
 /**
  * Class which implements the identity contract.
  */
-export class IdentityService implements IIdentityComponent {
+export class IdentityService implements IIdentityComponent, IHealthProviderComponent {
 	/**
 	 * Runtime name for the class.
 	 */
@@ -47,6 +57,24 @@ export class IdentityService implements IIdentityComponent {
 	private readonly _telemetryComponent?: ITelemetryComponent;
 
 	/**
+	 * Cached result of the most recent application-level health check.
+	 * @internal
+	 */
+	private _lastAppHealthResult: IHealth | undefined;
+
+	/**
+	 * Timestamp of the last health cycle, used to enforce the health interval.
+	 * @internal
+	 */
+	private _lastHealthTime: number;
+
+	/**
+	 * Minimum interval in ms between full application-level health checks.
+	 * @internal
+	 */
+	private readonly _healthInterval: number;
+
+	/**
 	 * Create a new instance of IdentityService.
 	 * @param options The options for the service.
 	 * @throws GeneralError if no connectors are registered.
@@ -58,6 +86,8 @@ export class IdentityService implements IIdentityComponent {
 		}
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
+		this._lastHealthTime = 0;
+		this._healthInterval = options?.config?.healthIntervalMs ?? 300_000;
 
 		this._telemetryComponent = ComponentFactory.getIfExists<ITelemetryComponent>(
 			options?.telemetryComponentType
@@ -82,6 +112,124 @@ export class IdentityService implements IIdentityComponent {
 		}
 
 		await MetricHelper.createMetrics(this._telemetryComponent, IdentityMetrics);
+	}
+
+	/**
+	 * Creates a temporary DID document for the health check using the default namespace connector.
+	 * Skipped when called within the configured health interval.
+	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
+	 * @param contextIds The context IDs accumulated by prior init steps.
+	 */
+	public async healthInit(lastTimestamp: number, contextIds: IContextIds): Promise<void> {
+		if (this._lastHealthTime > 0 && lastTimestamp - this._lastHealthTime < this._healthInterval) {
+			return;
+		}
+		const controller = contextIds[ContextIdKeys.Node];
+		if (!Is.stringValue(controller)) {
+			return;
+		}
+		try {
+			const connector = this.getConnectorByNamespace();
+			const doc = await connector.createDocument(controller);
+			await connector.addVerificationMethod(
+				controller,
+				doc.id,
+				DidVerificationMethodType.AssertionMethod,
+				"health-assertion"
+			);
+			contextIds[ContextIdKeys.Organization] = doc.id;
+		} catch (error) {
+			this._lastAppHealthResult = {
+				source: IdentityService.CLASS_NAME,
+				category: HealthCategory.Application,
+				status: HealthStatus.Error,
+				description: "healthDescription",
+				message: "createDocumentFailed",
+				error: BaseError.fromError(error)
+			};
+		}
+	}
+
+	/**
+	 * Returns the application health status of the identity service by resolving the DID created
+	 * in healthInit. On cycles where healthInit was skipped, returns the cached result.
+	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
+	 * @returns The health status of the service.
+	 */
+	public async health(lastTimestamp: number): Promise<IHealth[]> {
+		const contextIds = (await ContextIdStore.getContextIds()) ?? {};
+		const orgDid = contextIds[ContextIdKeys.Organization];
+
+		if (Is.stringValue(orgDid)) {
+			try {
+				const resolverConnector =
+					IdentityResolverConnectorFactory.getIfExists<IIdentityResolverConnector>(
+						this._defaultNamespace
+					);
+				if (!Is.undefined(resolverConnector)) {
+					const resolved = await resolverConnector.resolveDocument(orgDid);
+					this._lastAppHealthResult = {
+						source: IdentityService.CLASS_NAME,
+						category: HealthCategory.Application,
+						status: Is.object(resolved) ? HealthStatus.Ok : HealthStatus.Error,
+						description: "healthDescription",
+						message: Is.object(resolved) ? undefined : "resolveDocumentFailed",
+						data: {
+							did: orgDid
+						}
+					};
+				} else {
+					this._lastAppHealthResult = {
+						source: IdentityService.CLASS_NAME,
+						category: HealthCategory.Application,
+						status: HealthStatus.Ok,
+						description: "healthDescription",
+						data: {
+							did: orgDid
+						}
+					};
+				}
+			} catch (error) {
+				this._lastAppHealthResult = {
+					source: IdentityService.CLASS_NAME,
+					category: HealthCategory.Application,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "resolveDocumentFailed",
+					data: {
+						did: orgDid
+					},
+					error: BaseError.fromError(error)
+				};
+			}
+		}
+
+		this._lastHealthTime = lastTimestamp > 0 ? lastTimestamp : Date.now();
+
+		const results: IHealth[] = [];
+		if (!Is.undefined(this._lastAppHealthResult)) {
+			results.push(this._lastAppHealthResult);
+		}
+		return results;
+	}
+
+	/**
+	 * Removes the DID document created in healthInit using the default namespace connector.
+	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
+	 */
+	public async healthTeardown(lastTimestamp: number): Promise<void> {
+		const contextIds = await ContextIdStore.getContextIds();
+		const nodeId = contextIds?.[ContextIdKeys.Node];
+		const orgId = contextIds?.[ContextIdKeys.Organization];
+		if (!Is.stringValue(orgId) || !Is.stringValue(nodeId)) {
+			return;
+		}
+		try {
+			const connector = this.getConnectorByNamespace();
+			await connector.removeDocument(nodeId, orgId);
+		} catch {
+			// Best-effort cleanup; the DID will remain on-chain if removal fails.
+		}
 	}
 
 	/**
