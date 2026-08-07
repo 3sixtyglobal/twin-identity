@@ -21,3 +21,17 @@ The identity to remove the verification method from.
 > **verificationMethodId**: `string`
 
 The verification method to remove.
+
+***
+
+### query? {#query}
+
+> `optional` **query?**: `object`
+
+The query parameters.
+
+#### removeKeys?
+
+> `optional` **removeKeys?**: `string`
+
+Also remove any associated private key from the vault.

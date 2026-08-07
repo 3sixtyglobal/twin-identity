@@ -68,17 +68,9 @@ The class name of the component.
 
 ### health() {#health}
 
-> **health**(`lastTimestamp`): `Promise`\<`IHealth`[]\>
+> **health**(): `Promise`\<`IHealth`[]\>
 
-Returns the health status of the component.
-
-#### Parameters
-
-##### lastTimestamp
-
-`number`
-
-The Unix timestamp (ms) recorded at the start of the previous cycle.
+Returns the connectivity health status of the component.
 
 #### Returns
 
@@ -89,6 +81,32 @@ The health status of the component.
 #### Implementation of
 
 `IHealthProviderComponent.health`
+
+***
+
+### healthApplication() {#healthapplication}
+
+> **healthApplication**(`callback`): `Promise`\<`IHealth`[] \| `undefined`\>
+
+Returns the application health status of the component.
+
+#### Parameters
+
+##### callback
+
+`HealthApplicationCallback`
+
+Callback for deferred results.
+
+#### Returns
+
+`Promise`\<`IHealth`[] \| `undefined`\>
+
+The health status of the component.
+
+#### Implementation of
+
+`IHealthProviderComponent.healthApplication`
 
 ***
 
@@ -120,7 +138,7 @@ The created document.
 
 ### removeDocument() {#removedocument}
 
-> **removeDocument**(`controller`, `documentId`): `Promise`\<`void`\>
+> **removeDocument**(`controller`, `documentId`, `options?`): `Promise`\<`void`\>
 
 Remove a document.
 
@@ -137,6 +155,16 @@ The controller of the identity who can make changes.
 `string`
 
 The id of the document to remove.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private keys from the vault.
 
 #### Returns
 
@@ -204,7 +232,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ### removeVerificationMethod() {#removeverificationmethod}
 
-> **removeVerificationMethod**(`controller`, `verificationMethodId`): `Promise`\<`void`\>
+> **removeVerificationMethod**(`controller`, `verificationMethodId`, `options?`): `Promise`\<`void`\>
 
 Remove a verification method from the document.
 
@@ -221,6 +249,16 @@ The controller of the identity who can make changes.
 `string`
 
 The id of the verification method.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private key from the vault.
 
 #### Returns
 

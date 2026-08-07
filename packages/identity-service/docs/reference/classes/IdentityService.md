@@ -77,20 +77,13 @@ A promise that resolves when all metrics have been registered.
 
 ***
 
-### healthInit() {#healthinit}
+### healthApplicationInit() {#healthapplicationinit}
 
-> **healthInit**(`lastTimestamp`, `contextIds`): `Promise`\<`void`\>
+> **healthApplicationInit**(`contextIds`): `Promise`\<`void`\>
 
-Creates a temporary DID document for the health check using the default namespace connector.
-Skipped when called within the configured health interval.
+Creates a temporary DID document for the application health check.
 
 #### Parameters
-
-##### lastTimestamp
-
-`number`
-
-The Unix timestamp (ms) recorded at the start of the previous cycle.
 
 ##### contextIds
 
@@ -104,50 +97,42 @@ The context IDs accumulated by prior init steps.
 
 #### Implementation of
 
-`IHealthProviderComponent.healthInit`
+`IHealthProviderComponent.healthApplicationInit`
 
 ***
 
-### health() {#health}
+### healthApplication() {#healthapplication}
 
-> **health**(`lastTimestamp`): `Promise`\<`IHealth`[]\>
+> **healthApplication**(`callback`): `Promise`\<`IHealth`[] \| `undefined`\>
 
 Returns the application health status of the identity service by resolving the DID created
-in healthInit. On cycles where healthInit was skipped, returns the cached result.
+in healthApplicationInit.
 
 #### Parameters
 
-##### lastTimestamp
+##### callback
 
-`number`
+`HealthApplicationCallback`
 
-The Unix timestamp (ms) recorded at the start of the previous cycle.
+Callback for deferred results.
 
 #### Returns
 
-`Promise`\<`IHealth`[]\>
+`Promise`\<`IHealth`[] \| `undefined`\>
 
 The health status of the service.
 
 #### Implementation of
 
-`IHealthProviderComponent.health`
+`IHealthProviderComponent.healthApplication`
 
 ***
 
-### healthTeardown() {#healthteardown}
+### healthApplicationTeardown() {#healthapplicationteardown}
 
-> **healthTeardown**(`lastTimestamp`): `Promise`\<`void`\>
+> **healthApplicationTeardown**(): `Promise`\<`void`\>
 
-Removes the DID document created in healthInit using the default namespace connector.
-
-#### Parameters
-
-##### lastTimestamp
-
-`number`
-
-The Unix timestamp (ms) recorded at the start of the previous cycle.
+Removes the DID document created in healthApplicationInit.
 
 #### Returns
 
@@ -155,7 +140,7 @@ The Unix timestamp (ms) recorded at the start of the previous cycle.
 
 #### Implementation of
 
-`IHealthProviderComponent.healthTeardown`
+`IHealthProviderComponent.healthApplicationTeardown`
 
 ***
 
@@ -193,7 +178,7 @@ The created identity document.
 
 ### identityRemove() {#identityremove}
 
-> **identityRemove**(`identity`, `controller?`): `Promise`\<`void`\>
+> **identityRemove**(`identity`, `options?`, `controller?`): `Promise`\<`void`\>
 
 Remove an identity.
 
@@ -204,6 +189,16 @@ Remove an identity.
 `string`
 
 The id of the document to remove.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private keys from the vault.
 
 ##### controller?
 
@@ -277,7 +272,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ### verificationMethodRemove() {#verificationmethodremove}
 
-> **verificationMethodRemove**(`verificationMethodId`, `controller?`): `Promise`\<`void`\>
+> **verificationMethodRemove**(`verificationMethodId`, `options?`, `controller?`): `Promise`\<`void`\>
 
 Remove a verification method from the document.
 
@@ -288,6 +283,16 @@ Remove a verification method from the document.
 `string`
 
 The id of the verification method.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private key from the vault.
 
 ##### controller?
 

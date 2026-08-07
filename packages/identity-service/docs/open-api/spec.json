@@ -152,6 +152,15 @@
 						},
 						"style": "simple",
 						"example": "did:iota:tst:0xe3088ba9aa8c28e1d139708a14e8c0fdff11ee8223baac4aa5bcf3321e4bfc6a"
+					},
+					{
+						"name": "removeKeys",
+						"description": "Also remove any associated private keys from the vault.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"security": [
@@ -492,6 +501,15 @@
 						},
 						"style": "simple",
 						"example": "my-assertion"
+					},
+					{
+						"name": "removeKeys",
+						"description": "Also remove any associated private key from the vault.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"security": [
