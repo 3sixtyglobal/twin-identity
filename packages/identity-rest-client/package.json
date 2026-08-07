@@ -1,6 +1,6 @@
 {
 	"name": "@twin.org/identity-rest-client",
-	"version": "0.9.2-next.3",
+	"version": "0.9.2-next.4",
 	"description": "Client library for consuming identity REST endpoints through shared request and response contracts.",
 	"repository": {
 		"type": "git",
@@ -34,7 +34,7 @@
 		"@twin.org/data-core": "next",
 		"@twin.org/data-json-ld": "next",
 		"@twin.org/entity": "next",
-		"@twin.org/identity-models": "0.9.2-next.3",
+		"@twin.org/identity-models": "0.9.2-next.4",
 		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/web": "next"

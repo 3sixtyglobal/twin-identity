@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.2-next.4](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.9.2-next.3...identity-models-v0.9.2-next.4) (2026-08-07)
+
+
+### Features
+
+* health and key removal ([934391f](https://github.com/iotaledger/twin-identity/commit/934391f9307beda34bc594e3aa506137e3df631b))
+* health and key removal ([#191](https://github.com/iotaledger/twin-identity/issues/191)) ([8504101](https://github.com/iotaledger/twin-identity/commit/8504101a7a08b2a042a4e59f666c245308527088))
+
 ## [0.9.2-next.3](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.9.2-next.2...identity-models-v0.9.2-next.3) (2026-08-03)
 
 
