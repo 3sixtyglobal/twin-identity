@@ -33,6 +33,7 @@
 		"@twin.org/data-core": "next",
 		"@twin.org/data-json-ld": "next",
 		"@twin.org/entity": "next",
+		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/telemetry-models": "next",
 		"@twin.org/web": "next"

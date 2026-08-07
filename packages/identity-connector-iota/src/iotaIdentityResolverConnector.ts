@@ -67,10 +67,9 @@ export class IotaIdentityResolverConnector
 
 	/**
 	 * Returns the health status of the component.
-	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
 	 * @returns The health status of the component.
 	 */
-	public async health(lastTimestamp: number): Promise<IHealth[]> {
+	public async health(): Promise<IHealth[]> {
 		const nodeEndpoint = (this._config.clientOptions as { url?: string }).url;
 
 		try {

@@ -67,10 +67,9 @@ export class UniversalResolverConnector
 
 	/**
 	 * Returns the health status of the component.
-	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
 	 * @returns The health status of the component.
 	 */
-	public async health(lastTimestamp: number): Promise<IHealth[]> {
+	public async health(): Promise<IHealth[]> {
 		try {
 			const response = await FetchHelper.fetch(
 				UniversalResolverConnector.CLASS_NAME,

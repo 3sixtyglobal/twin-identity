@@ -15,4 +15,10 @@ export interface IIdentityServiceConstructorOptions {
 	 * The component type for the optional telemetry component used for event metrics.
 	 */
 	telemetryComponentType?: string;
+
+	/**
+	 * The vault connector type to use for migrating the mnemonic during health check initialisation.
+	 * @default vault
+	 */
+	vaultConnectorType?: string;
 }

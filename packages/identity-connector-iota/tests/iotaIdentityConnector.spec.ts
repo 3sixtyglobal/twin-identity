@@ -61,7 +61,8 @@ describe("IotaIdentityConnector", () => {
 					clientOptions: TEST_CLIENT_OPTIONS,
 					vaultMnemonicId: TEST_MNEMONIC_NAME,
 					network: TEST_NETWORK,
-					gasBudget: TEST_GAS_BUDGET
+					gasBudget: TEST_GAS_BUDGET,
+					didResolutionCacheTtlMs: 0
 				}
 			});
 
@@ -219,6 +220,8 @@ describe("IotaIdentityConnector", () => {
 		expect(addedMethod).toBeDefined();
 		expect(addedMethod.id).toEqual(`${testDocumentId}#${verificationMethodId}`);
 
+		await waitForBlock();
+
 		await identityConnector.removeVerificationMethod(
 			TEST_USER_IDENTITY,
 			`${testDocumentId}#${verificationMethodId}`
@@ -362,6 +365,8 @@ describe("IotaIdentityConnector", () => {
 
 		expect(addedService).toBeDefined();
 		expect(addedService.id).toEqual(`${testDocumentId}#${serviceId}`);
+
+		await waitForBlock();
 
 		await identityConnector.removeService(TEST_USER_IDENTITY, addedService.id);
 	});
@@ -1480,7 +1485,8 @@ describe("IotaIdentityConnector", () => {
 			config: {
 				clientOptions: TEST_CLIENT_OPTIONS,
 				vaultMnemonicId: TEST_MNEMONIC_NAME,
-				network: TEST_NETWORK
+				network: TEST_NETWORK,
+				didResolutionCacheTtlMs: 0
 			}
 		});
 

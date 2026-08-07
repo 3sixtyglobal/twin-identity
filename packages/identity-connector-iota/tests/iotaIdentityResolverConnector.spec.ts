@@ -95,7 +95,7 @@ describe("IotaIdentityResolverConnector", () => {
 			}
 		});
 
-		const health = await identityResolverConnector.health(0);
+		const health = await identityResolverConnector.health();
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);
@@ -111,7 +111,7 @@ describe("IotaIdentityResolverConnector", () => {
 			}
 		});
 
-		const health = await identityResolverConnector.health(0);
+		const health = await identityResolverConnector.health();
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);

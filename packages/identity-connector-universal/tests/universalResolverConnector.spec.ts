@@ -9,7 +9,7 @@ describe("UniversalResolverConnector", () => {
 			config: { endpoint: "http://localhost:18180" }
 		});
 
-		const health = await resolver.health(0);
+		const health = await resolver.health();
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);
@@ -22,7 +22,7 @@ describe("UniversalResolverConnector", () => {
 			config: { endpoint: "http://localhost:1" }
 		});
 
-		const health = await resolver.health(0);
+		const health = await resolver.health();
 
 		expect(health).toBeDefined();
 		expect(health.length).toBeGreaterThan(0);

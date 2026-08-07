@@ -3,6 +3,7 @@
 import {
 	HealthCategory,
 	HealthStatus,
+	type HealthApplicationCallback,
 	type IHealth,
 	type IHealthProviderComponent
 } from "@twin.org/api-models";
@@ -10,6 +11,7 @@ import type { IContextIds } from "@twin.org/context";
 import { ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import { BaseError, ComponentFactory, GeneralError, Guards, Is, Urn } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
+import { AccountHelper } from "@twin.org/dlt-account";
 import {
 	DocumentHelper,
 	IdentityConnectorFactory,
@@ -32,6 +34,7 @@ import {
 	type IDidVerifiablePresentation
 } from "@twin.org/standards-w3c-did";
 import { MetricHelper, type ITelemetryComponent } from "@twin.org/telemetry-models";
+import { type IVaultConnector, VaultConnectorFactory } from "@twin.org/vault-models";
 import { Jwt } from "@twin.org/web";
 import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServiceConstructorOptions.js";
 
@@ -51,28 +54,16 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	private readonly _defaultNamespace: string;
 
 	/**
+	 * The vault connector type used for mnemonic migration during health check init.
+	 * @internal
+	 */
+	private readonly _vaultConnector: IVaultConnector;
+
+	/**
 	 * The telemetry component.
 	 * @internal
 	 */
 	private readonly _telemetryComponent?: ITelemetryComponent;
-
-	/**
-	 * Cached result of the most recent application-level health check.
-	 * @internal
-	 */
-	private _lastAppHealthResult: IHealth | undefined;
-
-	/**
-	 * Timestamp of the last health cycle, used to enforce the health interval.
-	 * @internal
-	 */
-	private _lastHealthTime: number;
-
-	/**
-	 * Minimum interval in ms between full application-level health checks.
-	 * @internal
-	 */
-	private readonly _healthInterval: number;
 
 	/**
 	 * Create a new instance of IdentityService.
@@ -86,8 +77,8 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		}
 
 		this._defaultNamespace = options?.config?.defaultNamespace ?? names[0];
-		this._lastHealthTime = 0;
-		this._healthInterval = options?.config?.healthIntervalMs ?? 300_000;
+
+		this._vaultConnector = VaultConnectorFactory.get(options?.vaultConnectorType ?? "vault");
 
 		this._telemetryComponent = ComponentFactory.getIfExists<ITelemetryComponent>(
 			options?.telemetryComponentType
@@ -115,16 +106,13 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	}
 
 	/**
-	 * Creates a temporary DID document for the health check using the default namespace connector.
-	 * Skipped when called within the configured health interval.
-	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
+	 * Creates a temporary DID document for the application health check.
 	 * @param contextIds The context IDs accumulated by prior init steps.
 	 */
-	public async healthInit(lastTimestamp: number, contextIds: IContextIds): Promise<void> {
-		if (this._lastHealthTime > 0 && lastTimestamp - this._lastHealthTime < this._healthInterval) {
-			return;
-		}
-		const controller = contextIds[ContextIdKeys.Node];
+	public async healthApplicationInit(contextIds: IContextIds): Promise<void> {
+		// The wallet service has already setup a temporary controller DID mnemonic for the health check
+		// so we can use that to create a new document and add a verification method to it.
+		const controller = contextIds[ContextIdKeys.Organization];
 		if (!Is.stringValue(controller)) {
 			return;
 		}
@@ -137,99 +125,101 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 				DidVerificationMethodType.AssertionMethod,
 				"health-assertion"
 			);
+
+			// The original seed/mnemonic/keys were created with the temp orgId
+			// so we need to migrate them to the new document id so that the health check can resolve the DID.
+			await AccountHelper.renameAccountKeys(undefined, this._vaultConnector, controller, doc.id);
+
+			// Replace the updated contextIds with the new document id for the health check.
 			contextIds[ContextIdKeys.Organization] = doc.id;
-		} catch (error) {
-			this._lastAppHealthResult = {
-				source: IdentityService.CLASS_NAME,
-				category: HealthCategory.Application,
-				status: HealthStatus.Error,
-				description: "healthDescription",
-				message: "createDocumentFailed",
-				error: BaseError.fromError(error)
-			};
-		}
+		} catch {}
 	}
 
 	/**
 	 * Returns the application health status of the identity service by resolving the DID created
-	 * in healthInit. On cycles where healthInit was skipped, returns the cached result.
-	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
+	 * in healthApplicationInit.
+	 * @param callback Callback for deferred results.
 	 * @returns The health status of the service.
 	 */
-	public async health(lastTimestamp: number): Promise<IHealth[]> {
+	public async healthApplication(
+		callback: HealthApplicationCallback
+	): Promise<IHealth[] | undefined> {
 		const contextIds = (await ContextIdStore.getContextIds()) ?? {};
 		const orgDid = contextIds[ContextIdKeys.Organization];
 
-		if (Is.stringValue(orgDid)) {
-			try {
-				const resolverConnector =
-					IdentityResolverConnectorFactory.getIfExists<IIdentityResolverConnector>(
-						this._defaultNamespace
-					);
-				if (!Is.undefined(resolverConnector)) {
-					const resolved = await resolverConnector.resolveDocument(orgDid);
-					this._lastAppHealthResult = {
+		if (!Is.stringValue(orgDid)) {
+			return [
+				{
+					source: IdentityService.CLASS_NAME,
+					category: HealthCategory.Application,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "createDocumentFailed",
+					data: {
+						did: orgDid
+					}
+				}
+			];
+		}
+
+		try {
+			const resolverConnector =
+				IdentityResolverConnectorFactory.getIfExists<IIdentityResolverConnector>(
+					this._defaultNamespace
+				);
+			if (!Is.undefined(resolverConnector)) {
+				const resolved = await resolverConnector.resolveDocument(orgDid);
+				return [
+					{
 						source: IdentityService.CLASS_NAME,
 						category: HealthCategory.Application,
 						status: Is.object(resolved) ? HealthStatus.Ok : HealthStatus.Error,
 						description: "healthDescription",
 						message: Is.object(resolved) ? undefined : "resolveDocumentFailed",
-						data: {
-							did: orgDid
-						}
-					};
-				} else {
-					this._lastAppHealthResult = {
-						source: IdentityService.CLASS_NAME,
-						category: HealthCategory.Application,
-						status: HealthStatus.Ok,
-						description: "healthDescription",
-						data: {
-							did: orgDid
-						}
-					};
+						data: { did: orgDid }
+					}
+				];
+			}
+			return [
+				{
+					source: IdentityService.CLASS_NAME,
+					category: HealthCategory.Application,
+					status: HealthStatus.Ok,
+					description: "healthDescription",
+					data: { did: orgDid }
 				}
-			} catch (error) {
-				this._lastAppHealthResult = {
+			];
+		} catch (error) {
+			return [
+				{
 					source: IdentityService.CLASS_NAME,
 					category: HealthCategory.Application,
 					status: HealthStatus.Error,
 					description: "healthDescription",
 					message: "resolveDocumentFailed",
-					data: {
-						did: orgDid
-					},
+					data: { did: orgDid },
 					error: BaseError.fromError(error)
-				};
-			}
+				}
+			];
 		}
-
-		this._lastHealthTime = lastTimestamp > 0 ? lastTimestamp : Date.now();
-
-		const results: IHealth[] = [];
-		if (!Is.undefined(this._lastAppHealthResult)) {
-			results.push(this._lastAppHealthResult);
-		}
-		return results;
 	}
 
 	/**
-	 * Removes the DID document created in healthInit using the default namespace connector.
-	 * @param lastTimestamp The Unix timestamp (ms) recorded at the start of the previous cycle.
+	 * Removes the DID document created in healthApplicationInit.
 	 */
-	public async healthTeardown(lastTimestamp: number): Promise<void> {
+	public async healthApplicationTeardown(): Promise<void> {
 		const contextIds = await ContextIdStore.getContextIds();
-		const nodeId = contextIds?.[ContextIdKeys.Node];
 		const orgId = contextIds?.[ContextIdKeys.Organization];
-		if (!Is.stringValue(orgId) || !Is.stringValue(nodeId)) {
+		if (!Is.stringValue(orgId)) {
 			return;
 		}
 		try {
 			const connector = this.getConnectorByNamespace();
-			await connector.removeDocument(nodeId, orgId);
-		} catch {
-			// Best-effort cleanup; the DID will remain on-chain if removal fails.
-		}
+			await connector.removeVerificationMethod(orgId, `${orgId}#health-assertion`, {
+				removeKeys: true
+			});
+			await connector.removeDocument(orgId, orgId);
+		} catch {}
 	}
 
 	/**
@@ -256,16 +246,22 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	/**
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private keys from the vault.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns A promise that resolves when the identity has been removed.
 	 */
-	public async identityRemove(identity: string, controller?: string): Promise<void> {
+	public async identityRemove(
+		identity: string,
+		options?: { removeKeys?: boolean },
+		controller?: string
+	): Promise<void> {
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(identity), identity);
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 
 		try {
 			const identityConnector = this.getConnectorByUri(identity);
-			const result = await identityConnector.removeDocument(controller, identity);
+			const result = await identityConnector.removeDocument(controller, identity, options);
 			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.DidsRemoved);
 			return result;
 		} catch (error) {
@@ -328,6 +324,8 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	/**
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private key from the vault.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
@@ -335,6 +333,7 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	 */
 	public async verificationMethodRemove(
 		verificationMethodId: string,
+		options?: { removeKeys?: boolean },
 		controller?: string
 	): Promise<void> {
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
@@ -345,7 +344,7 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 
 			const identityConnector = this.getConnectorByUri(idParts.id);
 
-			await identityConnector.removeVerificationMethod(controller, verificationMethodId);
+			await identityConnector.removeVerificationMethod(controller, verificationMethodId, options);
 		} catch (error) {
 			throw new GeneralError(
 				IdentityService.CLASS_NAME,

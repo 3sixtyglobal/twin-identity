@@ -154,6 +154,7 @@ describe("IdentityService", () => {
 
 		await service.verificationMethodRemove(
 			"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#hGHGs0DxLAWcgzx0QjTbzJc3PO-NMqSFAPcdgzx_qQo",
+			undefined,
 			TEST_CONTROLLER
 		);
 
@@ -263,7 +264,7 @@ describe("IdentityService", () => {
 
 	describe("health checks", () => {
 		// Each test needs its own buffer region because MemoryEntityStorageConnector uses
-		// SharedObjectBuffer keyed by storageKey — instances sharing a key share data.
+		// SharedObjectBuffer keyed by storageKey - instances sharing a key share data.
 		let healthTestIndex = 0;
 
 		beforeEach(() => {
@@ -323,18 +324,19 @@ describe("IdentityService", () => {
 			);
 		});
 
-		test("health returns application ok after full lifecycle", async () => {
+		test("healthApplication returns application ok after full lifecycle", async () => {
 			const service = new IdentityService();
 
-			const initContextIds: IContextIds = { [ContextIdKeys.Node]: TEST_CONTROLLER };
-			await service.healthInit(0, initContextIds);
+			const tempOrgDoc = await service.identityCreate(undefined, TEST_CONTROLLER);
+			const initContextIds: IContextIds = { [ContextIdKeys.Organization]: tempOrgDoc.id };
+			await service.healthApplicationInit(initContextIds);
 
 			expect(initContextIds[ContextIdKeys.Organization]).toBeDefined();
 
 			const combinedContextIds = { ...initContextIds };
 			let results: IHealth[] = [];
 			await ContextIdStore.run(combinedContextIds, async () => {
-				results = await service.health(0);
+				results = (await service.healthApplication(async () => {})) ?? [];
 			});
 
 			expect(results).toHaveLength(1);
@@ -342,59 +344,42 @@ describe("IdentityService", () => {
 			expect(results[0].status).toEqual(HealthStatus.Ok);
 		});
 
-		test("health returns cached result when called within the health interval", async () => {
-			const service = new IdentityService({ config: { healthIntervalMs: 300_000 } });
-
-			const initContextIds: IContextIds = { [ContextIdKeys.Node]: TEST_CONTROLLER };
-			await service.healthInit(0, initContextIds);
-
-			const combinedContextIds = { ...initContextIds };
-			await ContextIdStore.run(combinedContextIds, async () => {
-				await service.health(0);
-			});
-
-			const secondInitContextIds: IContextIds = { [ContextIdKeys.Node]: TEST_CONTROLLER };
-			await service.healthInit(1000, secondInitContextIds);
-
-			expect(secondInitContextIds[ContextIdKeys.Organization]).toBeUndefined();
-
-			let results: IHealth[] = [];
-			await ContextIdStore.run(combinedContextIds, async () => {
-				results = await service.health(1000);
-			});
-
-			expect(results).toHaveLength(1);
-			expect(results[0].status).toEqual(HealthStatus.Ok);
-		});
-
-		test("healthTeardown removes the DID created in healthInit", async () => {
+		test("healthApplicationTeardown removes the DID created in healthApplicationInit", async () => {
 			const service = new IdentityService();
 
-			const initContextIds: IContextIds = { [ContextIdKeys.Node]: TEST_CONTROLLER };
-			await service.healthInit(0, initContextIds);
+			const tempOrgDoc = await service.identityCreate(undefined, TEST_CONTROLLER);
+			await service.verificationMethodCreate(
+				tempOrgDoc.id,
+				DidVerificationMethodType.AssertionMethod,
+				"health-assertion",
+				TEST_CONTROLLER
+			);
+			const initContextIds: IContextIds = { [ContextIdKeys.Organization]: tempOrgDoc.id };
+			await service.healthApplicationInit(initContextIds);
 
 			const orgDid = initContextIds[ContextIdKeys.Organization];
 			expect(orgDid).toBeDefined();
 
 			const combinedContextIds = { ...initContextIds };
 			await ContextIdStore.run(combinedContextIds, async () => {
-				await service.health(0);
-				await service.healthTeardown(0);
+				await service.healthApplication(async () => {});
+				await service.healthApplicationTeardown();
 			});
 
 			const resolverConnector = IdentityResolverConnectorFactory.get("entity-storage");
 			await expect(resolverConnector.resolveDocument(orgDid ?? "")).rejects.toThrow();
 		});
 
-		test("health returns empty array when healthInit has not run yet", async () => {
+		test("healthApplication returns error when healthApplicationInit has not run", async () => {
 			const service = new IdentityService();
 
 			let results: IHealth[] = [];
 			await ContextIdStore.run({}, async () => {
-				results = await service.health(0);
+				results = (await service.healthApplication(async () => {})) ?? [];
 			});
 
-			expect(results).toHaveLength(0);
+			expect(results).toHaveLength(1);
+			expect(results[0].status).toEqual(HealthStatus.Error);
 		});
 	});
 });

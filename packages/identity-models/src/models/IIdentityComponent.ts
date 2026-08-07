@@ -28,10 +28,16 @@ export interface IIdentityComponent extends IComponent {
 	/**
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private keys from the vault.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns A promise that resolves when the identity has been removed.
 	 */
-	identityRemove(identity: string, controller?: string): Promise<void>;
+	identityRemove(
+		identity: string,
+		options?: { removeKeys?: boolean },
+		controller?: string
+	): Promise<void>;
 
 	/**
 	 * Add a verification method to the document in JSON Web key Format.
@@ -53,12 +59,18 @@ export interface IIdentityComponent extends IComponent {
 	/**
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private key from the vault.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
-	verificationMethodRemove(verificationMethodId: string, controller?: string): Promise<void>;
+	verificationMethodRemove(
+		verificationMethodId: string,
+		options?: { removeKeys?: boolean },
+		controller?: string
+	): Promise<void>;
 
 	/**
 	 * Add a service to the document.

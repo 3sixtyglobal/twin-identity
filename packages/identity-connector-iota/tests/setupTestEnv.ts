@@ -4,6 +4,7 @@ import path from "node:path";
 import { requestIotaFromFaucetV0 } from "@iota/iota-sdk/faucet";
 import { Coerce, Guards, Is } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
+import { AccountHelper } from "@twin.org/dlt-account";
 import { Iota } from "@twin.org/dlt-iota";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -82,31 +83,9 @@ export const TEST_GAS_STATION_URL = process.env.TEST_GAS_STATION_URL;
 export const TEST_GAS_STATION_AUTH_TOKEN = process.env.TEST_GAS_STATION_AUTH_TOKEN;
 export const TEST_GAS_BUDGET = Coerce.number(process.env.TEST_GAS_BUDGET);
 
-await TEST_VAULT_CONNECTOR.setSecret(
-	`${TEST_USER_IDENTITY}/${TEST_MNEMONIC_NAME}`,
-	process.env.TEST_MNEMONIC
-);
-
 export const TEST_CLIENT_OPTIONS = {
 	url: process.env.TEST_NODE_ENDPOINT
 };
-
-export const TEST_CONFIG = {
-	clientOptions: TEST_CLIENT_OPTIONS,
-	network: TEST_NETWORK,
-	coinType: TEST_COIN_TYPE,
-	vaultMnemonicId: TEST_MNEMONIC_NAME
-};
-
-const testAddresses = await Iota.getAddresses(
-	TEST_VAULT_CONNECTOR,
-	TEST_CONFIG,
-	TEST_USER_IDENTITY,
-	0,
-	0,
-	1
-);
-export const TEST_ADDRESS = testAddresses[0];
 
 export const TEST_IOTA_CONFIG = {
 	clientOptions: TEST_CLIENT_OPTIONS,
@@ -114,6 +93,22 @@ export const TEST_IOTA_CONFIG = {
 	coinType: TEST_COIN_TYPE,
 	vaultMnemonicId: TEST_MNEMONIC_NAME
 };
+
+await AccountHelper.createAccountKeys(
+	TEST_IOTA_CONFIG,
+	TEST_VAULT_CONNECTOR,
+	TEST_USER_IDENTITY,
+	process.env.TEST_MNEMONIC
+);
+
+const testAddress = await AccountHelper.getAddress(
+	TEST_IOTA_CONFIG,
+	TEST_VAULT_CONNECTOR,
+	TEST_USER_IDENTITY,
+	0,
+	0
+);
+export const TEST_ADDRESS = testAddress;
 
 /**
  * Setup the test environment.

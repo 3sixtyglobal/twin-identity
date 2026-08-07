@@ -71,7 +71,7 @@ function makeMockTelemetry(): {
 	return { component, created, values };
 }
 
-describe("IdentityService — metrics", () => {
+describe("IdentityService - metrics", () => {
 	let identityDocStorage: MemoryEntityStorageConnector<IdentityDocument>;
 	let vaultKeyStorage: MemoryEntityStorageConnector<VaultKey>;
 	let vaultSecretStorage: MemoryEntityStorageConnector<VaultSecret>;
@@ -153,7 +153,7 @@ describe("IdentityService — metrics", () => {
 		expect(ids).toContain("identity_vps_verification_failed");
 	});
 
-	test("start() is idempotent — AlreadyExistsError is swallowed", async () => {
+	test("start() is idempotent - AlreadyExistsError is swallowed", async () => {
 		let callCount = 0;
 		const component: ITelemetryComponent = {
 			...makeMockTelemetry().component,
@@ -191,7 +191,7 @@ describe("IdentityService — metrics", () => {
 		const service = new IdentityService({ telemetryComponentType: "test-telemetry" });
 
 		const identity = await service.identityCreate(undefined, TEST_CONTROLLER);
-		await service.identityRemove(identity.id, TEST_CONTROLLER);
+		await service.identityRemove(identity.id, undefined, TEST_CONTROLLER);
 
 		const removed = values.filter(v => v.id === "identity_dids_removed");
 		expect(removed).toHaveLength(1);
@@ -503,7 +503,7 @@ describe("IdentityService — metrics", () => {
 		expect(values.filter(v => v.id === "identity_vps_verified")).toHaveLength(0);
 	});
 
-	test("service works without telemetryComponentType — no errors, all operations succeed", async () => {
+	test("service works without telemetryComponentType - no errors, all operations succeed", async () => {
 		const service = new IdentityService();
 
 		const identity = await service.identityCreate(undefined, TEST_CONTROLLER);

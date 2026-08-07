@@ -2,11 +2,11 @@
 	"health": {
 		"iotaIdentityConnector": {
 			"healthDescription": "Connectivity and availability of the IOTA node \"{endpoint}\"",
-			"nodeHealthCheckFailed": "Failed to check IOTA node health status \"{endpoint}\""
-		},
-		"iotaIdentityConnectorGasStation": {
-			"healthDescription": "Connectivity and availability of the IOTA gas station \"{endpoint}\"",
-			"healthCheckFailed": "Failed to check gas station health status \"{endpoint}\""
+			"nodeHealthCheckFailed": "Failed to check IOTA node health status \"{endpoint}\"",
+			"healthDescriptionGasStationConnectivity": "Connectivity and availability of the IOTA gas station \"{endpoint}\"",
+			"healthCheckFailedGasStationConnectivity": "Failed to check gas station connectivity \"{endpoint}\"",
+			"healthDescriptionGasStationWorking": "Operational status of the IOTA gas station \"{endpoint}\"",
+			"healthCheckFailedGasStationWorking": "Gas station sponsored transaction check failed \"{endpoint}\""
 		},
 		"iotaIdentityResolverConnector": {
 			"healthDescription": "Connectivity and availability of the IOTA resolver node \"{endpoint}\"",
