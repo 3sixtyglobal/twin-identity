@@ -1076,7 +1076,7 @@ export async function identityRemove(
 
 	await component.identityRemove(
 		request.pathParams.identity,
-		{ removeKeys: Coerce.boolean(request.queryParams?.removeKeys) },
+		{ removeKeys: Coerce.boolean(request.query?.removeKeys) },
 		contextIds[ContextIdKeys.Organization]
 	);
 
@@ -1162,7 +1162,7 @@ export async function identityVerificationMethodRemove(
 
 	await component.verificationMethodRemove(
 		DocumentHelper.joinId(request.pathParams.identity, request.pathParams.verificationMethodId),
-		{ removeKeys: Coerce.boolean(request.queryParams?.removeKeys) },
+		{ removeKeys: Coerce.boolean(request.query?.removeKeys) },
 		contextIds[ContextIdKeys.Organization]
 	);
 

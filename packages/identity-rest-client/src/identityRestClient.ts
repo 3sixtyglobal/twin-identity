@@ -105,7 +105,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 			pathParams: {
 				identity
 			},
-			queryParams: { removeKeys: Coerce.string(options?.removeKeys) }
+			query: { removeKeys: Coerce.string(options?.removeKeys) }
 		});
 	}
 
@@ -177,7 +177,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 					identity: idParts.id,
 					verificationMethodId: idParts.fragment ?? ""
 				},
-				queryParams: { removeKeys: Coerce.string(options?.removeKeys) }
+				query: { removeKeys: Coerce.string(options?.removeKeys) }
 			}
 		);
 	}

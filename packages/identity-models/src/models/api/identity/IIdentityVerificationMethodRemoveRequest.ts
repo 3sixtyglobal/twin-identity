@@ -23,7 +23,7 @@ export interface IIdentityVerificationMethodRemoveRequest {
 	/**
 	 * The query parameters.
 	 */
-	queryParams?: {
+	query?: {
 		/**
 		 * Also remove any associated private key from the vault.
 		 */

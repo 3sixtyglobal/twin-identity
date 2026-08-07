@@ -18,7 +18,7 @@ export interface IIdentityRemoveRequest {
 	/**
 	 * The query parameters.
 	 */
-	queryParams?: {
+	query?: {
 		/**
 		 * Also remove any associated private keys from the vault.
 		 */
