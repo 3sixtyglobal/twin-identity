@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.9.2-next.5](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.9.2-next.4...identity-connector-entity-storage-v0.9.2-next.5) (2026-08-10)
+
+
+### Features
+
+* ensure credential subject exists ([3847e82](https://github.com/iotaledger/twin-identity/commit/3847e8250ac5abd1fffcd1a72d3157f32d08478c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.4 to 0.9.2-next.5
+
 ## [0.9.2-next.4](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.9.2-next.3...identity-connector-entity-storage-v0.9.2-next.4) (2026-08-07)
 
 
