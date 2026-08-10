@@ -913,7 +913,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					ObjectHelper.propertyDelete(c, "id");
 					return c;
 				});
-			} else {
+			} else if (Is.object(jwtVc.credentialSubject)) {
 				ObjectHelper.propertyDelete(jwtVc.credentialSubject, "id");
 			}
 
