@@ -3,7 +3,7 @@
 /**
  * Tests for DID resolution caching in IotaIdentityConnector.
  *
- * Covers: the AsyncCache dependency contract this feature relies on, that the identity client is
+ * Covers: the LruCache dependency contract this feature relies on, that the identity client is
  * rebuilt fresh on every call (never memoized - see the incident note on the describe block
  * below), that same-call document reuse collapses redundant resolves, that the role-1
  * (own-identity) cache serves hits within its TTL, evicts on mutation, and expires correctly, and
@@ -17,7 +17,7 @@
  * not WASM opaque internals.
  */
 import { IdentityClient, type IotaDocument } from "@iota/identity-wasm/node/index.js";
-import { AsyncCache } from "@twin.org/core";
+import { LruCache } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { Iota } from "@twin.org/dlt-iota";
 import { ProofTypes, type IProof } from "@twin.org/standards-w3c-did";
@@ -33,72 +33,59 @@ import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 
 const CACHE_KEY_PREFIX = "identityConnectorCacheSpec:";
 
-// Exercises @twin.org/core's AsyncCache directly, not the connector - this pins down the
-// dependency contract the caching feature relies on (TTL hit/expiry, explicit remove, the
-// ttlMs: 0 bypass). It cannot fail for a connector-level defect; see the
-// "didResolutionCacheTtlMs: 0 disables caching end-to-end" block below for connector-level
-// coverage of the same bypass behavior.
-describe("AsyncCache dependency contract (offline, not connector-specific)", () => {
-	afterEach(() => {
-		AsyncCache.clearCache(CACHE_KEY_PREFIX);
+// Exercises @twin.org/core's LruCache directly, not the connector - this pins down the
+// dependency contract the caching feature relies on (TTI hit/expiry, explicit delete). It cannot
+// fail for a connector-level defect; see the "didResolutionCacheTtlMs: 0 disables caching
+// end-to-end" block below for connector-level coverage of the bypass behavior.
+describe("LruCache dependency contract (offline, not connector-specific)", () => {
+	test("returns a cached value within the TTI window without re-invoking the factory", async () => {
+		const cache = new LruCache<string>({ ttiMs: 30_000 });
+		const factory = vi.fn().mockResolvedValue("resolved-document");
+		const key = `${CACHE_KEY_PREFIX}own:testnet:did:iota:testnet:0xabc`;
+
+		const first = await cache.getOrSet(key, factory);
+		const second = await cache.getOrSet(key, factory);
+
+		expect(first).toEqual("resolved-document");
+		expect(second).toEqual("resolved-document");
+		expect(factory).toHaveBeenCalledTimes(1);
 	});
 
-	test("returns a cached value within the TTL window without re-invoking the request method", async () => {
+	test("re-invokes the factory after the TTI expires", async () => {
 		vi.useFakeTimers();
 		try {
-			const requestMethod = vi.fn().mockResolvedValue("resolved-document");
-			const key = `${CACHE_KEY_PREFIX}own:testnet:did:iota:testnet:0xabc`;
-
-			const first = await AsyncCache.exec<string>(key, 30000, requestMethod);
-			const second = await AsyncCache.exec<string>(key, 30000, requestMethod);
-
-			expect(first).toEqual("resolved-document");
-			expect(second).toEqual("resolved-document");
-			expect(requestMethod).toHaveBeenCalledTimes(1);
-		} finally {
-			vi.useRealTimers();
-		}
-	});
-
-	test("re-invokes the request method after the TTL expires", async () => {
-		vi.useFakeTimers();
-		try {
-			const requestMethod = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
+			const cache = new LruCache<string>({ ttiMs: 1000 });
+			const factory = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
 			const key = `${CACHE_KEY_PREFIX}own:testnet:did:iota:testnet:0xdef`;
 
-			const first = await AsyncCache.exec<string>(key, 1000, requestMethod);
+			const first = await cache.getOrSet(key, factory);
 			vi.advanceTimersByTime(1001);
-			const second = await AsyncCache.exec<string>(key, 1000, requestMethod);
+			const second = await cache.getOrSet(key, factory);
 
 			expect(first).toEqual("first");
 			expect(second).toEqual("second");
-			expect(requestMethod).toHaveBeenCalledTimes(2);
+			expect(factory).toHaveBeenCalledTimes(2);
 		} finally {
 			vi.useRealTimers();
 		}
 	});
 
-	test("AsyncCache.remove forces the next call to re-invoke the request method", async () => {
-		const requestMethod = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
+	test("delete forces the next call to re-invoke the factory", async () => {
+		const cache = new LruCache<string>({ ttiMs: 30_000 });
+		const factory = vi.fn().mockResolvedValueOnce("first").mockResolvedValueOnce("second");
 		const key = `${CACHE_KEY_PREFIX}own:testnet:did:iota:testnet:0xghi`;
 
-		const first = await AsyncCache.exec<string>(key, 30000, requestMethod);
-		AsyncCache.remove(key);
-		const second = await AsyncCache.exec<string>(key, 30000, requestMethod);
+		const first = await cache.getOrSet(key, factory);
+		cache.delete(key);
+		const second = await cache.getOrSet(key, factory);
 
 		expect(first).toEqual("first");
 		expect(second).toEqual("second");
-		expect(requestMethod).toHaveBeenCalledTimes(2);
+		expect(factory).toHaveBeenCalledTimes(2);
 	});
 
-	test("a ttlMs of 0 bypasses the cache entirely (the config-off switch this feature relies on)", async () => {
-		const requestMethod = vi.fn().mockResolvedValue("value");
-		const key = `${CACHE_KEY_PREFIX}own:testnet:did:iota:testnet:0xjkl`;
-
-		await AsyncCache.exec<string>(key, 0, requestMethod);
-		await AsyncCache.exec<string>(key, 0, requestMethod);
-
-		expect(requestMethod).toHaveBeenCalledTimes(2);
+	test("ttiMs of 0 is invalid: a disabled cache is represented as undefined, not a zero-TTI cache", () => {
+		expect(() => new LruCache({ ttiMs: 0 })).toThrow();
 	});
 });
 
@@ -210,9 +197,9 @@ describe("IotaIdentityConnector - resolveDid call count (live, spy-only)", () =>
 
 // resolveDid's real .d.ts types it non-nullable (not-found rejects instead of resolving empty),
 // so this scenario is unreachable through the live network today. It's forced here by mocking a
-// single resolveDid call, to prove the hardening added for it actually works: without it, an
-// empty result would be indistinguishable from "still in progress" to AsyncCache, and every
-// caller within the TTL would hang forever instead of seeing a rejection.
+// single resolveDid call, to prove the hardening added for it actually works: without it, a
+// null/undefined document would be stored in the cache and corrupt all subsequent resolves for
+// that DID within the TTI window.
 describe("IotaIdentityConnector - resolveOwnDidCached rejects instead of hanging on an empty resolve (live, spy-only, mocked edge case)", () => {
 	let identityConnector: IotaIdentityConnector;
 	let testDocumentId: string;
@@ -262,12 +249,11 @@ describe("IotaIdentityConnector - resolveOwnDidCached rejects instead of hanging
 			message: "iotaIdentityConnector.createProofFailed"
 		});
 
-		// No zombie cache entry left behind: since the throw happens before AsyncCache.exec's
-		// .then() ever settles the entry, the rejection is treated as a failure and the entry is
-		// deleted outright, so this follow-up call resolves fresh rather than hanging or waiting
-		// out the TTL. Clear the call count (not the spy itself, which would restore the
-		// mockResolvedValueOnce-consumed real implementation as a *new* spy and defeat the
-		// zombie-entry check) so this assertion counts only the follow-up call.
+		// No zombie cache entry left behind: LruCache.getOrSet only calls set() after the factory
+		// resolves successfully, so a factory rejection is never stored in the cache. Clear the
+		// call count (not the spy itself, which would restore the mockResolvedValueOnce-consumed
+		// real implementation as a *new* spy and defeat the zombie-entry check) so this assertion
+		// counts only the follow-up call.
 		resolveDidSpy.mockClear();
 
 		await expect(
@@ -508,7 +494,9 @@ describe("IotaIdentityConnector - didResolutionCacheTtlMs: 0 disables caching en
 			}
 		);
 
-		const asyncCacheExecSpy = vi.spyOn(AsyncCache, "exec");
+		// Spy only during the second call so any invocation proves a fresh resolve attempt.
+		// We avoid strict call counts because the SDK may retry internally on transient network behaviour.
+		const resolveDidSpy = vi.spyOn(IdentityClient.prototype, "resolveDid");
 
 		await identityConnector.createVerifiableCredential(
 			TEST_USER_IDENTITY,
@@ -521,16 +509,9 @@ describe("IotaIdentityConnector - didResolutionCacheTtlMs: 0 disables caching en
 			}
 		);
 
-		// With caching disabled (ttlMs: 0), the second call must reach AsyncCache.exec with the
-		// own-DID cache key and ttlMs: 0 - proving the config flows through to resolveOwnDidCached.
-		// Asserting via AsyncCache.exec (a plain TypeScript static method) is more reliable than
-		// spying on IdentityClient.prototype.resolveDid: the WASM SDK may issue zero or multiple
-		// low-level calls internally depending on network retry behaviour, which makes a strict
-		// toHaveBeenCalledTimes(1) on the WASM prototype intermittently fail.
-		const ownDidResolves = asyncCacheExecSpy.mock.calls.filter(
-			([key, ttlMs]) => String(key).includes(":own:") && ttlMs === 0
-		);
-		expect(ownDidResolves.length).toBeGreaterThanOrEqual(1);
+		// With caching disabled (didResolutionCacheTtlMs: 0), the second credential creation
+		// must trigger a live DID resolution instead of serving a cached result.
+		expect(resolveDidSpy).toHaveBeenCalled();
 	});
 });
 

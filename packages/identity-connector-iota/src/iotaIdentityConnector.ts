@@ -46,12 +46,12 @@ import {
 } from "@twin.org/api-models";
 import {
 	ArrayHelper,
-	AsyncCache,
 	BaseError,
 	Converter,
 	GeneralError,
 	Guards,
 	Is,
+	LruCache,
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
@@ -163,6 +163,24 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	private readonly _didResolutionCacheTtlMs: number;
 
 	/**
+	 * Maximum number of own DID documents retained in cache.
+	 * @internal
+	 */
+	private readonly _didResolutionCacheCapacity: number;
+
+	/**
+	 * Maximum wait time for own DID cache getOrSet mutex acquisition in milliseconds.
+	 * @internal
+	 */
+	private readonly _didResolutionCacheMutexTimeoutMs?: number;
+
+	/**
+	 * LRU cache for own DID documents. Undefined when caching is disabled (ttl is 0).
+	 * @internal
+	 */
+	private readonly _didResolutionCache?: LruCache<IotaDocument>;
+
+	/**
 	 * Create a new instance of IotaIdentityConnector.
 	 * @param options The options for the identity connector.
 	 */
@@ -187,6 +205,16 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		this._walletAddressIndex = options.config.walletAddressIndex ?? 0;
 		this._standardGasPrice = BigInt(this._config.standardGasPrice ?? 1000);
 		this._didResolutionCacheTtlMs = this._config.didResolutionCacheTtlMs ?? 30_000;
+		this._didResolutionCacheCapacity = this._config.didResolutionCacheCapacity ?? 1000;
+		this._didResolutionCacheMutexTimeoutMs = this._config.didResolutionCacheMutexTimeoutMs;
+		this._didResolutionCache =
+			this._didResolutionCacheTtlMs > 0
+				? new LruCache<IotaDocument>({
+						capacity: this._didResolutionCacheCapacity,
+						ttiMs: this._didResolutionCacheTtlMs,
+						mutexTimeoutMs: this._didResolutionCacheMutexTimeoutMs
+					})
+				: undefined;
 
 		Iota.populateConfig(this._config);
 	}
@@ -283,6 +311,16 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	}
 
 	/**
+	 * Stop the service.
+	 * Destroys in-memory resources owned by this component.
+	 * @param nodeLoggingComponentType The node logging component type.
+	 * @returns A promise that resolves when the service has stopped.
+	 */
+	public async stop(nodeLoggingComponentType?: string): Promise<void> {
+		this._didResolutionCache?.destroy();
+	}
+
+	/**
 	 * Create a new document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns The created document.
@@ -372,7 +410,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				await deleteBuilder.buildAndExecute(identityClient);
 			}
 
-			AsyncCache.remove(this.ownDidCacheKey(documentId));
+			this._didResolutionCache?.delete(this.ownDidCacheKey(documentId));
 
 			for (const methodId of methodIds) {
 				const idParts = DocumentHelper.parseId(methodId);
@@ -1860,9 +1898,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 
 	/**
 	 * Resolve a DID for this connector's own sign/mutate operations, cached for
-	 * didResolutionCacheTtlMs (0 disables caching and resolves fresh every call). Only ever used
-	 * for the connector's own create/update/revoke paths - never for verifyProof or credential/
-	 * presentation verification, which must stay uncached.
+	 * didResolutionCacheTtlMs (0 disables caching and resolves fresh every call), with optional
+	 * capacity and mutex timeout controls from config. Only ever used for the connector's own
+	 * create/update/revoke paths - never for verifyProof or credential/presentation verification,
+	 * which must stay uncached.
 	 * @param identityClient The identity client to resolve with.
 	 * @param did The DID to resolve.
 	 * @returns The resolved document.
@@ -1873,23 +1912,35 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		identityClient: IdentityClient,
 		did: string
 	): Promise<IotaDocument> {
-		// The empty check lives inside this callback, not after awaiting resolveOwnDidCached's
-		// result, so a not-found DID throws (and is never cached) instead of settling as an
-		// empty result.
-		const resolved = await AsyncCache.exec<IotaDocument>(
-			this.ownDidCacheKey(did),
-			this._didResolutionCacheTtlMs,
-			async () => {
-				const document = await identityClient.resolveDid(IotaDID.parse(did));
-				if (Is.undefined(document)) {
-					throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", did);
-				}
-				return document;
-			}
+		if (Is.undefined(this._didResolutionCache)) {
+			return this.clientResolveDid(identityClient, did);
+		}
+
+		return this._didResolutionCache.getOrSet(this.ownDidCacheKey(did), async () =>
+			this.clientResolveDid(identityClient, did)
 		);
+	}
+
+	/**
+	 * Resolve a DID document via the identity client, throwing NotFoundError if absent.
+	 * @param identityClient The identity client to resolve with.
+	 * @param did The DID to resolve.
+	 * @returns The resolved document.
+	 * @throws NotFoundError if the DID could not be resolved.
+	 * @internal
+	 */
+	private async clientResolveDid(
+		identityClient: IdentityClient,
+		did: string
+	): Promise<IotaDocument> {
+		const document = await identityClient.resolveDid(IotaDID.parse(did));
+		if (Is.undefined(document)) {
+			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", did);
+		}
+
 		// Return a deep clone, not the cached instance itself: several role-1 callers mutate the
 		// resolved document in place
-		return resolved.clone();
+		return document.clone();
 	}
 
 	/**
@@ -2111,7 +2162,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			result = executionResult as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 		}
 
-		AsyncCache.remove(this.ownDidCacheKey(did));
+		this._didResolutionCache?.delete(this.ownDidCacheKey(did));
 
 		return result;
 	}

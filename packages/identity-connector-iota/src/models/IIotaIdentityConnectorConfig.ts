@@ -42,4 +42,17 @@ export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	 * @default 30000
 	 */
 	didResolutionCacheTtlMs?: number;
+
+	/**
+	 * Maximum number of DID documents kept in the own-DID resolution cache.
+	 * Only used when didResolutionCacheTtlMs > 0.
+	 * @default 1000
+	 */
+	didResolutionCacheCapacity?: number;
+
+	/**
+	 * Maximum time in milliseconds to wait for own-DID cache getOrSet mutex acquisition.
+	 * Only used when didResolutionCacheTtlMs > 0.
+	 */
+	didResolutionCacheMutexTimeoutMs?: number;
 }
