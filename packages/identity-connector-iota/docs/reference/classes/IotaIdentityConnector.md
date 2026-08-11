@@ -110,6 +110,33 @@ The health status of the component.
 
 ***
 
+### stop() {#stop}
+
+> **stop**(`nodeLoggingComponentType?`): `Promise`\<`void`\>
+
+Stop the service.
+Destroys in-memory resources owned by this component.
+
+#### Parameters
+
+##### nodeLoggingComponentType?
+
+`string`
+
+The node logging component type.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+A promise that resolves when the service has stopped.
+
+#### Implementation of
+
+`IIdentityConnector.stop`
+
+***
+
 ### createDocument() {#createdocument}
 
 > **createDocument**(`controller`): `Promise`\<`IDidDocument`\>

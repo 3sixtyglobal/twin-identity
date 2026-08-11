@@ -77,3 +77,27 @@ is never cached by this connector.
 ```ts
 30000
 ```
+
+***
+
+### didResolutionCacheCapacity? {#didresolutioncachecapacity}
+
+> `optional` **didResolutionCacheCapacity?**: `number`
+
+Maximum number of DID documents kept in the own-DID resolution cache.
+Only used when didResolutionCacheTtlMs > 0.
+
+#### Default
+
+```ts
+1000
+```
+
+***
+
+### didResolutionCacheMutexTimeoutMs? {#didresolutioncachemutextimeoutms}
+
+> `optional` **didResolutionCacheMutexTimeoutMs?**: `number`
+
+Maximum time in milliseconds to wait for own-DID cache getOrSet mutex acquisition.
+Only used when didResolutionCacheTtlMs > 0.
