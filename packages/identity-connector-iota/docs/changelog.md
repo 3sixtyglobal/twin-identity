@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.2-next.6](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.2-next.5...identity-connector-iota-v0.9.2-next.6) (2026-08-11)
+
+
+### Features
+
+* lru cache ([#195](https://github.com/iotaledger/twin-identity/issues/195)) ([42e93de](https://github.com/iotaledger/twin-identity/commit/42e93de918581eb0e106c5b8fe9dfa105481a6ce))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.5 to 0.9.2-next.6
+
 ## [0.9.2-next.5](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.2-next.4...identity-connector-iota-v0.9.2-next.5) (2026-08-10)
 
 

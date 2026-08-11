@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.2-next.6](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.5...identity-service-v0.9.2-next.6) (2026-08-11)
+
+
+### Miscellaneous Chores
+
+* **identity-service:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.5 to 0.9.2-next.6
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.9.2-next.5 to 0.9.2-next.6
+
 ## [0.9.2-next.5](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.4...identity-service-v0.9.2-next.5) (2026-08-10)
 
 
