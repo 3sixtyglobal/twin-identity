@@ -425,6 +425,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				await deleteBuilder.buildAndExecute(identityClient);
 			}
 
+			await this.waitForDocumentDeletion(identityClient, IotaDID.parse(documentId));
 			this._didResolutionCache?.delete(this.ownDidCacheKey(documentId));
 
 			for (const methodId of methodIds) {
@@ -1855,6 +1856,30 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			throw lastError;
 		}
 		return resolved?.clone();
+	}
+
+	/**
+	 * Waits for a deleted DID document to become unresolvable, using the same retry and delay
+	 * config as waitForDocument. Returns as soon as the resolver throws; if retries are
+	 * exhausted without observing the deletion the method returns silently.
+	 * @param identityClient The identity client to use for resolution.
+	 * @param did The DID that should become unresolvable after deletion.
+	 * @internal
+	 */
+	private async waitForDocumentDeletion(
+		identityClient: IdentityClient,
+		did: IotaDID
+	): Promise<void> {
+		for (let attempt = 0; attempt <= this._didResolutionRetries; attempt++) {
+			try {
+				await identityClient.resolveDid(did);
+			} catch {
+				return;
+			}
+			if (attempt < this._didResolutionRetries) {
+				await new Promise<void>(resolve => setTimeout(resolve, this._didResolutionRetryDelayMs));
+			}
+		}
 	}
 
 	/**
