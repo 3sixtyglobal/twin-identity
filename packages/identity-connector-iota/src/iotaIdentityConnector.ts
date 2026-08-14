@@ -181,6 +181,20 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	private readonly _didResolutionCache?: LruCache<IotaDocument>;
 
 	/**
+	 * Number of times to retry resolving a DID after a successful createDocument transaction,
+	 * to handle propagation delays between transaction confirmation and ledger availability.
+	 * @internal
+	 */
+	private readonly _didResolutionRetries: number;
+
+	/**
+	 * Number of times to retry resolving a DID after a successful createDocument transaction,
+	 * to handle propagation delays between transaction confirmation and ledger availability.
+	 * @internal
+	 */
+	private readonly _didResolutionRetryDelayMs: number;
+
+	/**
 	 * Create a new instance of IotaIdentityConnector.
 	 * @param options The options for the identity connector.
 	 */
@@ -215,6 +229,8 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 						mutexTimeoutMs: this._didResolutionCacheMutexTimeoutMs
 					})
 				: undefined;
+		this._didResolutionRetries = Math.max(this._config.didResolutionRetries ?? 3, 1);
+		this._didResolutionRetryDelayMs = this._config.didResolutionRetryDelayMs ?? 500;
 
 		Iota.populateConfig(this._config);
 	}
@@ -1812,19 +1828,16 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		identityClient: IdentityClient,
 		did: IotaDID
 	): Promise<IotaDocument> {
-		const resolveRetries = this._config.didResolutionRetries ?? 3;
-		const resolveDelayMs = this._config.didResolutionRetryDelayMs ?? 500;
-
 		let resolved: IotaDocument | undefined;
 		let lastError: unknown;
-		for (let attempt = 0; attempt <= resolveRetries; attempt++) {
+		for (let attempt = 0; attempt <= this._didResolutionRetries; attempt++) {
 			try {
 				resolved = await identityClient.resolveDid(did);
 				break;
 			} catch (error) {
 				lastError = error;
-				if (attempt < resolveRetries) {
-					await new Promise<void>(resolve => setTimeout(resolve, resolveDelayMs));
+				if (attempt < this._didResolutionRetries) {
+					await new Promise<void>(resolve => setTimeout(resolve, this._didResolutionRetryDelayMs));
 				}
 			}
 		}
