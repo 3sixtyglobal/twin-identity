@@ -207,3 +207,55 @@ The maximum number of items in a page.
 `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
 
 The list of items and cursor for paging.
+
+***
+
+### listAdmin() {#listadmin}
+
+> **listAdmin**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+
+Get a list of identities including private profile data.
+
+#### Parameters
+
+##### publicFilters?
+
+`object`[]
+
+The filters to apply to the identities public profiles.
+
+##### privateFilters?
+
+`object`[]
+
+The filters to apply to the identities private profiles.
+
+##### publicPropertyNames?
+
+keyof `T`[]
+
+The public properties to get for the profile, defaults to all.
+
+##### privatePropertyNames?
+
+keyof `U`[]
+
+The private properties to get for the profile, defaults to none.
+
+##### cursor?
+
+`string`
+
+The cursor for paged requests.
+
+##### limit?
+
+`number`
+
+The maximum number of items in a page.
+
+#### Returns
+
+`Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+
+The list of items and cursor for paging.
