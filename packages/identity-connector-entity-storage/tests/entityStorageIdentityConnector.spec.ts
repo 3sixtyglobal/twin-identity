@@ -37,8 +37,6 @@ async function debugOutput(documentId: string): Promise<void> {
 	console.debug("DID Document", documentId);
 }
 
-async function waitForBlock(): Promise<void> {}
-
 let testVcJwt: string;
 let testVc: IDidVerifiableCredential;
 let testDocumentId: string;
@@ -817,8 +815,6 @@ describe("EntityStorageIdentityConnector", () => {
 
 		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [456]);
 
-		await waitForBlock();
-
 		const revokedCheck = await identityConnector.checkVerifiableCredential(vcJwt);
 		expect(revokedCheck.revoked).toBeTruthy();
 	});
@@ -895,13 +891,9 @@ describe("EntityStorageIdentityConnector", () => {
 			revocationIndex
 		]);
 
-		await waitForBlock();
-
 		await identityConnector.unrevokeVerifiableCredentials(TEST_USER_IDENTITY, didId, [
 			revocationIndex
 		]);
-
-		await waitForBlock();
 	});
 
 	test("can fail to create a verifiable presentation with no verification method id", async () => {

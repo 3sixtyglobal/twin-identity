@@ -282,11 +282,7 @@ describe("IotaIdentityConnector - resolveOwnDidCached rejects instead of hanging
 // Long, dedicated TTL (60s) - deliberately the opposite of a short TTL. Both tests below need
 // the cache entry to never expire "by accident" during a real network/on-chain call, or the
 // effect they're observing (a cache hit, an explicit eviction) becomes indistinguishable from
-// ordinary TTL expiry. This codebase's own suite already assumes on-chain mutations can take up
-// to ~5s to settle (see waitForBlock() in iotaIdentityConnector.spec.ts) - 60s gives comfortable
-// headroom over that, so a regression that deletes the real eviction call is guaranteed to be
-// caught rather than possibly masked by a live call happening to run long. Real timers (not
-// vi.useFakeTimers()) since these calls hit the live testnet.
+// ordinary TTL expiry.
 describe("IotaIdentityConnector - role-1 cache hit + eviction (live, spy-only)", () => {
 	const TTL_MS = 60_000;
 

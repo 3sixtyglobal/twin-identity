@@ -40,10 +40,6 @@ async function debugOutput(documentId: string): Promise<void> {
 	console.debug("DID Document", `${TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`);
 }
 
-async function waitForBlock(): Promise<void> {
-	await new Promise(resolve => setTimeout(resolve, 5000));
-}
-
 let testVcJwt: string;
 let testVc: IDidVerifiableCredential;
 let testDocumentId: string;
@@ -220,8 +216,6 @@ describe("IotaIdentityConnector", () => {
 		expect(addedMethod).toBeDefined();
 		expect(addedMethod.id).toEqual(`${testDocumentId}#${verificationMethodId}`);
 
-		await waitForBlock();
-
 		await identityConnector.removeVerificationMethod(
 			TEST_USER_IDENTITY,
 			`${testDocumentId}#${verificationMethodId}`
@@ -365,8 +359,6 @@ describe("IotaIdentityConnector", () => {
 
 		expect(addedService).toBeDefined();
 		expect(addedService.id).toEqual(`${testDocumentId}#${serviceId}`);
-
-		await waitForBlock();
 
 		await identityConnector.removeService(TEST_USER_IDENTITY, addedService.id);
 	});
@@ -805,8 +797,6 @@ describe("IotaIdentityConnector", () => {
 
 		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [456]);
 
-		await waitForBlock();
-
 		const revokedCheck = await identityConnector.checkVerifiableCredential(vcJwt);
 		expect(revokedCheck.revoked).toBeTruthy();
 	});
@@ -883,13 +873,9 @@ describe("IotaIdentityConnector", () => {
 			revocationIndex
 		]);
 
-		await waitForBlock();
-
 		await identityConnector.unrevokeVerifiableCredentials(TEST_USER_IDENTITY, didId, [
 			revocationIndex
 		]);
-
-		await waitForBlock();
 	});
 
 	test("can fail to create a verifiable presentation with no verification method id", async () => {

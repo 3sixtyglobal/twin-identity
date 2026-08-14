@@ -229,7 +229,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 						mutexTimeoutMs: this._didResolutionCacheMutexTimeoutMs
 					})
 				: undefined;
-		this._didResolutionRetries = Math.max(this._config.didResolutionRetries ?? 3, 1);
+		this._didResolutionRetries = Math.max(this._config.didResolutionRetries ?? 10, 1);
 		this._didResolutionRetryDelayMs = this._config.didResolutionRetryDelayMs ?? 500;
 
 		Iota.populateConfig(this._config);
