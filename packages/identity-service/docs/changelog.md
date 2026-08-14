@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.2-next.7](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.6...identity-service-v0.9.2-next.7) (2026-08-14)
+
+
+### Features
+
+* admin endpoints ([#199](https://github.com/iotaledger/twin-identity/issues/199)) ([da6c189](https://github.com/iotaledger/twin-identity/commit/da6c18963ed551451d919e36aedc1dd8b005a12f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.6 to 0.9.2-next.7
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.9.2-next.6 to 0.9.2-next.7
+
 ## [0.9.2-next.6](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.5...identity-service-v0.9.2-next.6) (2026-08-11)
 
 
