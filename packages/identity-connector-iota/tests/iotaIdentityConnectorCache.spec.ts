@@ -187,11 +187,10 @@ describe("IotaIdentityConnector - resolveDid call count (live, spy-only)", () =>
 
 		expect(result.jwt).toBeDefined();
 		// Originally 2 (once directly, once again inside createProof for the same DID) before the
-		// already-resolved issuerDocument was threaded through instead of re-resolved. A plain
-		// resolve-count collapse from passing the document down - no cache/TTL involved, and
-		// unaffected by the identity-client-memoization revert above, since this reuse never
-		// touches the identity client itself, only the resolved document value.
-		expect(resolveDidSpy).toHaveBeenCalledTimes(1);
+		// already-resolved issuerDocument was threaded through instead of re-resolved. Then 1 (plain
+		// document-threading, no cache). Now 0: addVerificationMethod stores the settled document in
+		// the role-1 cache, so createVerifiableCredential's resolveOwnDidCached is a cache hit.
+		expect(resolveDidSpy).toHaveBeenCalledTimes(0);
 	});
 });
 
@@ -232,13 +231,25 @@ describe("IotaIdentityConnector - resolveOwnDidCached rejects instead of hanging
 	});
 
 	test("an empty resolveDid result rejects immediately instead of caching a nullish value", async () => {
+		// Use a fresh connector with no cache entries - mutations on identityConnector (from
+		// beforeAll) populate that instance's cache, but freshConnector has no entry for this DID,
+		// so resolveOwnDidCached goes through the getOrSet factory and the mock is intercepted.
+		const freshConnector = new IotaIdentityConnector({
+			config: {
+				clientOptions: TEST_CLIENT_OPTIONS,
+				vaultMnemonicId: TEST_MNEMONIC_NAME,
+				network: TEST_NETWORK,
+				gasBudget: TEST_GAS_BUDGET
+			}
+		});
+
 		const resolveDidSpy = vi
 			.spyOn(IdentityClient.prototype, "resolveDid")
 			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 			.mockResolvedValueOnce(undefined as unknown as IotaDocument);
 
 		await expect(
-			identityConnector.createProof(
+			freshConnector.createProof(
 				TEST_USER_IDENTITY,
 				testVerificationMethodId,
 				ProofTypes.DataIntegrityProof,
@@ -257,7 +268,7 @@ describe("IotaIdentityConnector - resolveOwnDidCached rejects instead of hanging
 		resolveDidSpy.mockClear();
 
 		await expect(
-			identityConnector.createProof(
+			freshConnector.createProof(
 				TEST_USER_IDENTITY,
 				testVerificationMethodId,
 				ProofTypes.DataIntegrityProof,
@@ -331,7 +342,7 @@ describe("IotaIdentityConnector - role-1 cache hit + eviction (live, spy-only)",
 		expect(resolveDidSpy).toHaveBeenCalledTimes(0);
 	});
 
-	test("addVerificationMethod evicts the cache, so the next role-1 resolve is not a cache hit", async () => {
+	test("addVerificationMethod updates the cache with the settled document, so the next role-1 resolve is a cache hit", async () => {
 		// Prime the cache - unspied.
 		await identityConnector.createVerifiableCredential(
 			TEST_USER_IDENTITY,
@@ -344,10 +355,9 @@ describe("IotaIdentityConnector - role-1 cache hit + eviction (live, spy-only)",
 			}
 		);
 
-		// A mutation on the same DID - its own internal resolve may still be a cache hit, but it
-		// must evict the entry once it succeeds. At a 60s TTL, the entry cannot have expired on
-		// its own by the time this on-chain call settles, so the assertion below can only pass
-		// because of the explicit eviction, not accidental TTL expiry.
+		// A mutation on the same DID - stores the settled document in the role-1 cache. At a 60s
+		// TTL, the entry cannot have expired on its own by the time this on-chain call settles, so
+		// the assertion below can only pass because the cache was updated with the settled document.
 		await identityConnector.addVerificationMethod(
 			TEST_USER_IDENTITY,
 			testDocumentId,
@@ -368,13 +378,9 @@ describe("IotaIdentityConnector - role-1 cache hit + eviction (live, spy-only)",
 			}
 		);
 
-		// A genuine network resolve, not a cache hit - proves the eviction in addVerificationMethod
-		// took effect instead of serving the (now stale) entry primed above. Also assert it
-		// resolved the right DID: IotaDID is a wasm-bound class with no value equality, so compare
-		// via toString() rather than toHaveBeenCalledWith(expect.any(IotaDID)), which would only
-		// check the instance type, not which DID was actually looked up.
-		expect(resolveDidSpy).toHaveBeenCalledTimes(1);
-		expect(resolveDidSpy.mock.calls[0][0].toString()).toBe(testDocumentId);
+		// A cache hit, not a network resolve - addVerificationMethod stored the settled document
+		// in the cache, so the primed (now updated) entry is served immediately.
+		expect(resolveDidSpy).toHaveBeenCalledTimes(0);
 	});
 });
 
