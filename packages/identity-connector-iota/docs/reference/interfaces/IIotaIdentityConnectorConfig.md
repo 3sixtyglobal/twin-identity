@@ -101,3 +101,32 @@ Only used when didResolutionCacheTtlMs > 0.
 
 Maximum time in milliseconds to wait for own-DID cache getOrSet mutex acquisition.
 Only used when didResolutionCacheTtlMs > 0.
+
+***
+
+### didResolutionRetries? {#didresolutionretries}
+
+> `optional` **didResolutionRetries?**: `number`
+
+Number of times to retry resolving a DID after a successful createDocument transaction,
+to handle propagation delays between transaction confirmation and ledger availability.
+
+#### Default
+
+```ts
+3
+```
+
+***
+
+### didResolutionRetryDelayMs? {#didresolutionretrydelayms}
+
+> `optional` **didResolutionRetryDelayMs?**: `number`
+
+Delay in milliseconds between each resolveDid retry.
+
+#### Default
+
+```ts
+500
+```
