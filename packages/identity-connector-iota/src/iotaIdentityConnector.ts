@@ -344,9 +344,8 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				>
 			);
 
-			const did = this.extractDidFromExecutionResult(executionResult, networkHrp); // Both regular and gas station transactions now use waitForTransactionConfirmation
-			// so the DID should be immediately resolvable after transaction confirmation
-			const resolved = await identityClient.resolveDid(did);
+			const did = this.extractDidFromExecutionResult(executionResult, networkHrp);
+			const resolved = await this.waitForDocument(identityClient, did);
 
 			const docJson = resolved.toJSON() as { doc: IDidDocument };
 
@@ -1800,6 +1799,39 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				Iota.extractPayloadError(error)
 			);
 		}
+	}
+
+	/**
+	 * Resolves a DID document with retries to handle propagation delays after a transaction.
+	 * @param identityClient The identity client to use for resolution.
+	 * @param did The DID to resolve.
+	 * @returns The resolved IOTA document.
+	 * @internal
+	 */
+	private async waitForDocument(
+		identityClient: IdentityClient,
+		did: IotaDID
+	): Promise<IotaDocument> {
+		const resolveRetries = this._config.didResolutionRetries ?? 3;
+		const resolveDelayMs = this._config.didResolutionRetryDelayMs ?? 500;
+
+		let resolved: IotaDocument | undefined;
+		let lastError: unknown;
+		for (let attempt = 0; attempt <= resolveRetries; attempt++) {
+			try {
+				resolved = await identityClient.resolveDid(did);
+				break;
+			} catch (error) {
+				lastError = error;
+				if (attempt < resolveRetries) {
+					await new Promise<void>(resolve => setTimeout(resolve, resolveDelayMs));
+				}
+			}
+		}
+		if (!resolved) {
+			throw lastError;
+		}
+		return resolved;
 	}
 
 	/**
