@@ -363,7 +363,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			const did = this.extractDidFromExecutionResult(executionResult, networkHrp);
 			const resolved = await this.waitForDocument(identityClient, did);
 
-			const docJson = resolved.toJSON() as { doc: IDidDocument };
+			const docJson = resolved?.toJSON() as { doc: IDidDocument };
 
 			return docJson.doc;
 		} catch (error) {
@@ -1818,33 +1818,43 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	}
 
 	/**
-	 * Resolves a DID document with retries to handle propagation delays after a transaction.
+	 * Implementation for both overloads above.
 	 * @param identityClient The identity client to use for resolution.
 	 * @param did The DID to resolve.
-	 * @returns The resolved IOTA document.
+	 * @param preMutationUpdated Pre-mutation metadataUpdated string, null for first mutation, or omitted for create mode.
+	 * @returns The resolved document, or undefined in update mode when retries are exhausted.
 	 * @internal
 	 */
 	private async waitForDocument(
 		identityClient: IdentityClient,
-		did: IotaDID
-	): Promise<IotaDocument> {
+		did: IotaDID,
+		preMutationUpdated?: string
+	): Promise<IotaDocument | undefined> {
 		let resolved: IotaDocument | undefined;
 		let lastError: unknown;
 		for (let attempt = 0; attempt <= this._didResolutionRetries; attempt++) {
 			try {
-				resolved = await identityClient.resolveDid(did);
-				break;
+				const candidate = await identityClient.resolveDid(did);
+				if (!Is.undefined(candidate)) {
+					const isSettled =
+						Is.undefined(preMutationUpdated) ||
+						candidate.metadataUpdated()?.toString() !== (preMutationUpdated ?? undefined);
+					if (isSettled) {
+						resolved = candidate;
+						break;
+					}
+				}
 			} catch (error) {
 				lastError = error;
-				if (attempt < this._didResolutionRetries) {
-					await new Promise<void>(resolve => setTimeout(resolve, this._didResolutionRetryDelayMs));
-				}
+			}
+			if (attempt < this._didResolutionRetries) {
+				await new Promise<void>(resolve => setTimeout(resolve, this._didResolutionRetryDelayMs));
 			}
 		}
-		if (!resolved) {
+		if (Is.undefined(resolved) && Is.undefined(preMutationUpdated)) {
 			throw lastError;
 		}
-		return resolved;
+		return resolved?.clone();
 	}
 
 	/**
@@ -2195,19 +2205,32 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 
 		// `did` is passed through from the caller - the exact string already used to populate the
 		// role-1 cache via resolveOwnDidCached - rather than re-derived from `document.id()`, so
-		// eviction is guaranteed to hit the same cache key that was populated.
-		// Both branches are captured into `result` (instead of returning directly) so eviction
-		// runs after either one succeeds, and a throw from either skips it automatically.
+		// the cache key is guaranteed to match.
+		// Both branches are captured into `result` (instead of returning directly) so the cache
+		// update runs after either one succeeds, and a throw from either skips it automatically.
 		let result: TransactionOutput<Transaction<OnChainIdentity>>;
+		let resolverClient: IdentityClient;
 		if (Is.object(this._config.gasStation)) {
 			result = await this.executeGasStationTransaction(controller, updateBuilder, "update");
+			resolverClient = await this.getIdentityClient();
 		} else {
-			const identityClient = await this.getIdentityClient(controller);
-			const executionResult = await updateBuilder.buildAndExecute(identityClient);
+			resolverClient = await this.getIdentityClient(controller);
+			const executionResult = await updateBuilder.buildAndExecute(resolverClient);
 			result = executionResult as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 		}
 
-		this._didResolutionCache?.delete(this.ownDidCacheKey(did));
+		const settled = await this.waitForDocument(
+			resolverClient,
+			IotaDID.parse(did),
+			document.metadataUpdated()?.toString()
+		);
+		if (!Is.undefined(this._didResolutionCache)) {
+			if (!Is.undefined(settled)) {
+				this._didResolutionCache.set(this.ownDidCacheKey(did), settled);
+			} else {
+				this._didResolutionCache.delete(this.ownDidCacheKey(did));
+			}
+		}
 
 		return result;
 	}
