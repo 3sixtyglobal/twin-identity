@@ -216,7 +216,7 @@ export class IdentityProfileService<
 		/**
 		 * The identities.
 		 */
-		items: { identity: string; publicProfile?: Partial<T>; privateProfile?: Partial<U> }[];
+		items: { identity: string; publicProfile?: Partial<T> }[];
 		/**
 		 * An optional cursor, when defined can be used to call find to get more entities.
 		 */
@@ -233,9 +233,67 @@ export class IdentityProfileService<
 				cursor,
 				limit
 			);
-			return result;
+			return {
+				items: result.items.map(item => ({
+					identity: item.identity,
+					publicProfile: item.publicProfile
+				})),
+				cursor: result.cursor
+			};
 		} catch (error) {
 			throw new GeneralError(IdentityProfileService.CLASS_NAME, "listFailed", undefined, error);
+		}
+	}
+
+	/**
+	 * Get a list of identities including private profile data.
+	 * @param publicFilters The filters to apply to the identities public profiles.
+	 * @param privateFilters The filters to apply to the identities private profiles.
+	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
+	 * @param privatePropertyNames The private properties to get for the profile, defaults to none.
+	 * @param cursor The cursor for paged requests.
+	 * @param limit The maximum number of items in a page.
+	 * @returns The list of items and cursor for paging.
+	 */
+	public async listAdmin(
+		publicFilters?: {
+			propertyName: string;
+			propertyValue: unknown;
+		}[],
+		privateFilters?: {
+			propertyName: string;
+			propertyValue: unknown;
+		}[],
+		publicPropertyNames?: (keyof T)[],
+		privatePropertyNames?: (keyof U)[],
+		cursor?: string,
+		limit?: number
+	): Promise<{
+		/**
+		 * The identities.
+		 */
+		items: { identity: string; publicProfile?: Partial<T>; privateProfile?: Partial<U> }[];
+		/**
+		 * An optional cursor, when defined can be used to call find to get more entities.
+		 */
+		cursor?: string;
+	}> {
+		try {
+			return await this._identityProfileConnector.list(
+				publicFilters,
+				privateFilters,
+				publicPropertyNames,
+				privatePropertyNames,
+				cursor,
+				limit
+			);
+		} catch (error) {
+			throw new GeneralError(
+				IdentityProfileService.CLASS_NAME,
+				"listAdminFailed",
+				undefined,
+				error
+			);
 		}
 	}
 }

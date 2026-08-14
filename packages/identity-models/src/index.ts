@@ -31,6 +31,11 @@ export * from "./models/api/identity/IIdentityVerifiablePresentationVerifyRespon
 export * from "./models/api/identity/IIdentityVerificationMethodCreateRequest.js";
 export * from "./models/api/identity/IIdentityVerificationMethodCreateResponse.js";
 export * from "./models/api/identity/IIdentityVerificationMethodRemoveRequest.js";
+export * from "./models/api/profile/IIdentityProfileAdminGetRequest.js";
+export * from "./models/api/profile/IIdentityProfileAdminListRequest.js";
+export * from "./models/api/profile/IIdentityProfileAdminListResponse.js";
+export * from "./models/api/profile/IIdentityProfileAdminRemoveRequest.js";
+export * from "./models/api/profile/IIdentityProfileAdminUpdateRequest.js";
 export * from "./models/api/profile/IIdentityProfileCreateRequest.js";
 export * from "./models/api/profile/IIdentityProfileGetPublicRequest.js";
 export * from "./models/api/profile/IIdentityProfileGetPublicResponse.js";
