@@ -59,7 +59,7 @@ export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	/**
 	 * Number of times to retry resolving a DID after a successful createDocument transaction,
 	 * to handle propagation delays between transaction confirmation and ledger availability.
-	 * @default 3
+	 * @default 10
 	 */
 	didResolutionRetries?: number;
 
