@@ -1,5 +1,63 @@
 # Changelog
 
+## [0.9.2-next.9](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.8...identity-service-v0.9.2-next.9) (2026-08-14)
+
+
+### Features
+
+* add addAlsoKnownAs to identity connector ([#117](https://github.com/iotaledger/twin-identity/issues/117)) ([aa27cff](https://github.com/iotaledger/twin-identity/commit/aa27cff88e61e7c8c6e32aeb437fb01c6ee9f57a))
+* add context id features ([#62](https://github.com/iotaledger/twin-identity/issues/62)) ([e02ecca](https://github.com/iotaledger/twin-identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add expiration date option to vc creation ([73e05e1](https://github.com/iotaledger/twin-identity/commit/73e05e1ae61112c7e056889969751f4ff82d9f29))
+* add identity remove ([eebc13f](https://github.com/iotaledger/twin-identity/commit/eebc13f4c2cd994d2d9cce4da2128fb346c80ba7))
+* add optional jwt payload and headers to vc and vp tokens ([#135](https://github.com/iotaledger/twin-identity/issues/135)) ([aa1de0f](https://github.com/iotaledger/twin-identity/commit/aa1de0f63be95ff62bae3c699aabc85ea93d74c2))
+* add proof to vcs and verify vs documents ([#103](https://github.com/iotaledger/twin-identity/issues/103)) ([b60bf0c](https://github.com/iotaledger/twin-identity/commit/b60bf0cb7d453d67574c5c0e4f769e67cf7cd6d1))
+* add telemetry metrics ([#132](https://github.com/iotaledger/twin-identity/issues/132)) ([b51cd78](https://github.com/iotaledger/twin-identity/commit/b51cd7816905fd55e250035daf1b8f2047cba83d))
+* add validate-locales ([04d74b4](https://github.com/iotaledger/twin-identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* admin endpoints ([#199](https://github.com/iotaledger/twin-identity/issues/199)) ([da6c189](https://github.com/iotaledger/twin-identity/commit/da6c18963ed551451d919e36aedc1dd8b005a12f))
+* application health ([#188](https://github.com/iotaledger/twin-identity/issues/188)) ([a7f0c3e](https://github.com/iotaledger/twin-identity/commit/a7f0c3e919d8a77b7d2661ec33742f1cc1889751))
+* common connector tests ([4f9642c](https://github.com/iotaledger/twin-identity/commit/4f9642ceb09843870909fc6819bf69fb20ef952a))
+* eslint migration to flat config ([fd6246d](https://github.com/iotaledger/twin-identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+* expanded cli methods ([#121](https://github.com/iotaledger/twin-identity/issues/121)) ([80a52b7](https://github.com/iotaledger/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
+* health and key removal ([934391f](https://github.com/iotaledger/twin-identity/commit/934391f9307beda34bc594e3aa506137e3df631b))
+* health and key removal ([#191](https://github.com/iotaledger/twin-identity/issues/191)) ([8504101](https://github.com/iotaledger/twin-identity/commit/8504101a7a08b2a042a4e59f666c245308527088))
+* identity key separator use slash ([1319d0d](https://github.com/iotaledger/twin-identity/commit/1319d0d07164a36b3ec279e6421b8835ffefc3d3))
+* remove auth generator ([#98](https://github.com/iotaledger/twin-identity/issues/98)) ([a8969e8](https://github.com/iotaledger/twin-identity/commit/a8969e85a5a2804abfc787406e2d12eb168dd978))
+* remove skipAuth from routes ([a2f8921](https://github.com/iotaledger/twin-identity/commit/a2f892133360a25cb7b6668342e5dad852c3a908))
+* remove unused namespace ([1987f72](https://github.com/iotaledger/twin-identity/commit/1987f72089be5ece10aa96b1fb9c386221c95c75))
+* rest enhancements ([f2307ff](https://github.com/iotaledger/twin-identity/commit/f2307ff6605ba87ac5bf991bdaa69ac7d8bbd56d))
+* separate vc verification routes with query and body ([ea7d891](https://github.com/iotaledger/twin-identity/commit/ea7d8910472150cf76dbd51e282625e70226d9b3))
+* typescript 6 update ([e8806ad](https://github.com/iotaledger/twin-identity/commit/e8806ad6858c37be3c0f54c41cf654023773bef3))
+* update contexts ([#100](https://github.com/iotaledger/twin-identity/issues/100)) ([7c17f98](https://github.com/iotaledger/twin-identity/commit/7c17f983110b2fc5db1b19531d0b2a7c53e02aaa))
+* update framework core ([c824497](https://github.com/iotaledger/twin-identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+* update namespaces and contexts ([#90](https://github.com/iotaledger/twin-identity/issues/90)) ([0c34d64](https://github.com/iotaledger/twin-identity/commit/0c34d64add8cca77856fa2d0357e774d72fbbfc1))
+* update twindev schemas ([f5b2735](https://github.com/iotaledger/twin-identity/commit/f5b273561b52fa75e654e074927c164a465aa510))
+* use new generateKid method ([f0fe779](https://github.com/iotaledger/twin-identity/commit/f0fe779323b675575bb9f80aa74f1957dc57a094))
+* use shared store mechanism ([#27](https://github.com/iotaledger/twin-identity/issues/27)) ([ce41f3f](https://github.com/iotaledger/twin-identity/commit/ce41f3fc3da1b206ec06da7ea5b2c968f788804d))
+
+
+### Bug Fixes
+
+* allow empty subject data in vc ([5bbf14e](https://github.com/iotaledger/twin-identity/commit/5bbf14eefd3c99b6cdca1af0ca741954d1b02cd3))
+* identity routes missing jwt fields ([b47470a](https://github.com/iotaledger/twin-identity/commit/b47470a8e59881d877c84f114892ee290d4254ca))
+* identity subject type property ([#146](https://github.com/iotaledger/twin-identity/issues/146)) ([fe71dc6](https://github.com/iotaledger/twin-identity/commit/fe71dc66972120b42f1ff0e1dc8732cb48e1dd2a))
+* Import path and bump version ([#21](https://github.com/iotaledger/twin-identity/issues/21)) ([ccea845](https://github.com/iotaledger/twin-identity/commit/ccea845bf32562267280bc1b3dde1c9af1a00360))
+* Install sdk-wasm ([#20](https://github.com/iotaledger/twin-identity/issues/20)) ([75ec14e](https://github.com/iotaledger/twin-identity/commit/75ec14e072f8c219863a1c028a3b0783802086e9))
+* missing path params ([02acbde](https://github.com/iotaledger/twin-identity/commit/02acbde3033bf5d5435dca0bd8187cabad8f3028))
+* proof create rest route identifier ([395dc57](https://github.com/iotaledger/twin-identity/commit/395dc5700f8ec1b3a607d18ffb68c8eec8ee751c))
+* query params force coercion ([d9347d2](https://github.com/iotaledger/twin-identity/commit/d9347d29d4a9cc58759f30f5d8526de864ea7522))
+* stricter pathParam types ([a174cdf](https://github.com/iotaledger/twin-identity/commit/a174cdf0ca4272bee35fcf20ab7e8e4e17b8b6f4))
+* use async getStore in tests ([cfc0d87](https://github.com/iotaledger/twin-identity/commit/cfc0d873532e8ab2010f86f05bffaad3bbaf5786))
+* use async getStore in tests ([3424c81](https://github.com/iotaledger/twin-identity/commit/3424c81cf7407ede4a89a026072720d52bf689b2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.8 to 0.9.2-next.9
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.9.2-next.8 to 0.9.2-next.9
+
 ## [0.9.2-next.8](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.7...identity-service-v0.9.2-next.8) (2026-08-14)
 
 
