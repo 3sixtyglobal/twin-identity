@@ -57,7 +57,7 @@ export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	didResolutionCacheMutexTimeoutMs?: number;
 
 	/**
-	 * Number of times to retry resolving a DID after a successful createDocument transaction,
+	 * Number of times to retry resolving a DID after a successful transaction,
 	 * to handle propagation delays between transaction confirmation and ledger availability.
 	 * @default 10
 	 */

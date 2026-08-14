@@ -108,13 +108,13 @@ Only used when didResolutionCacheTtlMs > 0.
 
 > `optional` **didResolutionRetries?**: `number`
 
-Number of times to retry resolving a DID after a successful createDocument transaction,
+Number of times to retry resolving a DID after a successful transaction,
 to handle propagation delays between transaction confirmation and ledger availability.
 
 #### Default
 
 ```ts
-3
+10
 ```
 
 ***
