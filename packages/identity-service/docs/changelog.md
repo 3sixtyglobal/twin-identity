@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.2-next.10](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.9...identity-service-v0.9.2-next.10) (2026-08-20)
+
+
+### Features
+
+* tracing ([#205](https://github.com/iotaledger/twin-identity/issues/205)) ([add81ab](https://github.com/iotaledger/twin-identity/commit/add81ab4a258078c34ef0c57681d1675c81f8e2c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.9 to 0.9.2-next.10
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.9.2-next.9 to 0.9.2-next.10
+
 ## [0.9.2-next.9](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.8...identity-service-v0.9.2-next.9) (2026-08-14)
 
 

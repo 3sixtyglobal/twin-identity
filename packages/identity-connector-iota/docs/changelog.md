@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.2-next.10](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.2-next.9...identity-connector-iota-v0.9.2-next.10) (2026-08-20)
+
+
+### Features
+
+* increase resolve timeout ([5a5398c](https://github.com/iotaledger/twin-identity/commit/5a5398c14e70ec2df1727d7e57204499aa5ba6b8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.2-next.9 to 0.9.2-next.10
+
 ## [0.9.2-next.9](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.2-next.8...identity-connector-iota-v0.9.2-next.9) (2026-08-14)
 
 
