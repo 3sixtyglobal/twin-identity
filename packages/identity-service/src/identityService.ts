@@ -16,6 +16,8 @@ import {
 	DocumentHelper,
 	IdentityConnectorFactory,
 	IdentityMetricIds,
+	IdentitySpanAttributes,
+	IdentitySpanNames,
 	IdentityMetrics,
 	IdentityResolverConnectorFactory,
 	type IIdentityComponent,
@@ -34,6 +36,7 @@ import {
 	type IDidVerifiablePresentation
 } from "@twin.org/standards-w3c-did";
 import { MetricHelper, type ITelemetryComponent } from "@twin.org/telemetry-models";
+import { TracingHelper, type ITracingComponent } from "@twin.org/tracing-models";
 import { type IVaultConnector, VaultConnectorFactory } from "@twin.org/vault-models";
 import { Jwt } from "@twin.org/web";
 import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServiceConstructorOptions.js";
@@ -66,6 +69,12 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	private readonly _telemetryComponent?: ITelemetryComponent;
 
 	/**
+	 * The optional tracing component for recording spans.
+	 * @internal
+	 */
+	private readonly _tracingComponent?: ITracingComponent;
+
+	/**
 	 * Create a new instance of IdentityService.
 	 * @param options The options for the service.
 	 * @throws GeneralError if no connectors are registered.
@@ -82,6 +91,9 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 
 		this._telemetryComponent = ComponentFactory.getIfExists<ITelemetryComponent>(
 			options?.telemetryComponentType
+		);
+		this._tracingComponent = ComponentFactory.getIfExists<ITracingComponent>(
+			options?.tracingComponentType
 		);
 	}
 
@@ -231,16 +243,32 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	public async identityCreate(namespace?: string, controller?: string): Promise<IDidDocument> {
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 
-		try {
-			const identityConnector = this.getConnectorByNamespace(namespace);
-			const result = await identityConnector.createDocument(controller);
-			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.DidsCreated, {
-				namespace: namespace ?? this._defaultNamespace
-			});
-			return result;
-		} catch (error) {
-			throw new GeneralError(IdentityService.CLASS_NAME, "identityCreateFailed", undefined, error);
-		}
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.Create,
+			undefined,
+			async () => {
+				try {
+					const identityConnector = this.getConnectorByNamespace(namespace);
+					const result = await identityConnector.createDocument(controller);
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.DidsCreated,
+						{
+							namespace: namespace ?? this._defaultNamespace
+						}
+					);
+					return result;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"identityCreateFailed",
+						undefined,
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -259,19 +287,29 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(identity), identity);
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 
-		try {
-			const identityConnector = this.getConnectorByUri(identity);
-			const result = await identityConnector.removeDocument(controller, identity, options);
-			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.DidsRemoved);
-			return result;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"identityRemoveFailed",
-				{ identity },
-				error
-			);
-		}
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.Remove,
+			{ attributes: { [IdentitySpanAttributes.Id]: identity } },
+			async () => {
+				try {
+					const identityConnector = this.getConnectorByUri(identity);
+					const result = await identityConnector.removeDocument(controller, identity, options);
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.DidsRemoved
+					);
+					return result;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"identityRemoveFailed",
+						{ identity },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -300,25 +338,32 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 			Object.values(DidVerificationMethodType)
 		);
 
-		try {
-			const identityConnector = this.getConnectorByUri(identity);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerificationMethodCreate,
+			{ attributes: { [IdentitySpanAttributes.Id]: identity } },
+			async () => {
+				try {
+					const identityConnector = this.getConnectorByUri(identity);
 
-			const verificationMethod = await identityConnector.addVerificationMethod(
-				controller,
-				identity,
-				verificationMethodType,
-				verificationMethodId
-			);
+					const verificationMethod = await identityConnector.addVerificationMethod(
+						controller,
+						identity,
+						verificationMethodType,
+						verificationMethodId
+					);
 
-			return verificationMethod;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verificationMethodCreateFailed",
-				{ identity },
-				error
-			);
-		}
+					return verificationMethod;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verificationMethodCreateFailed",
+						{ identity },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -339,20 +384,31 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 		Urn.guard(IdentityService.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
 
-		try {
-			const idParts = DocumentHelper.parseId(verificationMethodId);
+		await TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerificationMethodRemove,
+			{ attributes: { [IdentitySpanAttributes.VerificationMethodId]: verificationMethodId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(verificationMethodId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			await identityConnector.removeVerificationMethod(controller, verificationMethodId, options);
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verificationMethodRemoveFailed",
-				{ verificationMethodId },
-				error
-			);
-		}
+					await identityConnector.removeVerificationMethod(
+						controller,
+						verificationMethodId,
+						options
+					);
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verificationMethodRemoveFailed",
+						{ verificationMethodId },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -390,26 +446,33 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 			Guards.stringValue(IdentityService.CLASS_NAME, nameof(serviceEndpoint), serviceEndpoint);
 		}
 
-		try {
-			const identityConnector = this.getConnectorByUri(identity);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.ServiceCreate,
+			{ attributes: { [IdentitySpanAttributes.Id]: identity } },
+			async () => {
+				try {
+					const identityConnector = this.getConnectorByUri(identity);
 
-			const service = await identityConnector.addService(
-				controller,
-				identity,
-				serviceId,
-				serviceType,
-				serviceEndpoint
-			);
+					const service = await identityConnector.addService(
+						controller,
+						identity,
+						serviceId,
+						serviceType,
+						serviceEndpoint
+					);
 
-			return service;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"serviceCreateFailed",
-				{ identity, serviceId },
-				error
-			);
-		}
+					return service;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"serviceCreateFailed",
+						{ identity, serviceId },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -423,20 +486,27 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(controller), controller);
 		Urn.guard(IdentityService.CLASS_NAME, nameof(serviceId), serviceId);
 
-		try {
-			const idParts = DocumentHelper.parseId(serviceId);
+		await TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.ServiceRemove,
+			{ attributes: { [IdentitySpanAttributes.ServiceId]: serviceId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(serviceId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			await identityConnector.removeService(controller, serviceId);
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"serviceRemoveFailed",
-				{ serviceId },
-				error
-			);
-		}
+					await identityConnector.removeService(controller, serviceId);
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"serviceRemoveFailed",
+						{ serviceId },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -458,20 +528,27 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(documentId), documentId);
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(alias), alias);
 
-		try {
-			const idParts = DocumentHelper.parseId(documentId);
+		await TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.AlsoKnownAsAdd,
+			{ attributes: { [IdentitySpanAttributes.Id]: documentId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(documentId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			await identityConnector.addAlsoKnownAs(controller, documentId, alias);
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"alsoKnownAsAddFailed",
-				{ identity: documentId, alias },
-				error
-			);
-		}
+					await identityConnector.addAlsoKnownAs(controller, documentId, alias);
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"alsoKnownAsAddFailed",
+						{ identity: documentId, alias },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -493,20 +570,27 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(documentId), documentId);
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(alias), alias);
 
-		try {
-			const idParts = DocumentHelper.parseId(documentId);
+		await TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.AlsoKnownAsRemove,
+			{ attributes: { [IdentitySpanAttributes.Id]: documentId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(documentId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			await identityConnector.removeAlsoKnownAs(controller, documentId, alias);
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"alsoKnownAsRemoveFailed",
-				{ identity: documentId, alias },
-				error
-			);
-		}
+					await identityConnector.removeAlsoKnownAs(controller, documentId, alias);
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"alsoKnownAsRemoveFailed",
+						{ identity: documentId, alias },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -542,33 +626,44 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Urn.guard(IdentityService.CLASS_NAME, nameof(verificationMethodId), verificationMethodId);
 		Guards.object(IdentityService.CLASS_NAME, nameof(subject), subject);
 
-		try {
-			const idParts = DocumentHelper.parseId(verificationMethodId);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerifiableCredentialCreate,
+			{ attributes: { [IdentitySpanAttributes.VerificationMethodId]: verificationMethodId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(verificationMethodId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			const service = await identityConnector.createVerifiableCredential(
-				controller,
-				verificationMethodId,
-				id,
-				subject,
-				options
-			);
+					const service = await identityConnector.createVerifiableCredential(
+						controller,
+						verificationMethodId,
+						id,
+						subject,
+						options
+					);
 
-			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsCreated, {
-				hasRevocation: Is.number(options?.revocationIndex),
-				hasExpiration: Is.date(options?.expirationDate)
-			});
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.VcsCreated,
+						{
+							hasRevocation: Is.number(options?.revocationIndex),
+							hasExpiration: Is.date(options?.expirationDate)
+						}
+					);
 
-			return service;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verifiableCredentialCreateFailed",
-				{ verificationMethodId },
-				error
-			);
-		}
+					return service;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verifiableCredentialCreateFailed",
+						{ verificationMethodId },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -593,33 +688,43 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 				credential.proof
 			);
 
-			try {
-				const identityConnector = this.getConnectorByUri(credential.issuer);
+			const issuer = credential.issuer;
+			const verifiableCredential = credential;
 
-				const service = await identityConnector.checkVerifiableCredential(credential);
+			return TracingHelper.withSpan(
+				this._tracingComponent,
+				IdentitySpanNames.VerifiableCredentialVerify,
+				undefined,
+				async () => {
+					try {
+						const identityConnector = this.getConnectorByUri(issuer);
 
-				if (service.revoked) {
-					await MetricHelper.metricIncrement(
-						this._telemetryComponent,
-						IdentityMetricIds.VcsVerificationFailed,
-						{ failureReason: "revoked" }
-					);
-				} else {
-					await MetricHelper.metricIncrement(
-						this._telemetryComponent,
-						IdentityMetricIds.VcsVerified
-					);
+						const service = await identityConnector.checkVerifiableCredential(verifiableCredential);
+
+						if (service.revoked) {
+							await MetricHelper.metricIncrement(
+								this._telemetryComponent,
+								IdentityMetricIds.VcsVerificationFailed,
+								{ failureReason: "revoked" }
+							);
+						} else {
+							await MetricHelper.metricIncrement(
+								this._telemetryComponent,
+								IdentityMetricIds.VcsVerified
+							);
+						}
+
+						return service;
+					} catch (error) {
+						throw new GeneralError(
+							IdentityService.CLASS_NAME,
+							"verifiableCredentialVerifyFailed",
+							undefined,
+							error
+						);
+					}
 				}
-
-				return service;
-			} catch (error) {
-				throw new GeneralError(
-					IdentityService.CLASS_NAME,
-					"verifiableCredentialVerifyFailed",
-					undefined,
-					error
-				);
-			}
+			);
 		}
 
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(credential), credential);
@@ -639,30 +744,42 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 			throw new GeneralError(IdentityService.CLASS_NAME, "jwtDecodeFailed");
 		}
 
-		try {
-			const identityConnector = this.getConnectorByUri(jwtPayload.iss);
+		const issuer = jwtPayload.iss;
 
-			const service = await identityConnector.checkVerifiableCredential(credential);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerifiableCredentialVerify,
+			undefined,
+			async () => {
+				try {
+					const identityConnector = this.getConnectorByUri(issuer);
 
-			if (service.revoked) {
-				await MetricHelper.metricIncrement(
-					this._telemetryComponent,
-					IdentityMetricIds.VcsVerificationFailed,
-					{ failureReason: "revoked" }
-				);
-			} else {
-				await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsVerified);
+					const service = await identityConnector.checkVerifiableCredential(credential);
+
+					if (service.revoked) {
+						await MetricHelper.metricIncrement(
+							this._telemetryComponent,
+							IdentityMetricIds.VcsVerificationFailed,
+							{ failureReason: "revoked" }
+						);
+					} else {
+						await MetricHelper.metricIncrement(
+							this._telemetryComponent,
+							IdentityMetricIds.VcsVerified
+						);
+					}
+
+					return service;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verifiableCredentialVerifyFailed",
+						undefined,
+						error
+					);
+				}
 			}
-
-			return service;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verifiableCredentialVerifyFailed",
-				undefined,
-				error
-			);
-		}
+		);
 	}
 
 	/**
@@ -681,28 +798,38 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(issuerIdentity), issuerIdentity);
 		Guards.number(IdentityService.CLASS_NAME, nameof(credentialIndex), credentialIndex);
 
-		try {
-			const idParts = DocumentHelper.parseId(issuerIdentity);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerifiableCredentialRevoke,
+			{ attributes: { [IdentitySpanAttributes.Id]: issuerIdentity } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(issuerIdentity);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			const result = await identityConnector.revokeVerifiableCredentials(
-				controller,
-				issuerIdentity,
-				[credentialIndex]
-			);
+					const result = await identityConnector.revokeVerifiableCredentials(
+						controller,
+						issuerIdentity,
+						[credentialIndex]
+					);
 
-			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsRevoked);
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.VcsRevoked
+					);
 
-			return result;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verifiableCredentialRevokeFailed",
-				{ issuerIdentity, credentialIndex },
-				error
-			);
-		}
+					return result;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verifiableCredentialRevokeFailed",
+						{ issuerIdentity, credentialIndex },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -721,28 +848,38 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(issuerIdentity), issuerIdentity);
 		Guards.number(IdentityService.CLASS_NAME, nameof(credentialIndex), credentialIndex);
 
-		try {
-			const idParts = DocumentHelper.parseId(issuerIdentity);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerifiableCredentialUnrevoke,
+			{ attributes: { [IdentitySpanAttributes.Id]: issuerIdentity } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(issuerIdentity);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			const result = await identityConnector.unrevokeVerifiableCredentials(
-				controller,
-				issuerIdentity,
-				[credentialIndex]
-			);
+					const result = await identityConnector.unrevokeVerifiableCredentials(
+						controller,
+						issuerIdentity,
+						[credentialIndex]
+					);
 
-			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VcsUnrevoked);
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.VcsUnrevoked
+					);
 
-			return result;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verifiableCredentialUnrevokeFailed",
-				{ issuerIdentity, credentialIndex },
-				error
-			);
-		}
+					return result;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verifiableCredentialUnrevokeFailed",
+						{ issuerIdentity, credentialIndex },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -783,34 +920,45 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 			verificationMethodId
 		);
 
-		try {
-			const idParts = DocumentHelper.parseId(verificationMethodId);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerifiablePresentationCreate,
+			{ attributes: { [IdentitySpanAttributes.VerificationMethodId]: verificationMethodId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(verificationMethodId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			const result = await identityConnector.createVerifiablePresentation(
-				controller,
-				verificationMethodId,
-				presentationId,
-				contexts,
-				types,
-				verifiableCredentials,
-				options
-			);
+					const result = await identityConnector.createVerifiablePresentation(
+						controller,
+						verificationMethodId,
+						presentationId,
+						contexts,
+						types,
+						verifiableCredentials,
+						options
+					);
 
-			await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VpsCreated, {
-				credentialCount: verifiableCredentials.length
-			});
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						IdentityMetricIds.VpsCreated,
+						{
+							credentialCount: verifiableCredentials.length
+						}
+					);
 
-			return result;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verifiablePresentationCreateFailed",
-				{ verificationMethodId },
-				error
-			);
-		}
+					return result;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verifiablePresentationCreateFailed",
+						{ verificationMethodId },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -850,30 +998,40 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		}
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(holder), holder);
 
-		try {
-			const identityConnector = this.getConnectorByUri(holder);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.VerifiablePresentationVerify,
+			undefined,
+			async () => {
+				try {
+					const identityConnector = this.getConnectorByUri(holder);
 
-			const service = await identityConnector.checkVerifiablePresentation(presentation);
+					const service = await identityConnector.checkVerifiablePresentation(presentation);
 
-			if (service.revoked) {
-				await MetricHelper.metricIncrement(
-					this._telemetryComponent,
-					IdentityMetricIds.VpsVerificationFailed,
-					{ failureReason: "revoked" }
-				);
-			} else {
-				await MetricHelper.metricIncrement(this._telemetryComponent, IdentityMetricIds.VpsVerified);
+					if (service.revoked) {
+						await MetricHelper.metricIncrement(
+							this._telemetryComponent,
+							IdentityMetricIds.VpsVerificationFailed,
+							{ failureReason: "revoked" }
+						);
+					} else {
+						await MetricHelper.metricIncrement(
+							this._telemetryComponent,
+							IdentityMetricIds.VpsVerified
+						);
+					}
+
+					return service;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"verifiablePresentationVerifyFailed",
+						undefined,
+						error
+					);
+				}
 			}
-
-			return service;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"verifiablePresentationVerifyFailed",
-				undefined,
-				error
-			);
-		}
+		);
 	}
 
 	/**
@@ -908,26 +1066,33 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 			unsecureDocument
 		);
 
-		try {
-			const idParts = DocumentHelper.parseId(verificationMethodId);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.ProofCreate,
+			{ attributes: { [IdentitySpanAttributes.VerificationMethodId]: verificationMethodId } },
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(verificationMethodId);
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+					const identityConnector = this.getConnectorByUri(idParts.id);
 
-			const result = await identityConnector.createProof(
-				controller,
-				verificationMethodId,
-				proofType,
-				unsecureDocument
-			);
-			return result;
-		} catch (error) {
-			throw new GeneralError(
-				IdentityService.CLASS_NAME,
-				"proofCreateFailed",
-				{ verificationMethodId },
-				error
-			);
-		}
+					const result = await identityConnector.createProof(
+						controller,
+						verificationMethodId,
+						proofType,
+						unsecureDocument
+					);
+					return result;
+				} catch (error) {
+					throw new GeneralError(
+						IdentityService.CLASS_NAME,
+						"proofCreateFailed",
+						{ verificationMethodId },
+						error
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -945,16 +1110,25 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 			proof.verificationMethod
 		);
 
-		try {
-			const idParts = DocumentHelper.parseId(proof.verificationMethod);
+		const verificationMethod = proof.verificationMethod;
 
-			const identityConnector = this.getConnectorByUri(idParts.id);
+		return TracingHelper.withSpan(
+			this._tracingComponent,
+			IdentitySpanNames.ProofVerify,
+			undefined,
+			async () => {
+				try {
+					const idParts = DocumentHelper.parseId(verificationMethod);
 
-			const result = await identityConnector.verifyProof(document, proof);
-			return result;
-		} catch (error) {
-			throw new GeneralError(IdentityService.CLASS_NAME, "proofVerifyFailed", undefined, error);
-		}
+					const identityConnector = this.getConnectorByUri(idParts.id);
+
+					const result = await identityConnector.verifyProof(document, proof);
+					return result;
+				} catch (error) {
+					throw new GeneralError(IdentityService.CLASS_NAME, "proofVerifyFailed", undefined, error);
+				}
+			}
+		);
 	}
 
 	/**

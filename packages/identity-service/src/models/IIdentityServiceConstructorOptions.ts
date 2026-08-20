@@ -17,6 +17,11 @@ export interface IIdentityServiceConstructorOptions {
 	telemetryComponentType?: string;
 
 	/**
+	 * The component type for the optional tracing component used for spans.
+	 */
+	tracingComponentType?: string;
+
+	/**
 	 * The vault connector type to use for migrating the mnemonic during health check initialisation.
 	 * @default vault
 	 */
