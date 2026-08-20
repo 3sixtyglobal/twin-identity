@@ -61,6 +61,8 @@
 ## Type Aliases
 
 - [IdentityMetricIds](type-aliases/IdentityMetricIds.md)
+- [IdentitySpanAttributes](type-aliases/IdentitySpanAttributes.md)
+- [IdentitySpanNames](type-aliases/IdentitySpanNames.md)
 
 ## Variables
 
@@ -69,3 +71,5 @@
 - [IdentityResolverConnectorFactory](variables/IdentityResolverConnectorFactory.md)
 - [IdentityMetricIds](variables/IdentityMetricIds.md)
 - [IdentityMetrics](variables/IdentityMetrics.md)
+- [IdentitySpanAttributes](variables/IdentitySpanAttributes.md)
+- [IdentitySpanNames](variables/IdentitySpanNames.md)
