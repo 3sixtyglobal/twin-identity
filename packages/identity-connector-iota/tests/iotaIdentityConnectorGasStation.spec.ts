@@ -362,8 +362,8 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			let reservedGasBudget: number | undefined;
 			const realFetch = globalThis.fetch;
 			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
-				const url = typeof input === "string" ? input : input.toString();
-				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+				const url = Is.string(input) ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && Is.string(init?.body)) {
 					reservedGasBudget = JSON.parse(init.body).gas_budget;
 				}
 				return realFetch(input, init);
@@ -399,8 +399,8 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			let reservedGasBudget: number | undefined;
 			const realFetch = globalThis.fetch;
 			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
-				const url = typeof input === "string" ? input : input.toString();
-				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+				const url = Is.string(input) ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && Is.string(init?.body)) {
 					reservedGasBudget = JSON.parse(init.body).gas_budget;
 				}
 				return realFetch(input, init);
