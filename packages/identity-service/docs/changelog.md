@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.2](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2...identity-service-v0.9.2) (2026-08-24)
+
+
+### Features
+
+* release to production ([dabf4c5](https://github.com/iotaledger/twin-identity/commit/dabf4c5bb19e04c09bfbc8533f23dc9d42b35e4c))
+* release to production ([8450ad7](https://github.com/iotaledger/twin-identity/commit/8450ad727e0c4d665f2ce483e41798c2ff5b7d55))
+* release to production ([#161](https://github.com/iotaledger/twin-identity/issues/161)) ([ad151fa](https://github.com/iotaledger/twin-identity/commit/ad151facfcaadc1d183d935a6db525379d48002f))
+* release to production ([#179](https://github.com/iotaledger/twin-identity/issues/179)) ([062816b](https://github.com/iotaledger/twin-identity/commit/062816b110776b7e60f89b04142d42c6f24890a8))
+* release to production ([#210](https://github.com/iotaledger/twin-identity/issues/210)) ([aec2d45](https://github.com/iotaledger/twin-identity/commit/aec2d45ed55b8bf96638dee835f54629170943ad))
+
 ## [0.9.2-next.10](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.9.2-next.9...identity-service-v0.9.2-next.10) (2026-08-20)
 
 
