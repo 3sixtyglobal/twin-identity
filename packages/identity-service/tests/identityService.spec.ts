@@ -1,5 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import { HealthCategory, HealthStatus, type IHealth } from "@twin.org/api-models";
+import { ContextIdKeys, ContextIdStore, type IContextIds } from "@twin.org/context";
 import { RandomHelper } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
@@ -152,6 +154,7 @@ describe("IdentityService", () => {
 
 		await service.verificationMethodRemove(
 			"did:entity-storage:0x0101010101010101010101010101010101010101010101010101010101010101#hGHGs0DxLAWcgzx0QjTbzJc3PO-NMqSFAPcdgzx_qQo",
+			undefined,
 			TEST_CONTROLLER
 		);
 
@@ -256,6 +259,127 @@ describe("IdentityService", () => {
 				}
 			},
 			jwt: "eyJraWQiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxI215LWlkIiwidHlwIjoiSldUIiwiYWxnIjoiRWREU0EifQ.eyJpc3MiOiJkaWQ6ZW50aXR5LXN0b3JhZ2U6MHgwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxIiwibmJmIjoxNTc3ODM2ODAwLCJqdGkiOiJodHRwczovL2V4YW1wbGUuY29tL2NyZWRlbnRpYWxzLzM3MzIiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vc2NoZW1hLm9yZyJdLCJ0eXBlIjoiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJAdHlwZSI6IlBlcnNvbiIsIm5hbWUiOiJKYW5lIERvZSJ9LCJjcmVkZW50aWFsU3RhdHVzIjp7ImlkIjoiZGlkOmVudGl0eS1zdG9yYWdlOjB4MDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMTAxMDEwMSNyZXZvY2F0aW9uIiwidHlwZSI6IkJpdHN0cmluZ1N0YXR1c0xpc3QiLCJyZXZvY2F0aW9uQml0bWFwSW5kZXgiOiI1In19fQ.b2cSnHw-4Llz4hU4I-kbq7sKWVVqA-bDkMN1IuWxDcW7bLpvIozgADAELPxOukWDNFXOM1-ZByXz9Dwgj3HABg"
+		});
+	});
+
+	describe("health checks", () => {
+		// Each test needs its own buffer region because MemoryEntityStorageConnector uses
+		// SharedObjectBuffer keyed by storageKey - instances sharing a key share data.
+		let healthTestIndex = 0;
+
+		beforeEach(() => {
+			healthTestIndex++;
+			const idx = healthTestIndex;
+
+			const freshDocumentStorage = new MemoryEntityStorageConnector<IdentityDocument>({
+				entitySchema: nameof<IdentityDocument>(),
+				config: { storageKey: `identity-document-health-${idx}` }
+			});
+			const freshVaultKeyStorage = new MemoryEntityStorageConnector<VaultKey>({
+				entitySchema: nameof<VaultKey>(),
+				config: { storageKey: `vault-key-health-${idx}` }
+			});
+			const freshVaultSecretStorage = new MemoryEntityStorageConnector<VaultSecret>({
+				entitySchema: nameof<VaultSecret>(),
+				config: { storageKey: `vault-secret-health-${idx}` }
+			});
+
+			// Register fresh storages; vault connector captures them at construction time
+			EntityStorageConnectorFactory.register("identity-document", () => freshDocumentStorage);
+			EntityStorageConnectorFactory.register("vault-key", () => freshVaultKeyStorage);
+			EntityStorageConnectorFactory.register("vault-secret", () => freshVaultSecretStorage);
+
+			// Evict cached connector instances so new ones are created using the fresh storages
+			VaultConnectorFactory.register("vault", () => new EntityStorageVaultConnector());
+			IdentityConnectorFactory.register(
+				"entity-storage",
+				() => new EntityStorageIdentityConnector()
+			);
+			IdentityResolverConnectorFactory.register(
+				"entity-storage",
+				() => new EntityStorageIdentityResolverConnector()
+			);
+		});
+
+		afterEach(() => {
+			EntityStorageConnectorFactory.register(
+				"identity-document",
+				() => identityDocumentEntityStorage
+			);
+			EntityStorageConnectorFactory.register("vault-key", () => vaultKeyEntityStorageConnector);
+			EntityStorageConnectorFactory.register(
+				"vault-secret",
+				() => vaultSecretEntityStorageConnector
+			);
+
+			// Evict cached connector instances so they are recreated with the original storages
+			VaultConnectorFactory.register("vault", () => new EntityStorageVaultConnector());
+			IdentityConnectorFactory.register(
+				"entity-storage",
+				() => new EntityStorageIdentityConnector()
+			);
+			IdentityResolverConnectorFactory.register(
+				"entity-storage",
+				() => new EntityStorageIdentityResolverConnector()
+			);
+		});
+
+		test("healthApplication returns application ok after full lifecycle", async () => {
+			const service = new IdentityService();
+
+			const tempOrgDoc = await service.identityCreate(undefined, TEST_CONTROLLER);
+			const initContextIds: IContextIds = { [ContextIdKeys.Organization]: tempOrgDoc.id };
+			await service.healthApplicationInit(initContextIds);
+
+			expect(initContextIds[ContextIdKeys.Organization]).toBeDefined();
+
+			const combinedContextIds = { ...initContextIds };
+			let results: IHealth[] = [];
+			await ContextIdStore.run(combinedContextIds, async () => {
+				results = (await service.healthApplication(async () => {})) ?? [];
+			});
+
+			expect(results).toHaveLength(1);
+			expect(results[0].category).toEqual(HealthCategory.Application);
+			expect(results[0].status).toEqual(HealthStatus.Ok);
+		});
+
+		test("healthApplicationTeardown removes the DID created in healthApplicationInit", async () => {
+			const service = new IdentityService();
+
+			const tempOrgDoc = await service.identityCreate(undefined, TEST_CONTROLLER);
+			await service.verificationMethodCreate(
+				tempOrgDoc.id,
+				DidVerificationMethodType.AssertionMethod,
+				"health-assertion",
+				TEST_CONTROLLER
+			);
+			const initContextIds: IContextIds = { [ContextIdKeys.Organization]: tempOrgDoc.id };
+			await service.healthApplicationInit(initContextIds);
+
+			const orgDid = initContextIds[ContextIdKeys.Organization];
+			expect(orgDid).toBeDefined();
+
+			const combinedContextIds = { ...initContextIds };
+			await ContextIdStore.run(combinedContextIds, async () => {
+				await service.healthApplication(async () => {});
+				await service.healthApplicationTeardown();
+			});
+
+			const resolverConnector = IdentityResolverConnectorFactory.get("entity-storage");
+			await expect(resolverConnector.resolveDocument(orgDid ?? "")).rejects.toThrow();
+		});
+
+		test("healthApplication returns error when healthApplicationInit has not run", async () => {
+			const service = new IdentityService();
+
+			let results: IHealth[] = [];
+			await ContextIdStore.run({}, async () => {
+				results = (await service.healthApplication(async () => {})) ?? [];
+			});
+
+			expect(results).toHaveLength(1);
+			expect(results[0].status).toEqual(HealthStatus.Error);
 		});
 	});
 });

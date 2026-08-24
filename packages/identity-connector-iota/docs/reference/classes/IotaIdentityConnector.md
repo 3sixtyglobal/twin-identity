@@ -8,6 +8,7 @@ to the vault connector to prevent key exposure.
 ## Implements
 
 - `IIdentityConnector`
+- `IHealthProviderComponent`
 
 ## Constructors
 
@@ -69,7 +70,7 @@ The class name of the component.
 
 > **health**(): `Promise`\<`IHealth`[]\>
 
-Returns the health status of the component.
+Returns the connectivity health status of the component.
 
 #### Returns
 
@@ -79,7 +80,60 @@ The health status of the component.
 
 #### Implementation of
 
-`IIdentityConnector.health`
+`IHealthProviderComponent.health`
+
+***
+
+### healthApplication() {#healthapplication}
+
+> **healthApplication**(`callback`): `Promise`\<`IHealth`[] \| `undefined`\>
+
+Returns the application health status of the component.
+
+#### Parameters
+
+##### callback
+
+`HealthApplicationCallback`
+
+Callback for deferred results.
+
+#### Returns
+
+`Promise`\<`IHealth`[] \| `undefined`\>
+
+The health status of the component.
+
+#### Implementation of
+
+`IHealthProviderComponent.healthApplication`
+
+***
+
+### stop() {#stop}
+
+> **stop**(`nodeLoggingComponentType?`): `Promise`\<`void`\>
+
+Stop the service.
+Destroys in-memory resources owned by this component.
+
+#### Parameters
+
+##### nodeLoggingComponentType?
+
+`string`
+
+The node logging component type.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+A promise that resolves when the service has stopped.
+
+#### Implementation of
+
+`IIdentityConnector.stop`
 
 ***
 
@@ -111,7 +165,7 @@ The created document.
 
 ### removeDocument() {#removedocument}
 
-> **removeDocument**(`controller`, `documentId`): `Promise`\<`void`\>
+> **removeDocument**(`controller`, `documentId`, `options?`): `Promise`\<`void`\>
 
 Remove a document.
 
@@ -128,6 +182,16 @@ The controller of the identity who can make changes.
 `string`
 
 The id of the document to remove.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private keys from the vault.
 
 #### Returns
 
@@ -195,7 +259,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ### removeVerificationMethod() {#removeverificationmethod}
 
-> **removeVerificationMethod**(`controller`, `verificationMethodId`): `Promise`\<`void`\>
+> **removeVerificationMethod**(`controller`, `verificationMethodId`, `options?`): `Promise`\<`void`\>
 
 Remove a verification method from the document.
 
@@ -212,6 +276,16 @@ The controller of the identity who can make changes.
 `string`
 
 The id of the verification method.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private key from the vault.
 
 #### Returns
 

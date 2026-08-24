@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { CLIUtils } from "@twin.org/cli-core";
-import { Converter, I18n } from "@twin.org/core";
+import { Converter, I18n, Is } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { actionCommandAddress } from "@twin.org/crypto-cli";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -52,27 +52,23 @@ describe("CLI Commands", () => {
 		if (didDocument === null || didDocument === undefined) {
 			return false;
 		}
-		if (typeof didDocument === "string") {
+		if (Is.string(didDocument)) {
 			return didDocument === id;
 		}
 		if (Array.isArray(didDocument)) {
 			return didDocument.some(item => didDocumentContainsId(item, id));
 		}
-		if (typeof didDocument === "object") {
-			return Object.values(didDocument as { [key: string]: unknown }).some(value =>
-				didDocumentContainsId(value, id)
-			);
+		if (Is.object(didDocument)) {
+			return Object.values(didDocument).some(value => didDocumentContainsId(value, id));
 		}
 		return false;
 	}
 
 	function getRevocationServiceEndpoint(didDocument: unknown): string | undefined {
 		const doc = didDocument as { service?: { id?: string; serviceEndpoint?: unknown }[] };
-		const service = doc?.service?.find(
-			s => typeof s?.id === "string" && s.id.endsWith("#revocation")
-		);
+		const service = doc?.service?.find(s => Is.string(s?.id) && s.id.endsWith("#revocation"));
 		const endpoint = service?.serviceEndpoint;
-		return typeof endpoint === "string" ? endpoint : undefined;
+		return Is.string(endpoint) ? endpoint : undefined;
 	}
 
 	beforeAll(async () => {

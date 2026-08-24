@@ -77,3 +77,56 @@ is never cached by this connector.
 ```ts
 30000
 ```
+
+***
+
+### didResolutionCacheCapacity? {#didresolutioncachecapacity}
+
+> `optional` **didResolutionCacheCapacity?**: `number`
+
+Maximum number of DID documents kept in the own-DID resolution cache.
+Only used when didResolutionCacheTtlMs > 0.
+
+#### Default
+
+```ts
+1000
+```
+
+***
+
+### didResolutionCacheMutexTimeoutMs? {#didresolutioncachemutextimeoutms}
+
+> `optional` **didResolutionCacheMutexTimeoutMs?**: `number`
+
+Maximum time in milliseconds to wait for own-DID cache getOrSet mutex acquisition.
+Only used when didResolutionCacheTtlMs > 0.
+
+***
+
+### didResolutionRetries? {#didresolutionretries}
+
+> `optional` **didResolutionRetries?**: `number`
+
+Number of times to retry resolving a DID after a successful transaction,
+to handle propagation delays between transaction confirmation and ledger availability.
+
+#### Default
+
+```ts
+10
+```
+
+***
+
+### didResolutionRetryDelayMs? {#didresolutionretrydelayms}
+
+> `optional` **didResolutionRetryDelayMs?**: `number`
+
+Delay in milliseconds between each resolveDid retry.
+
+#### Default
+
+```ts
+500
+```

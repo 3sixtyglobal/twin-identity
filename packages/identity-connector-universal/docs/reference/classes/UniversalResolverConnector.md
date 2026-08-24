@@ -5,6 +5,7 @@ Class for performing identity operations on a universal resolver.
 ## Implements
 
 - `IIdentityResolverConnector`
+- `IHealthProviderComponent`
 
 ## Constructors
 
@@ -76,7 +77,7 @@ The health status of the component.
 
 #### Implementation of
 
-`IIdentityResolverConnector.health`
+`IHealthProviderComponent.health`
 
 ***
 

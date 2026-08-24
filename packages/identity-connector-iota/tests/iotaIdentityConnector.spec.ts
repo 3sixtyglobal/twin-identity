@@ -1,11 +1,11 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 // Note: IOTA connector is the primary source for shared test bodies.
-import { Is, Urn } from "@twin.org/core";
+import { Is, StringHelper, Urn } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import type { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
-import { nameofCamelCase } from "@twin.org/nameof";
+
 import {
 	DidContexts,
 	DidTypes,
@@ -30,9 +30,7 @@ import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 import { IotaIdentityResolverConnector } from "../src/iotaIdentityResolverConnector.js";
 
 const DID_PREFIX = "did:iota";
-const RESOLVE_ERROR = "iotaIdentityResolverConnector.resolveDocumentFailed";
-const INVALID_ALIAS_ERROR = "iotaIdentityConnector.invalidAlias";
-const REMOVE_SERVICE_FAILED_ERROR = `${nameofCamelCase<IotaIdentityConnector>()}.removeServiceFailed`;
+
 const CREDENTIAL_STATUS_TYPE = "RevocationBitmap2022";
 
 async function debugOutput(documentId: string): Promise<void> {
@@ -40,10 +38,6 @@ async function debugOutput(documentId: string): Promise<void> {
 	const didParts = didUrn.parts();
 	const objectId = didParts[didParts.length - 1];
 	console.debug("DID Document", `${TEST_EXPLORER_URL}object/${objectId}?network=${TEST_NETWORK}`);
-}
-
-async function waitForBlock(): Promise<void> {
-	await new Promise(resolve => setTimeout(resolve, 5000));
 }
 
 let testVcJwt: string;
@@ -63,7 +57,8 @@ describe("IotaIdentityConnector", () => {
 					clientOptions: TEST_CLIENT_OPTIONS,
 					vaultMnemonicId: TEST_MNEMONIC_NAME,
 					network: TEST_NETWORK,
-					gasBudget: TEST_GAS_BUDGET
+					gasBudget: TEST_GAS_BUDGET,
+					didResolutionCacheTtlMs: 0
 				}
 			});
 
@@ -103,7 +98,7 @@ describe("IotaIdentityConnector", () => {
 
 		await expect(identityResolverConnector.resolveDocument(testDocument.id)).rejects.toMatchObject({
 			name: "GeneralError",
-			message: RESOLVE_ERROR,
+			message: `${StringHelper.camelCase(identityResolverConnector.className())}.resolveDocumentFailed`,
 			properties: {
 				documentId: testDocument.id
 			}
@@ -375,7 +370,7 @@ describe("IotaIdentityConnector", () => {
 			identityConnector.removeService(TEST_USER_IDENTITY, nonExistentServiceId)
 		).rejects.toMatchObject({
 			name: "GeneralError",
-			message: REMOVE_SERVICE_FAILED_ERROR
+			message: `${StringHelper.camelCase(identityConnector.className())}.removeServiceFailed`
 		});
 	});
 
@@ -401,7 +396,7 @@ describe("IotaIdentityConnector", () => {
 			identityConnector.addAlsoKnownAs(TEST_USER_IDENTITY, testDocumentId, "not a uri")
 		).rejects.toMatchObject({
 			name: "GeneralError",
-			message: INVALID_ALIAS_ERROR,
+			message: `${StringHelper.camelCase(identityConnector.className())}.invalidAlias`,
 			properties: { alias: "not a uri" }
 		});
 	});
@@ -452,7 +447,7 @@ describe("IotaIdentityConnector", () => {
 			identityConnector.removeAlsoKnownAs(TEST_USER_IDENTITY, testDocumentId, "not a uri")
 		).rejects.toMatchObject({
 			name: "GeneralError",
-			message: INVALID_ALIAS_ERROR,
+			message: `${StringHelper.camelCase(identityConnector.className())}.invalidAlias`,
 			properties: { alias: "not a uri" }
 		});
 	});
@@ -726,6 +721,22 @@ describe("IotaIdentityConnector", () => {
 		}
 	});
 
+	test("can fail to validate a tampered verifiable credential document", async () => {
+		const tampered = {
+			...testVc,
+			credentialSubject: {
+				...(Array.isArray(testVc.credentialSubject)
+					? testVc.credentialSubject[0]
+					: testVc.credentialSubject),
+				name: "Tampered Name"
+			}
+		};
+		await expect(identityConnector.checkVerifiableCredential(tampered)).rejects.toMatchObject({
+			name: "GeneralError",
+			message: `${StringHelper.camelCase(identityConnector.className())}.signatureVerificationFailed`
+		});
+	});
+
 	test("can fail to revoke a verifiable credential with no documentId", async () => {
 		await expect(
 			identityConnector.revokeVerifiableCredentials(
@@ -785,8 +796,6 @@ describe("IotaIdentityConnector", () => {
 		expect(initialCheck.revoked).toBeFalsy();
 
 		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [456]);
-
-		await waitForBlock();
 
 		const revokedCheck = await identityConnector.checkVerifiableCredential(vcJwt);
 		expect(revokedCheck.revoked).toBeTruthy();
@@ -864,13 +873,9 @@ describe("IotaIdentityConnector", () => {
 			revocationIndex
 		]);
 
-		await waitForBlock();
-
 		await identityConnector.unrevokeVerifiableCredentials(TEST_USER_IDENTITY, didId, [
 			revocationIndex
 		]);
-
-		await waitForBlock();
 	});
 
 	test("can fail to create a verifiable presentation with no verification method id", async () => {
@@ -1087,6 +1092,26 @@ describe("IotaIdentityConnector", () => {
 		expect(objectResult.verifiablePresentation).toBeDefined();
 		expect(objectResult.verifiablePresentation?.["@context"]).toBeDefined();
 		expect(objectResult.verifiablePresentation?.type).toBeDefined();
+	});
+
+	test("can fail to validate a tampered verifiable presentation document", async () => {
+		const createResult = await identityConnector.createVerifiablePresentation(
+			TEST_USER_IDENTITY,
+			testVerificationMethodId,
+			"http://example.com/tampered",
+			"https://schema.org",
+			["Person"],
+			[testVcJwt]
+		);
+
+		const tampered = {
+			...createResult.verifiablePresentation,
+			id: "http://example.com/tampered-different-id"
+		};
+		await expect(identityConnector.checkVerifiablePresentation(tampered)).rejects.toMatchObject({
+			name: "GeneralError",
+			message: `${StringHelper.camelCase(identityConnector.className())}.signatureVerificationFailed`
+		});
 	});
 
 	test("can fail to create a proof with no verificationMethodId", async () => {
@@ -1446,7 +1471,8 @@ describe("IotaIdentityConnector", () => {
 			config: {
 				clientOptions: TEST_CLIENT_OPTIONS,
 				vaultMnemonicId: TEST_MNEMONIC_NAME,
-				network: TEST_NETWORK
+				network: TEST_NETWORK,
+				didResolutionCacheTtlMs: 0
 			}
 		});
 

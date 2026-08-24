@@ -3,6 +3,7 @@
 import {
 	HttpParameterHelper,
 	type IConflictResponse,
+	type IForbiddenResponse,
 	type IHttpRequestContext,
 	type INoContentRequest,
 	type INoContentResponse,
@@ -14,6 +15,11 @@ import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/contex
 import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import type { IJsonLdDocument } from "@twin.org/data-json-ld";
 import type {
+	IIdentityProfileAdminGetRequest,
+	IIdentityProfileAdminListRequest,
+	IIdentityProfileAdminListResponse,
+	IIdentityProfileAdminRemoveRequest,
+	IIdentityProfileAdminUpdateRequest,
 	IIdentityProfileComponent,
 	IIdentityProfileCreateRequest,
 	IIdentityProfileGetPublicRequest,
@@ -146,6 +152,65 @@ export function generateRestRoutesIdentityProfile(
 		]
 	};
 
+	const identityProfileAdminGetRoute: IRestRoute<
+		IIdentityProfileAdminGetRequest,
+		IIdentityProfileGetResponse
+	> = {
+		operationId: "identityProfileAdminGet",
+		summary: "Get the identity profile properties of another user",
+		tag: tagsIdentityProfile[0].name,
+		method: "GET",
+		path: `${baseRouteName}/:userIdentity`,
+		requiredScope: ["user-admin"],
+		handler: async (httpRequestContext, request) =>
+			identityProfileAdminGet(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityProfileAdminGetRequest>(),
+			examples: [
+				{
+					id: "identityProfileAdminGetRequestExample",
+					request: {
+						pathParams: {
+							userIdentity:
+								"did:iota:tst:0xc57d94b088f4c6d2cb32ded014813d0c786aa00134c8ee22f84b1e2545602a70"
+						},
+						query: {
+							publicPropertyNames: "name,jobTitle"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<IIdentityProfileGetResponse>(),
+				examples: [
+					{
+						id: "identityProfileAdminGetResponseExample",
+						response: {
+							body: {
+								identity:
+									"did:iota:tst:0xc57d94b088f4c6d2cb32ded014813d0c786aa00134c8ee22f84b1e2545602a70",
+								publicProfile: {
+									"@context": "https://schema.org",
+									"@type": "Person",
+									jobTitle: "Professor",
+									name: "Jane Doe"
+								}
+							}
+						}
+					}
+				]
+			},
+			{
+				type: nameof<INotFoundResponse>()
+			},
+			{
+				type: nameof<IForbiddenResponse>()
+			}
+		]
+	};
+
 	const identityProfileGetPublicRoute: IRestRoute<
 		IIdentityProfileGetPublicRequest,
 		IIdentityProfileGetPublicResponse
@@ -244,6 +309,98 @@ export function generateRestRoutesIdentityProfile(
 			]
 		};
 
+	const identityProfileAdminUpdateRoute: IRestRoute<
+		IIdentityProfileAdminUpdateRequest,
+		INoContentResponse
+	> = {
+		operationId: "identityProfileAdminUpdate",
+		summary: "Update the identity profile properties of another user",
+		tag: tagsIdentityProfile[0].name,
+		method: "PUT",
+		path: `${baseRouteName}/:userIdentity`,
+		requiredScope: ["user-admin"],
+		handler: async (httpRequestContext, request) =>
+			identityProfileAdminUpdate(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityProfileAdminUpdateRequest>(),
+			examples: [
+				{
+					id: "identityProfileAdminUpdateRequestExample",
+					request: {
+						pathParams: {
+							userIdentity:
+								"did:iota:tst:0xc57d94b088f4c6d2cb32ded014813d0c786aa00134c8ee22f84b1e2545602a70"
+						},
+						body: {
+							publicProfile: {
+								"@context": "https://schema.org",
+								"@type": "Person",
+								jobTitle: "Professor",
+								name: "Jane Doe"
+							},
+							privateProfile: {
+								"@context": "https://schema.org",
+								"@type": "Person",
+								telephone: "(425) 123-4567",
+								url: "http://www.janedoe.com"
+							}
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>()
+			},
+			{
+				type: nameof<INotFoundResponse>()
+			},
+			{
+				type: nameof<IForbiddenResponse>()
+			}
+		]
+	};
+
+	const identityProfileAdminRemoveRoute: IRestRoute<
+		IIdentityProfileAdminRemoveRequest,
+		INoContentResponse
+	> = {
+		operationId: "identityProfileAdminRemove",
+		summary: "Remove the identity profile of another user",
+		tag: tagsIdentityProfile[0].name,
+		method: "DELETE",
+		path: `${baseRouteName}/:userIdentity`,
+		requiredScope: ["user-admin"],
+		handler: async (httpRequestContext, request) =>
+			identityProfileAdminRemove(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityProfileAdminRemoveRequest>(),
+			examples: [
+				{
+					id: "identityProfileAdminRemoveRequestExample",
+					request: {
+						pathParams: {
+							userIdentity:
+								"did:iota:tst:0xc57d94b088f4c6d2cb32ded014813d0c786aa00134c8ee22f84b1e2545602a70"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>()
+			},
+			{
+				type: nameof<INotFoundResponse>()
+			},
+			{
+				type: nameof<IForbiddenResponse>()
+			}
+		]
+	};
+
 	const identityProfileRemoveRoute: IRestRoute<INoContentRequest, INoContentResponse> = {
 		operationId: "identityProfileRemove",
 		summary: "Remove an identity profile",
@@ -321,13 +478,86 @@ export function generateRestRoutesIdentityProfile(
 		]
 	};
 
+	const identityProfileAdminListRoute: IRestRoute<
+		IIdentityProfileAdminListRequest,
+		IIdentityProfileAdminListResponse
+	> = {
+		operationId: "identitiesProfileAdminList",
+		summary: "Get the list of profile data for identities including private properties",
+		tag: tagsIdentityProfile[0].name,
+		method: "GET",
+		path: `${baseRouteName}/admin/query/`,
+		requiredScope: ["user-admin"],
+		handler: async (httpRequestContext, request) =>
+			identitiesAdminList(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IIdentityProfileAdminListRequest>(),
+			examples: [
+				{
+					id: "identityProfileAdminListRequestExample",
+					request: {
+						query: {}
+					}
+				},
+				{
+					id: "identityProfileAdminListRequestFilteredExample",
+					request: {
+						query: {
+							publicFilters: "jobTitle:Professor",
+							privateFilters: "department:Engineering"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<IIdentityProfileAdminListResponse>(),
+				examples: [
+					{
+						id: "identitiesProfileAdminListResponseExample",
+						response: {
+							body: {
+								items: [
+									{
+										identity:
+											"did:iota:tst:0xc57d94b088f4c6d2cb32ded014813d0c786aa00134c8ee22f84b1e2545602a70",
+										publicProfile: {
+											"@context": "https://schema.org",
+											"@type": "Person",
+											jobTitle: "Professor",
+											name: "Jane Doe"
+										},
+										privateProfile: {
+											"@context": "https://schema.org",
+											"@type": "Person",
+											telephone: "(425) 123-4567"
+										}
+									}
+								],
+								cursor: "1"
+							}
+						}
+					}
+				]
+			},
+			{
+				type: nameof<IForbiddenResponse>()
+			}
+		]
+	};
+
 	return [
 		identityProfileCreateRoute,
 		identityProfileGetRoute,
+		identityProfileAdminGetRoute,
 		identityProfileGetPublicRoute,
 		identityProfileUpdateRoute,
+		identityProfileAdminUpdateRoute,
 		identityProfileRemoveRoute,
-		identityProfileListRoute
+		identityProfileAdminRemoveRoute,
+		identityProfileListRoute,
+		identityProfileAdminListRoute
 	];
 }
 
@@ -391,6 +621,40 @@ export async function identityGet(
 			request?.query?.privatePropertyNames
 		),
 		contextIds[ContextIdKeys.User]
+	);
+
+	return {
+		body: result
+	};
+}
+
+/**
+ * Get the identity profile of another user as an admin.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityProfileAdminGet(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityProfileAdminGetRequest
+): Promise<IIdentityProfileGetResponse> {
+	Guards.object<IIdentityProfileAdminGetRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams?.userIdentity),
+		request.pathParams?.userIdentity
+	);
+
+	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
+
+	const result = await component.get(
+		HttpParameterHelper.arrayFromString<keyof IJsonLdDocument>(request?.query?.publicPropertyNames),
+		HttpParameterHelper.arrayFromString<keyof IJsonLdDocument>(
+			request?.query?.privatePropertyNames
+		),
+		request.pathParams.userIdentity
 	);
 
 	return {
@@ -469,6 +733,43 @@ export async function identityProfileUpdate(
 }
 
 /**
+ * Update the identity profile of another user as an admin.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityProfileAdminUpdate(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityProfileAdminUpdateRequest
+): Promise<INoContentResponse> {
+	Guards.object<IIdentityProfileAdminUpdateRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.object<IIdentityProfileAdminUpdateRequest["body"]>(
+		ROUTES_SOURCE,
+		nameof(request.body),
+		request.body
+	);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams?.userIdentity),
+		request.pathParams?.userIdentity
+	);
+
+	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
+
+	await component.update(
+		request.body.publicProfile,
+		request.body.privateProfile,
+		request.pathParams.userIdentity
+	);
+
+	return {
+		statusCode: HttpStatusCode.noContent
+	};
+}
+
+/**
  * Remove an identity profile.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
@@ -486,6 +787,34 @@ export async function identityProfileRemove(
 	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
 
 	await component.remove(contextIds[ContextIdKeys.User]);
+
+	return {
+		statusCode: HttpStatusCode.noContent
+	};
+}
+
+/**
+ * Remove the identity profile of another user as an admin.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identityProfileAdminRemove(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityProfileAdminRemoveRequest
+): Promise<INoContentResponse> {
+	Guards.object<IIdentityProfileAdminRemoveRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.stringValue(
+		ROUTES_SOURCE,
+		nameof(request.pathParams?.userIdentity),
+		request.pathParams?.userIdentity
+	);
+
+	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
+
+	await component.remove(request.pathParams.userIdentity);
 
 	return {
 		statusCode: HttpStatusCode.noContent
@@ -520,6 +849,54 @@ export async function identitiesList(
 			publicFilters,
 			HttpParameterHelper.arrayFromString<keyof IJsonLdDocument>(
 				request?.query?.publicPropertyNames
+			),
+			request?.query?.cursor,
+			Coerce.integer(request.query?.limit)
+		)
+	};
+}
+
+/**
+ * Get the list of identity profiles including private properties as an admin.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes stored in the ComponentFactory.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function identitiesAdminList(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IIdentityProfileAdminListRequest
+): Promise<IIdentityProfileAdminListResponse> {
+	const component = ComponentFactory.get<IIdentityProfileComponent>(componentName);
+
+	const publicFilterPairs = HttpParameterHelper.arrayFromString(request?.query?.publicFilters);
+	const publicFilters = publicFilterPairs?.map(pair => {
+		const parts = pair.split(":");
+		return {
+			propertyName: parts[0],
+			propertyValue: parts[1]
+		};
+	});
+
+	const privateFilterPairs = HttpParameterHelper.arrayFromString(request?.query?.privateFilters);
+	const privateFilters = privateFilterPairs?.map(pair => {
+		const parts = pair.split(":");
+		return {
+			propertyName: parts[0],
+			propertyValue: parts[1]
+		};
+	});
+
+	return {
+		body: await component.listAdmin(
+			publicFilters,
+			privateFilters,
+			HttpParameterHelper.arrayFromString<keyof IJsonLdDocument>(
+				request?.query?.publicPropertyNames
+			),
+			HttpParameterHelper.arrayFromString<keyof IJsonLdDocument>(
+				request?.query?.privatePropertyNames
 			),
 			request?.query?.cursor,
 			Coerce.integer(request.query?.limit)

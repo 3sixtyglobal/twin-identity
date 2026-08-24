@@ -47,6 +47,17 @@ const TEST_LIST_RESPONSE = {
 	cursor: undefined
 };
 
+const TEST_ADMIN_LIST_RESPONSE = {
+	items: [
+		{
+			identity: IDENTITY_URN,
+			publicProfile: TEST_PUBLIC_PROFILE,
+			privateProfile: TEST_PRIVATE_PROFILE
+		}
+	],
+	cursor: undefined
+};
+
 const fetchMock = vi.fn();
 
 describe("IdentityProfileRestClient", () => {
@@ -132,6 +143,36 @@ describe("IdentityProfileRestClient", () => {
 			expect(result.publicProfile).toEqual(TEST_PUBLIC_PROFILE);
 			expect(result.privateProfile).toEqual(TEST_PRIVATE_PROFILE);
 		});
+
+		test("throws when identity is provided but not a string", async () => {
+			await expect(
+				// @ts-expect-error testing invalid input
+				client.get(undefined, undefined, 123)
+			).rejects.toMatchObject({
+				name: GuardError.CLASS_NAME,
+				message: "guard.string"
+			});
+		});
+
+		test("sends GET to /{prefix}/:identity when identity provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_GET_RESPONSE));
+
+			await client.get(undefined, undefined, IDENTITY_URN);
+
+			const [url, options] = fetchMock.mock.calls[0];
+			expect(url).toContain(`${ENDPOINT}/${PREFIX}/${IDENTITY_URN}`);
+			expect(options.method).toBe(HttpMethod.GET);
+		});
+
+		test("returns identity and profiles from the response body when identity provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_GET_RESPONSE));
+
+			const result = await client.get(undefined, undefined, IDENTITY_URN);
+
+			expect(result.identity).toBe(IDENTITY_URN);
+			expect(result.publicProfile).toEqual(TEST_PUBLIC_PROFILE);
+			expect(result.privateProfile).toEqual(TEST_PRIVATE_PROFILE);
+		});
 	});
 
 	describe("getPublic", () => {
@@ -202,6 +243,37 @@ describe("IdentityProfileRestClient", () => {
 
 			expect(result).toBeUndefined();
 		});
+
+		test("throws when identity is provided but not a string", async () => {
+			await expect(
+				// @ts-expect-error testing invalid input
+				client.update(undefined, undefined, 123)
+			).rejects.toMatchObject({
+				name: GuardError.CLASS_NAME,
+				message: "guard.string"
+			});
+		});
+
+		test("sends PUT to /{prefix}/:identity when identity provided", async () => {
+			fetchMock.mockResolvedValueOnce(noContentResponse());
+
+			await client.update(TEST_PUBLIC_PROFILE, TEST_PRIVATE_PROFILE, IDENTITY_URN);
+
+			const [url, options] = fetchMock.mock.calls[0];
+			expect(url).toContain(`${ENDPOINT}/${PREFIX}/${IDENTITY_URN}`);
+			expect(options.method).toBe(HttpMethod.PUT);
+		});
+
+		test("sends publicProfile and privateProfile in request body when identity provided", async () => {
+			fetchMock.mockResolvedValueOnce(noContentResponse());
+
+			await client.update(TEST_PUBLIC_PROFILE, TEST_PRIVATE_PROFILE, IDENTITY_URN);
+
+			const [, options] = fetchMock.mock.calls[0];
+			const body = JSON.parse(options.body);
+			expect(body.publicProfile).toEqual(TEST_PUBLIC_PROFILE);
+			expect(body.privateProfile).toEqual(TEST_PRIVATE_PROFILE);
+		});
 	});
 
 	describe("remove", () => {
@@ -219,6 +291,34 @@ describe("IdentityProfileRestClient", () => {
 			fetchMock.mockResolvedValueOnce(noContentResponse());
 
 			const result = await client.remove();
+
+			expect(result).toBeUndefined();
+		});
+
+		test("throws when identity is provided but not a string", async () => {
+			await expect(
+				// @ts-expect-error testing invalid input
+				client.remove(123)
+			).rejects.toMatchObject({
+				name: GuardError.CLASS_NAME,
+				message: "guard.string"
+			});
+		});
+
+		test("sends DELETE to /{prefix}/:identity when identity provided", async () => {
+			fetchMock.mockResolvedValueOnce(noContentResponse());
+
+			await client.remove(IDENTITY_URN);
+
+			const [url, options] = fetchMock.mock.calls[0];
+			expect(url).toContain(`${ENDPOINT}/${PREFIX}/${IDENTITY_URN}`);
+			expect(options.method).toBe(HttpMethod.DELETE);
+		});
+
+		test("resolves without a return value when identity provided", async () => {
+			fetchMock.mockResolvedValueOnce(noContentResponse());
+
+			const result = await client.remove(IDENTITY_URN);
 
 			expect(result).toBeUndefined();
 		});
@@ -293,6 +393,100 @@ describe("IdentityProfileRestClient", () => {
 			fetchMock.mockResolvedValueOnce(jsonResponse(responseWithCursor));
 
 			const result = await client.list();
+
+			expect(result.cursor).toBe("page2");
+		});
+	});
+
+	describe("listAdmin", () => {
+		test("sends GET to /{prefix}/admin/query", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin();
+
+			const [url, options] = fetchMock.mock.calls[0];
+			expect(url).toContain(`${ENDPOINT}/${PREFIX}/admin/query`);
+			expect(options.method).toBe(HttpMethod.GET);
+		});
+
+		test("includes publicFilters as query parameter when provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin([{ propertyName: "name", propertyValue: "Alice" }]);
+
+			const [url] = fetchMock.mock.calls[0];
+			expect(url).toContain("publicFilters=");
+		});
+
+		test("includes publicPropertyNames as query parameter when provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin(undefined, undefined, ["name"]);
+
+			const [url] = fetchMock.mock.calls[0];
+			expect(url).toContain("publicPropertyNames=");
+		});
+
+		test("includes privateFilters as query parameter when provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin(undefined, [{ propertyName: "department", propertyValue: "Eng" }]);
+
+			const [url] = fetchMock.mock.calls[0];
+			expect(url).toContain("privateFilters=");
+		});
+
+		test("includes privatePropertyNames as query parameter when provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin(undefined, undefined, undefined, ["dateOfBirth"]);
+
+			const [url] = fetchMock.mock.calls[0];
+			expect(url).toContain("privatePropertyNames=");
+		});
+
+		test("includes cursor as query parameter when provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin(undefined, undefined, undefined, undefined, "page2");
+
+			const [url] = fetchMock.mock.calls[0];
+			expect(url).toContain("cursor=page2");
+		});
+
+		test("includes limit as query parameter when provided", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			await client.listAdmin(undefined, undefined, undefined, undefined, undefined, 10);
+
+			const [url] = fetchMock.mock.calls[0];
+			expect(url).toContain("limit=10");
+		});
+
+		test("returns items with public and private profiles from the response body", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			const result = await client.listAdmin();
+
+			expect(result.items).toHaveLength(1);
+			expect(result.items[0].identity).toBe(IDENTITY_URN);
+			expect(result.items[0].publicProfile).toEqual(TEST_PUBLIC_PROFILE);
+			expect(result.items[0].privateProfile).toEqual(TEST_PRIVATE_PROFILE);
+		});
+
+		test("returns undefined cursor when no cursor in response", async () => {
+			fetchMock.mockResolvedValueOnce(jsonResponse(TEST_ADMIN_LIST_RESPONSE));
+
+			const result = await client.listAdmin();
+
+			expect(result.cursor).toBeUndefined();
+		});
+
+		test("returns cursor from the response body when present", async () => {
+			const responseWithCursor = { ...TEST_ADMIN_LIST_RESPONSE, cursor: "page2" };
+			fetchMock.mockResolvedValueOnce(jsonResponse(responseWithCursor));
+
+			const result = await client.listAdmin();
 
 			expect(result.cursor).toBe("page2");
 		});

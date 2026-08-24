@@ -38,7 +38,7 @@ The created identity document.
 
 ### identityRemove() {#identityremove}
 
-> **identityRemove**(`identity`, `controller?`): `Promise`\<`void`\>
+> **identityRemove**(`identity`, `options?`, `controller?`): `Promise`\<`void`\>
 
 Remove an identity.
 
@@ -49,6 +49,16 @@ Remove an identity.
 `string`
 
 The id of the document to remove.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private keys from the vault.
 
 ##### controller?
 
@@ -114,7 +124,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ### verificationMethodRemove() {#verificationmethodremove}
 
-> **verificationMethodRemove**(`verificationMethodId`, `controller?`): `Promise`\<`void`\>
+> **verificationMethodRemove**(`verificationMethodId`, `options?`, `controller?`): `Promise`\<`void`\>
 
 Remove a verification method from the document.
 
@@ -125,6 +135,16 @@ Remove a verification method from the document.
 `string`
 
 The id of the verification method.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private key from the vault.
 
 ##### controller?
 

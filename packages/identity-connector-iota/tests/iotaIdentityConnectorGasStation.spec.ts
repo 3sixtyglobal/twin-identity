@@ -1,16 +1,17 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HealthStatus, Is } from "@twin.org/core";
+import { HealthCategory, HealthStatus } from "@twin.org/api-models";
+import { Is } from "@twin.org/core";
 import { DidVerificationMethodType, type IDidDocument } from "@twin.org/standards-w3c-did";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,
-	TEST_USER_IDENTITY,
+	TEST_GAS_BUDGET,
+	TEST_GAS_STATION_AUTH_TOKEN,
+	TEST_GAS_STATION_URL,
 	TEST_MNEMONIC_NAME,
 	TEST_NETWORK,
-	TEST_GAS_STATION_URL,
-	TEST_GAS_STATION_AUTH_TOKEN,
-	TEST_GAS_BUDGET
+	TEST_USER_IDENTITY
 } from "./setupTestEnv.js";
 import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 import type { IIotaIdentityConnectorConfig } from "../src/models/IIotaIdentityConnectorConfig.js";
@@ -94,15 +95,20 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			});
 
 			const health = await connector.health();
+			const appHealth = (await connector.healthApplication(async () => {})) ?? [];
 
 			expect(health).toBeDefined();
 			expect(health).toHaveLength(2);
-
 			expect(health[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
 			expect(health[0].status).toEqual(HealthStatus.Ok);
-
-			expect(health[1].source).toEqual(`${IotaIdentityConnector.CLASS_NAME}GasStation`);
+			expect(health[1].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+			expect(health[1].category).toEqual(HealthCategory.Connectivity);
 			expect(health[1].status).toEqual(HealthStatus.Ok);
+
+			expect(appHealth).toHaveLength(1);
+			expect(appHealth[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+			expect(appHealth[0].category).toEqual(HealthCategory.Application);
+			expect(appHealth[0].status).toEqual(HealthStatus.Ok);
 		}, 10000);
 
 		test("can get health status with gas station error when url is unreachable", async () => {
@@ -117,15 +123,20 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			});
 
 			const health = await connector.health();
+			const appHealth = (await connector.healthApplication(async () => {})) ?? [];
 
 			expect(health).toBeDefined();
 			expect(health).toHaveLength(2);
-
 			expect(health[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
 			expect(health[0].status).toEqual(HealthStatus.Ok);
-
-			expect(health[1].source).toEqual(`${IotaIdentityConnector.CLASS_NAME}GasStation`);
+			expect(health[1].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+			expect(health[1].category).toEqual(HealthCategory.Connectivity);
 			expect(health[1].status).toEqual(HealthStatus.Error);
+
+			expect(appHealth).toHaveLength(1);
+			expect(appHealth[0].source).toEqual(IotaIdentityConnector.CLASS_NAME);
+			expect(appHealth[0].category).toEqual(HealthCategory.Application);
+			expect(appHealth[0].status).toEqual(HealthStatus.Error);
 		}, 10000);
 
 		test("Should create identity document using gas station", async () => {
@@ -270,7 +281,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			// removeDocument used to submit the delete transaction via the gas
 			// station AND then unconditionally again via a direct buildAndExecute call on
 			// the same (by then already wasm-consumed) builder. That crashed deep in the
-			// wasm-bindgen ↔ JS boundary while marshaling the redundant call's result — a
+			// wasm-bindgen ↔ JS boundary while marshaling the redundant call's result - a
 			// crash that never rejected the promise removeDocument returned, only escaped
 			// as a process-level uncaught exception, so removeDocument hung forever from
 			// the caller's perspective. This regression-locks both halves of that fix: the
@@ -299,7 +310,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 				const raceResult = await Promise.race([removeOutcome, timeoutOutcome]);
 				clearTimeout(timeoutHandle);
 
-				// The call must settle — and specifically resolve, not merely avoid hanging.
+				// The call must settle - and specifically resolve, not merely avoid hanging.
 				expect(raceResult).toBe("resolved");
 
 				// No stray uncaught exception from a redundant second submission.
@@ -308,7 +319,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 				process.off("uncaughtException", captureUncaught);
 			}
 
-			// The deletion must have genuinely happened on-chain — confirm the identity is
+			// The deletion must have genuinely happened on-chain - confirm the identity is
 			// actually gone, not just that removeDocument returned without error.
 			const regularConnector = new IotaIdentityConnector({ config: regularConfig });
 			await expect(
@@ -331,7 +342,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 				clientOptions: TEST_CLIENT_OPTIONS,
 				vaultMnemonicId: TEST_MNEMONIC_NAME,
 				network: TEST_NETWORK,
-				// gasBudget deliberately omitted — the one difference from
+				// gasBudget deliberately omitted - the one difference from
 				// `gasStationConfig` above, and the only way this bug ever manifested:
 				// every other test in this file sets gasBudget explicitly, which masks
 				// the divergence between the connector's own default (1B) and
@@ -346,13 +357,13 @@ describe("IotaIdentityConnector with Gas Station", () => {
 
 			// Capture the real request sent to the gas station's /v1/reserve_gas
 			// endpoint. This still calls through to the genuine fetch implementation
-			// (matching this file's live convention) — it only observes the request,
+			// (matching this file's live convention) - it only observes the request,
 			// it does not fake the response.
 			let reservedGasBudget: number | undefined;
 			const realFetch = globalThis.fetch;
 			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
-				const url = typeof input === "string" ? input : input.toString();
-				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+				const url = Is.string(input) ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && Is.string(init?.body)) {
 					reservedGasBudget = JSON.parse(init.body).gas_budget;
 				}
 				return realFetch(input, init);
@@ -380,7 +391,7 @@ describe("IotaIdentityConnector with Gas Station", () => {
 
 		test("explicit gasBudget in config still reserves and declares the same, explicit amount", async () => {
 			// Uses the file's existing `gasStationConfig` fixture, which sets
-			// gasBudget: TEST_GAS_BUDGET explicitly — confirms the fix didn't disturb
+			// gasBudget: TEST_GAS_BUDGET explicitly - confirms the fix didn't disturb
 			// the already-working explicit-budget case, only the previously-broken
 			// unset-budget case above.
 			const connector = new IotaIdentityConnector({ config: gasStationConfig });
@@ -388,8 +399,8 @@ describe("IotaIdentityConnector with Gas Station", () => {
 			let reservedGasBudget: number | undefined;
 			const realFetch = globalThis.fetch;
 			const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
-				const url = typeof input === "string" ? input : input.toString();
-				if (url.includes("/v1/reserve_gas") && typeof init?.body === "string") {
+				const url = Is.string(input) ? input : input.toString();
+				if (url.includes("/v1/reserve_gas") && Is.string(init?.body)) {
 					reservedGasBudget = JSON.parse(init.body).gas_budget;
 				}
 				return realFetch(input, init);

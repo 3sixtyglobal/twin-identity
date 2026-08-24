@@ -195,9 +195,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Remove a document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param documentId The id of the document to remove.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private keys from the vault.
 	 * @returns A promise that resolves when the document has been removed.
 	 */
-	public async removeDocument(controller: string, documentId: string): Promise<void> {
+	public async removeDocument(
+		controller: string,
+		documentId: string,
+		options?: { removeKeys?: boolean }
+	): Promise<void> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
 
@@ -212,6 +218,25 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			await this._didDocumentEntityStorage.remove(documentId);
+
+			if (options?.removeKeys ?? false) {
+				const methods = this.getAllMethods(didDocument.document);
+				for (const { method } of methods) {
+					const methodId = Is.string(method) ? method : method.id;
+					if (Is.stringValue(methodId)) {
+						const idParts = DocumentHelper.parseId(methodId);
+						if (Is.stringValue(idParts.fragment)) {
+							const vaultKey = EntityStorageIdentityConnector.buildVaultKey(
+								documentId,
+								idParts.fragment
+							);
+							if (await this._vaultConnector.keyExists(vaultKey)) {
+								await this._vaultConnector.removeKey(vaultKey);
+							}
+						}
+					}
+				}
+			}
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -360,13 +385,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Remove a verification method from the document.
 	 * @param controller The controller of the identity who can make changes.
 	 * @param verificationMethodId The id of the verification method.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private key from the vault.
 	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
 	public async removeVerificationMethod(
 		controller: string,
-		verificationMethodId: string
+		verificationMethodId: string,
+		options?: { removeKeys?: boolean }
 	): Promise<void> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(
@@ -426,6 +454,14 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			await this.updateDocument(controller, didDocument);
+
+			if (options?.removeKeys ?? false) {
+				try {
+					await this._vaultConnector.removeKey(
+						EntityStorageIdentityConnector.buildVaultKey(idParts.id, idParts.fragment)
+					);
+				} catch {}
+			}
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -877,7 +913,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					ObjectHelper.propertyDelete(c, "id");
 					return c;
 				});
-			} else {
+			} else if (Is.object(jwtVc.credentialSubject)) {
 				ObjectHelper.propertyDelete(jwtVc.credentialSubject, "id");
 			}
 
@@ -938,10 +974,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				credential.proof
 			);
 			const { proof, ...doc } = credential;
-			await this.verifyProof(
+			const credentialVerified = await this.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
 				ArrayHelper.fromObjectOrArray(proof)[0]
 			);
+			if (!credentialVerified) {
+				throw new GeneralError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"signatureVerificationFailed"
+				);
+			}
 			return {
 				revoked: false,
 				verifiableCredential: doc
@@ -1402,7 +1444,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
 			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
 			Guards.objectValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(proofEntry), proofEntry);
-			await this.verifyProof(JsonLdHelper.toNodeObject(doc), proofEntry);
+			const presentationVerified = await this.verifyProof(
+				JsonLdHelper.toNodeObject(doc),
+				proofEntry
+			);
+			if (!presentationVerified) {
+				throw new GeneralError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"signatureVerificationFailed"
+				);
+			}
 			return { revoked: false, verifiablePresentation: doc };
 		}
 

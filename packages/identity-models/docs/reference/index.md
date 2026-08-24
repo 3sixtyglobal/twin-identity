@@ -42,6 +42,11 @@
 - [IIdentityVerificationMethodCreateRequest](interfaces/IIdentityVerificationMethodCreateRequest.md)
 - [IIdentityVerificationMethodCreateResponse](interfaces/IIdentityVerificationMethodCreateResponse.md)
 - [IIdentityVerificationMethodRemoveRequest](interfaces/IIdentityVerificationMethodRemoveRequest.md)
+- [IIdentityProfileAdminGetRequest](interfaces/IIdentityProfileAdminGetRequest.md)
+- [IIdentityProfileAdminListRequest](interfaces/IIdentityProfileAdminListRequest.md)
+- [IIdentityProfileAdminListResponse](interfaces/IIdentityProfileAdminListResponse.md)
+- [IIdentityProfileAdminRemoveRequest](interfaces/IIdentityProfileAdminRemoveRequest.md)
+- [IIdentityProfileAdminUpdateRequest](interfaces/IIdentityProfileAdminUpdateRequest.md)
 - [IIdentityProfileCreateRequest](interfaces/IIdentityProfileCreateRequest.md)
 - [IIdentityProfileGetPublicRequest](interfaces/IIdentityProfileGetPublicRequest.md)
 - [IIdentityProfileGetPublicResponse](interfaces/IIdentityProfileGetPublicResponse.md)
@@ -56,6 +61,8 @@
 ## Type Aliases
 
 - [IdentityMetricIds](type-aliases/IdentityMetricIds.md)
+- [IdentitySpanAttributes](type-aliases/IdentitySpanAttributes.md)
+- [IdentitySpanNames](type-aliases/IdentitySpanNames.md)
 
 ## Variables
 
@@ -64,3 +71,5 @@
 - [IdentityResolverConnectorFactory](variables/IdentityResolverConnectorFactory.md)
 - [IdentityMetricIds](variables/IdentityMetricIds.md)
 - [IdentityMetrics](variables/IdentityMetrics.md)
+- [IdentitySpanAttributes](variables/IdentitySpanAttributes.md)
+- [IdentitySpanNames](variables/IdentitySpanNames.md)

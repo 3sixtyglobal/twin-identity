@@ -42,6 +42,32 @@ describe("DidContextIdHandler", () => {
 		});
 	});
 
+	describe("long", () => {
+		test("should reconstruct a did:internal DID from a base64url short form", () => {
+			const result = handler.long("ASNFZ4mrze8");
+			expect(result).toBe("did:internal:0x0123456789abcdef");
+		});
+
+		test("should return the value as-is when it is a full DID", () => {
+			const did = "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK";
+			expect(handler.long(did)).toBe(did);
+		});
+
+		test("should return the value as-is when it contains non-base64url characters", () => {
+			const did = "did:web:example.com";
+			expect(handler.long(did)).toBe(did);
+		});
+	});
+
+	describe("short → long → short roundtrip", () => {
+		test("should return the original short form after expanding a hex DID and shortening again", () => {
+			const did = "did:example:0x0123456789abcdef";
+			const shortened = handler.short(did);
+			const expanded = handler.long(shortened);
+			expect(handler.short(expanded)).toBe(shortened);
+		});
+	});
+
 	describe("guard", () => {
 		test("should not throw for valid DIDs", () => {
 			expect(() => handler.guard("did:example:123456789abcdefghi")).not.toThrow();

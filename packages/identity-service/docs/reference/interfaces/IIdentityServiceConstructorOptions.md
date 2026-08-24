@@ -17,3 +17,25 @@ The configuration for the identity service.
 > `optional` **telemetryComponentType?**: `string`
 
 The component type for the optional telemetry component used for event metrics.
+
+***
+
+### tracingComponentType? {#tracingcomponenttype}
+
+> `optional` **tracingComponentType?**: `string`
+
+The component type for the optional tracing component used for spans.
+
+***
+
+### vaultConnectorType? {#vaultconnectortype}
+
+> `optional` **vaultConnectorType?**: `string`
+
+The vault connector type to use for migrating the mnemonic during health check initialisation.
+
+#### Default
+
+```ts
+vault
+```

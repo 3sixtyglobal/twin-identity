@@ -1,4 +1,11 @@
 {
+	"health": {
+		"identityService": {
+			"healthDescription": "DID document lifecycle (create, resolve, remove) using the \"{namespace}\" namespace",
+			"createDocumentFailed": "Failed to create the health check identity document",
+			"resolveDocumentFailed": "Failed to resolve the health check identity document"
+		}
+	},
 	"error": {
 		"identityService": {
 			"noConnectors": "There are no connectors registered with the identity factory",
@@ -35,7 +42,8 @@
 			"updateFailed": "Updating the identity profile failed \"{identity}\"",
 			"notFound": "The identity profile could not be found \"{notFoundId}\"",
 			"removeFailed": "Removing the identity profile failed \"{identity}\"",
-			"listFailed": "Failed listing identities"
+			"listFailed": "Failed listing identities",
+			"listAdminFailed": "Failed listing identities with private data"
 		}
 	}
 }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { BaseRestClient } from "@twin.org/api-core";
 import type { IBaseRestClientConfig, INoContentResponse } from "@twin.org/api-models";
-import { Guards, Is } from "@twin.org/core";
+import { Coerce, Guards, Is } from "@twin.org/core";
 import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import {
 	DocumentHelper,
@@ -95,14 +95,17 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Remove an identity.
 	 * @param identity The id of the document to remove.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private keys from the vault.
 	 * @returns A promise that resolves when the identity has been removed.
 	 */
-	public async identityRemove(identity: string): Promise<void> {
+	public async identityRemove(identity: string, options?: { removeKeys?: boolean }): Promise<void> {
 		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
 		await this.fetch<IIdentityRemoveRequest, INoContentResponse>("/:identity", HttpMethod.DELETE, {
 			pathParams: {
 				identity
-			}
+			},
+			query: { removeKeys: Coerce.string(options?.removeKeys) }
 		});
 	}
 
@@ -146,11 +149,18 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	/**
 	 * Remove a verification method from the document.
 	 * @param verificationMethodId The id of the verification method.
+	 * @param options Optional settings.
+	 * @param options.removeKeys Also remove any associated private key from the vault.
+	 * @param controller Unused by the REST client; the controller is resolved server-side from the session context.
 	 * @returns A promise that resolves when the verification method has been removed.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws NotSupportedError if the platform does not support multiple revocable keys.
 	 */
-	public async verificationMethodRemove(verificationMethodId: string): Promise<void> {
+	public async verificationMethodRemove(
+		verificationMethodId: string,
+		options?: { removeKeys?: boolean },
+		controller?: string
+	): Promise<void> {
 		Guards.stringValue(
 			IdentityRestClient.CLASS_NAME,
 			nameof(verificationMethodId),
@@ -166,7 +176,8 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 				pathParams: {
 					identity: idParts.id,
 					verificationMethodId: idParts.fragment ?? ""
-				}
+				},
+				query: { removeKeys: Coerce.string(options?.removeKeys) }
 			}
 		);
 	}

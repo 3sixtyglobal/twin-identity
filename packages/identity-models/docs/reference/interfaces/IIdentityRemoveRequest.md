@@ -15,3 +15,17 @@ The data for the request.
 > **identity**: `string`
 
 The identity to remove.
+
+***
+
+### query? {#query}
+
+> `optional` **query?**: `object`
+
+The query parameters.
+
+#### removeKeys?
+
+> `optional` **removeKeys?**: `string`
+
+Also remove any associated private keys from the vault.

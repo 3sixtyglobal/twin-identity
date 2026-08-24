@@ -42,4 +42,30 @@ export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	 * @default 30000
 	 */
 	didResolutionCacheTtlMs?: number;
+
+	/**
+	 * Maximum number of DID documents kept in the own-DID resolution cache.
+	 * Only used when didResolutionCacheTtlMs > 0.
+	 * @default 1000
+	 */
+	didResolutionCacheCapacity?: number;
+
+	/**
+	 * Maximum time in milliseconds to wait for own-DID cache getOrSet mutex acquisition.
+	 * Only used when didResolutionCacheTtlMs > 0.
+	 */
+	didResolutionCacheMutexTimeoutMs?: number;
+
+	/**
+	 * Number of times to retry resolving a DID after a successful transaction,
+	 * to handle propagation delays between transaction confirmation and ledger availability.
+	 * @default 10
+	 */
+	didResolutionRetries?: number;
+
+	/**
+	 * Delay in milliseconds between each resolveDid retry.
+	 * @default 500
+	 */
+	didResolutionRetryDelayMs?: number;
 }

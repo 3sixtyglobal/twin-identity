@@ -106,7 +106,7 @@ A promise that resolves when the profile has been created.
 
 ### get() {#get}
 
-> **get**(`publicPropertyNames?`, `privatePropertyNames?`): `Promise`\<\{ `identity`: `string`; `publicProfile?`: `Partial`\<`T`\>; `privateProfile?`: `Partial`\<`U`\>; \}\>
+> **get**(`publicPropertyNames?`, `privatePropertyNames?`, `identity?`): `Promise`\<\{ `identity`: `string`; `publicProfile?`: `Partial`\<`T`\>; `privateProfile?`: `Partial`\<`U`\>; \}\>
 
 Get the profile properties for an identity.
 
@@ -123,6 +123,12 @@ The public properties to get for the profile, defaults to all.
 keyof `U`[]
 
 The private properties to get for the profile, defaults to all.
+
+##### identity?
+
+`string`
+
+The identity to perform the profile operation on, defaults to the current user.
 
 #### Returns
 
@@ -170,7 +176,7 @@ The items properties.
 
 ### update() {#update}
 
-> **update**(`publicProfile?`, `privateProfile?`): `Promise`\<`void`\>
+> **update**(`publicProfile?`, `privateProfile?`, `identity?`): `Promise`\<`void`\>
 
 Update the profile properties of an identity.
 
@@ -188,6 +194,12 @@ The public profile data as JSON-LD.
 
 The private profile data as JSON-LD.
 
+##### identity?
+
+`string`
+
+The identity to perform the profile operation on, defaults to the current user.
+
 #### Returns
 
 `Promise`\<`void`\>
@@ -202,9 +214,17 @@ A promise that resolves when the profile has been updated.
 
 ### remove() {#remove}
 
-> **remove**(): `Promise`\<`void`\>
+> **remove**(`identity?`): `Promise`\<`void`\>
 
 Delete the profile for an identity.
+
+#### Parameters
+
+##### identity?
+
+`string`
+
+The identity to perform the profile operation on, defaults to the current user.
 
 #### Returns
 
@@ -259,3 +279,59 @@ The list of items and cursor for paging.
 #### Implementation of
 
 `IIdentityProfileComponent.list`
+
+***
+
+### listAdmin() {#listadmin}
+
+> **listAdmin**(`publicFilters?`, `privateFilters?`, `publicPropertyNames?`, `privatePropertyNames?`, `cursor?`, `limit?`): `Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+
+Get the list of identity profiles including private properties.
+
+#### Parameters
+
+##### publicFilters?
+
+`object`[]
+
+The filters to apply to the identities public profiles.
+
+##### privateFilters?
+
+`object`[]
+
+The filters to apply to the identities private profiles.
+
+##### publicPropertyNames?
+
+keyof `T`[]
+
+The public properties to get for the profile, defaults to all.
+
+##### privatePropertyNames?
+
+keyof `U`[]
+
+The private properties to get for the profile, defaults to none.
+
+##### cursor?
+
+`string`
+
+The cursor for paged requests.
+
+##### limit?
+
+`number`
+
+The maximum number of items in a page.
+
+#### Returns
+
+`Promise`\<\{ `items`: `object`[]; `cursor?`: `string`; \}\>
+
+The list of items and cursor for paging.
+
+#### Implementation of
+
+`IIdentityProfileComponent.listAdmin`

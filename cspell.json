@@ -28,11 +28,13 @@
 		"dids",
 		"eddsa",
 		"Faucet",
+		"hotfixes",
 		"Multibase",
 		"nameof",
 		"nanos",
 		"openapi",
 		"Stiftung",
+		"teardown",
 		"unrevoke",
 		"Unrevoking"
 	],

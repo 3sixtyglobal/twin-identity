@@ -89,4 +89,42 @@ export interface IIdentityProfileComponent<
 		 */
 		cursor?: string;
 	}>;
+
+	/**
+	 * Get a list of identities including private profile data.
+	 * @param publicFilters The filters to apply to the identities public profiles.
+	 * @param privateFilters The filters to apply to the identities private profiles.
+	 * @param publicPropertyNames The public properties to get for the profile, defaults to all.
+	 * @param privatePropertyNames The private properties to get for the profile, defaults to none.
+	 * @param cursor The cursor for paged requests.
+	 * @param limit The maximum number of items in a page.
+	 * @returns The list of items and cursor for paging.
+	 */
+	listAdmin(
+		publicFilters?: {
+			propertyName: string;
+			propertyValue: unknown;
+		}[],
+		privateFilters?: {
+			propertyName: string;
+			propertyValue: unknown;
+		}[],
+		publicPropertyNames?: (keyof T)[],
+		privatePropertyNames?: (keyof U)[],
+		cursor?: string,
+		limit?: number
+	): Promise<{
+		/**
+		 * The identities.
+		 */
+		items: {
+			identity: string;
+			publicProfile?: Partial<T>;
+			privateProfile?: Partial<U>;
+		}[];
+		/**
+		 * An optional cursor, when defined can be used to call find to get more entities.
+		 */
+		cursor?: string;
+	}>;
 }

@@ -5,6 +5,7 @@ Class which implements the identity contract.
 ## Implements
 
 - `IIdentityComponent`
+- `IHealthProviderComponent`
 
 ## Constructors
 
@@ -76,6 +77,73 @@ A promise that resolves when all metrics have been registered.
 
 ***
 
+### healthApplicationInit() {#healthapplicationinit}
+
+> **healthApplicationInit**(`contextIds`): `Promise`\<`void`\>
+
+Creates a temporary DID document for the application health check.
+
+#### Parameters
+
+##### contextIds
+
+`IContextIds`
+
+The context IDs accumulated by prior init steps.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Implementation of
+
+`IHealthProviderComponent.healthApplicationInit`
+
+***
+
+### healthApplication() {#healthapplication}
+
+> **healthApplication**(`callback`): `Promise`\<`IHealth`[] \| `undefined`\>
+
+Returns the application health status of the identity service by resolving the DID created
+in healthApplicationInit.
+
+#### Parameters
+
+##### callback
+
+`HealthApplicationCallback`
+
+Callback for deferred results.
+
+#### Returns
+
+`Promise`\<`IHealth`[] \| `undefined`\>
+
+The health status of the service.
+
+#### Implementation of
+
+`IHealthProviderComponent.healthApplication`
+
+***
+
+### healthApplicationTeardown() {#healthapplicationteardown}
+
+> **healthApplicationTeardown**(): `Promise`\<`void`\>
+
+Removes the DID document created in healthApplicationInit.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Implementation of
+
+`IHealthProviderComponent.healthApplicationTeardown`
+
+***
+
 ### identityCreate() {#identitycreate}
 
 > **identityCreate**(`namespace?`, `controller?`): `Promise`\<`IDidDocument`\>
@@ -110,7 +178,7 @@ The created identity document.
 
 ### identityRemove() {#identityremove}
 
-> **identityRemove**(`identity`, `controller?`): `Promise`\<`void`\>
+> **identityRemove**(`identity`, `options?`, `controller?`): `Promise`\<`void`\>
 
 Remove an identity.
 
@@ -121,6 +189,16 @@ Remove an identity.
 `string`
 
 The id of the document to remove.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private keys from the vault.
 
 ##### controller?
 
@@ -194,7 +272,7 @@ NotSupportedError if the platform does not support multiple keys.
 
 ### verificationMethodRemove() {#verificationmethodremove}
 
-> **verificationMethodRemove**(`verificationMethodId`, `controller?`): `Promise`\<`void`\>
+> **verificationMethodRemove**(`verificationMethodId`, `options?`, `controller?`): `Promise`\<`void`\>
 
 Remove a verification method from the document.
 
@@ -205,6 +283,16 @@ Remove a verification method from the document.
 `string`
 
 The id of the verification method.
+
+##### options?
+
+Optional settings.
+
+###### removeKeys?
+
+`boolean`
+
+Also remove any associated private key from the vault.
 
 ##### controller?
 
