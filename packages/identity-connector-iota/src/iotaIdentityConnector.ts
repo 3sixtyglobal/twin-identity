@@ -27,6 +27,7 @@ import {
 	SubjectHolderRelationship,
 	VerificationMethod,
 	type ControllerToken,
+	type CoreDocument,
 	type DIDUrl,
 	type ICredential,
 	type IJwkParams,
@@ -47,6 +48,7 @@ import {
 import {
 	ArrayHelper,
 	BaseError,
+	Coerce,
 	Converter,
 	GeneralError,
 	Guards,
@@ -66,7 +68,12 @@ import {
 } from "@twin.org/data-json-ld";
 import { AccountHelper } from "@twin.org/dlt-account";
 import { Iota, VaultJwtSigner, type IIotaClient } from "@twin.org/dlt-iota";
-import { Did, DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
+import {
+	Did,
+	DocumentHelper,
+	VerificationHelper,
+	type IIdentityConnector
+} from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
 	DidContexts,
@@ -75,6 +82,7 @@ import {
 	JwsAlgorithms,
 	ProofHelper,
 	ProofTypes,
+	type IDidCredentialStatus,
 	type IDidDocument,
 	type IDidDocumentVerificationMethod,
 	type IDidService,
@@ -1122,17 +1130,48 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				nameof(credential.proof),
 				credential.proof
 			);
+			VerificationHelper.checkValidityPeriod(credential);
+
 			const { proof, ...doc } = credential;
-			const credentialVerified = await this.verifyProof(
+			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
+			Guards.stringValue(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(proofEntry.verificationMethod),
+				proofEntry.verificationMethod
+			);
+
+			const issuer = Is.object<{ id: string }>(doc.issuer) ? doc.issuer.id : doc.issuer;
+			const signerDid = DocumentHelper.parseId(proofEntry.verificationMethod).id;
+			if (Is.stringValue(issuer) && issuer !== signerDid) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "issuerMismatch", {
+					issuer,
+					method: proofEntry.verificationMethod
+				});
+			}
+
+			const issuerDocument = await this.resolveAssertionMethodDocument(
+				proofEntry.verificationMethod
+			);
+			const publicKeyJwk = DocumentHelper.getJwk(
+				this.toDidDocumentJson(issuerDocument),
+				proofEntry.verificationMethod,
+				DidVerificationMethodType.AssertionMethod
+			);
+
+			const credentialVerified = await ProofHelper.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
-				ArrayHelper.fromObjectOrArray(proof)[0]
+				proofEntry,
+				publicKeyJwk
 			);
 			if (!credentialVerified) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "signatureVerificationFailed");
 			}
+
+			const revoked = this.isCredentialStatusRevoked(issuerDocument, doc.credentialStatus);
+
 			return {
-				revoked: false,
-				verifiableCredential: doc
+				revoked,
+				verifiableCredential: revoked ? undefined : doc
 			};
 		}
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(credential), credential);
@@ -1144,7 +1183,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				iotaClient,
 				this._config?.identityPkgId
 			);
-			const resolver = new Resolver({ client: identityClientReadOnly });
+			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(credential);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
 			const issuerDid = this.stringifyIdentityValue(issuerDocumentId);
@@ -1161,6 +1200,23 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				new JwtCredentialValidationOptions(),
 				FailFast.FirstError
 			);
+
+			// JwtCredentialValidationOptions.verifierOptions.methodScope was tried here and, on
+			// live testing, did not actually restrict which relationship the signing method must
+			// be in - the library validated a credential signed by an authentication-only method.
+			// Enforce the assertionMethod relationship explicitly instead.
+			const decodedHeader = await JwtHelper.decode(credential);
+			Guards.stringValue(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(decodedHeader.header?.kid),
+				decodedHeader.header?.kid
+			);
+			DocumentHelper.getVerificationMethod(
+				this.toDidDocumentJson(issuerDocument),
+				decodedHeader.header.kid,
+				DidVerificationMethodType.AssertionMethod
+			);
+
 			const vc = decoded.credential().toJSON() as IDidVerifiableCredential;
 
 			return {
@@ -1561,8 +1617,18 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			if (!presentationVerified) {
 				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "signatureVerificationFailed");
 			}
+
+			let revoked = false;
+			for (const embeddedCredential of doc.verifiableCredential ?? []) {
+				const credentialCheck = await this.checkVerifiableCredential(embeddedCredential);
+				if (credentialCheck.revoked) {
+					revoked = true;
+					break;
+				}
+			}
+
 			return {
-				revoked: false,
+				revoked,
 				verifiablePresentation: doc
 			};
 		}
@@ -1626,6 +1692,23 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 					resolvedIssuers[i],
 					validationOptions,
 					FailFast.FirstError
+				);
+
+				// See the note on the credential-level check: JwsVerificationOptions.methodScope is
+				// not enforced by the library here either, so the relationship is checked explicitly.
+				const decodedHeader = await JwtHelper.decode(jwtCredentials[i].toString());
+				Guards.stringValue(
+					IotaIdentityConnector.CLASS_NAME,
+					nameof(decodedHeader.header?.kid),
+					decodedHeader.header?.kid
+				);
+				const resolvedIssuer = resolvedIssuers[i];
+				const issuerCoreDocument =
+					"toJSON" in resolvedIssuer ? resolvedIssuer : resolvedIssuer.toCoreDocument();
+				DocumentHelper.getVerificationMethod(
+					this.toDidDocumentJson(issuerCoreDocument),
+					decodedHeader.header.kid,
+					DidVerificationMethodType.AssertionMethod
 				);
 			}
 
@@ -1816,6 +1899,76 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				Iota.extractPayloadError(error)
 			);
 		}
+	}
+
+	/**
+	 * Resolve the issuer document for a verification method, fresh from the network.
+	 * Never cached: this is a role-2/3 resolve of a third party's DID (see spike #170).
+	 * @param verificationMethodId The verification method id whose owning DID to resolve.
+	 * @returns The resolved document.
+	 * @throws NotFoundError if the id has no DID, or the DID cannot be resolved.
+	 * @internal
+	 */
+	private async resolveAssertionMethodDocument(
+		verificationMethodId: string
+	): Promise<IotaDocument> {
+		const idParts = DocumentHelper.parseId(verificationMethodId);
+		if (Is.empty(idParts.fragment)) {
+			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "missingDid", verificationMethodId);
+		}
+
+		const identityClient = await this.getIdentityClient();
+		const resolvedDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
+
+		if (Is.undefined(resolvedDocument)) {
+			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
+		}
+
+		return resolvedDocument;
+	}
+
+	/**
+	 * Convert a resolved wasm document to its plain IDidDocument JSON shape.
+	 * toJSON() on a resolved document returns a resolution wrapper ({ doc: ... }), not the bare
+	 * document, matching the unwrap already done in IotaIdentityResolverConnector.resolveDocument.
+	 * @param document The resolved document to convert.
+	 * @returns The plain DID document.
+	 * @internal
+	 */
+	private toDidDocumentJson(document: IotaDocument | CoreDocument): IDidDocument {
+		return (document.toJSON() as { doc: IDidDocument }).doc;
+	}
+
+	/**
+	 * Check whether a credential's status entry or entries report it as revoked.
+	 * @param issuerDocument The resolved issuer document owning the revocation bitmap service.
+	 * @param credentialStatus The credential's status entry or entries to check.
+	 * @returns True if any entry is reported revoked.
+	 * @internal
+	 */
+	private isCredentialStatusRevoked(
+		issuerDocument: IotaDocument,
+		credentialStatus: IDidCredentialStatus | IDidCredentialStatus[] | undefined
+	): boolean {
+		let statuses: IDidCredentialStatus[] = [];
+		if (Is.array<IDidCredentialStatus>(credentialStatus)) {
+			statuses = credentialStatus;
+		} else if (Is.object<IDidCredentialStatus>(credentialStatus)) {
+			statuses = [credentialStatus];
+		}
+
+		for (const status of statuses) {
+			if (status.type === RevocationBitmap.type()) {
+				const service = issuerDocument.resolveService(status.id);
+				if (!Is.undefined(service)) {
+					const index = Coerce.number(status.revocationBitmapIndex);
+					if (Is.number(index) && RevocationBitmap.fromEndpoint(service).isRevoked(index)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

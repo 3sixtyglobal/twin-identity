@@ -3,7 +3,12 @@
 import { GeneralError, Guards, Is } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import { nameof } from "@twin.org/nameof";
-import { ProofHelper, type IDidDocument, type IProof } from "@twin.org/standards-w3c-did";
+import {
+	ProofHelper,
+	type IDidDocument,
+	type IDidVerifiableCredential,
+	type IProof
+} from "@twin.org/standards-w3c-did";
 import { Jwk, Jwt, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
 import { DocumentHelper } from "./documentHelper.js";
 import type { IIdentityResolverComponent } from "../models/IIdentityResolverComponent.js";
@@ -122,5 +127,54 @@ export class VerificationHelper {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Check a verifiable credential is within its validity period.
+	 * @param credential The credential to check, either VC data model v1 or v2.
+	 * @throws GeneralError if the credential has expired or is not yet valid.
+	 */
+	public static checkValidityPeriod(credential: IDidVerifiableCredential): void {
+		Guards.object<IDidVerifiableCredential>(
+			VerificationHelper.CLASS_NAME,
+			nameof(credential),
+			credential
+		);
+
+		const dated = credential as {
+			issuanceDate?: string;
+			validFrom?: string;
+			expirationDate?: string;
+			validUntil?: string;
+		};
+		const notBefore = dated.issuanceDate ?? dated.validFrom;
+		const notAfter = dated.expirationDate ?? dated.validUntil;
+		const now = Date.now();
+
+		if (Is.stringValue(notBefore)) {
+			if (!Is.dateTimeString(notBefore)) {
+				throw new GeneralError(VerificationHelper.CLASS_NAME, "credentialValidityDateInvalid", {
+					date: notBefore
+				});
+			}
+			if (new Date(notBefore).getTime() > now) {
+				throw new GeneralError(VerificationHelper.CLASS_NAME, "credentialNotYetValid", {
+					validFrom: notBefore
+				});
+			}
+		}
+
+		if (Is.stringValue(notAfter)) {
+			if (!Is.dateTimeString(notAfter)) {
+				throw new GeneralError(VerificationHelper.CLASS_NAME, "credentialValidityDateInvalid", {
+					date: notAfter
+				});
+			}
+			if (new Date(notAfter).getTime() < now) {
+				throw new GeneralError(VerificationHelper.CLASS_NAME, "credentialExpired", {
+					validUntil: notAfter
+				});
+			}
+		}
 	}
 }

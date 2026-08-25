@@ -17,6 +17,7 @@
 			"createVerifiablePresentationFailed": "Creating the verifiable presentation failed",
 			"documentNotFound": "The document could not be found \"{notFoundId}\"",
 			"invalidAlias": "The alias is invalid it must be a Url or Urn, it is \"{alias}\"",
+			"issuerMismatch": "The credential issuer \"{issuer}\" does not match the DID of the proof verification method \"{method}\"",
 			"jwkSignatureFailed": "The signature on the JWK failed verification",
 			"methodMissing": "The verification method specified does not exist \"{method}\"",
 			"missingDid": "The full id including DID is required",

@@ -28,12 +28,17 @@ import {
 	EntityStorageConnectorFactory,
 	type IEntityStorageConnector
 } from "@twin.org/entity-storage-models";
-import { DocumentHelper, type IIdentityConnector } from "@twin.org/identity-models";
+import {
+	DocumentHelper,
+	VerificationHelper,
+	type IIdentityConnector
+} from "@twin.org/identity-models";
 import { nameof } from "@twin.org/nameof";
 import {
 	DidContexts,
 	DidTypes,
 	DidVerificationMethodType,
+	type IDidCredentialStatus,
 	type IDidVerifiableCredential,
 	JwsAlgorithms,
 	ProofHelper,
@@ -973,10 +978,38 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				nameof(credential.proof),
 				credential.proof
 			);
+			VerificationHelper.checkValidityPeriod(credential);
+
 			const { proof, ...doc } = credential;
-			const credentialVerified = await this.verifyProof(
+			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
+			Guards.stringValue(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(proofEntry.verificationMethod),
+				proofEntry.verificationMethod
+			);
+
+			const issuer = Is.object<{ id: string }>(doc.issuer) ? doc.issuer.id : doc.issuer;
+			const signerDid = DocumentHelper.parseId(proofEntry.verificationMethod).id;
+			if (Is.stringValue(issuer) && issuer !== signerDid) {
+				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "issuerMismatch", {
+					issuer,
+					method: proofEntry.verificationMethod
+				});
+			}
+
+			const issuerDidDocument = await this.resolveAssertionMethodDocument(
+				proofEntry.verificationMethod
+			);
+			const publicKeyJwk = DocumentHelper.getJwk(
+				issuerDidDocument,
+				proofEntry.verificationMethod,
+				DidVerificationMethodType.AssertionMethod
+			);
+
+			const credentialVerified = await ProofHelper.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
-				ArrayHelper.fromObjectOrArray(proof)[0]
+				proofEntry,
+				publicKeyJwk
 			);
 			if (!credentialVerified) {
 				throw new GeneralError(
@@ -984,9 +1017,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					"signatureVerificationFailed"
 				);
 			}
+
+			const revoked = await this.checkCredentialStatusRevoked(
+				issuerDidDocument,
+				doc.credentialStatus
+			);
+
 			return {
-				revoked: false,
-				verifiableCredential: doc
+				revoked,
+				verifiableCredential: revoked ? undefined : doc
 			};
 		}
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(credential), credential);
@@ -1022,28 +1061,18 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
-			const methods = this.getAllMethods(issuerDidDocument);
-			const methodAndArray = methods.find(m => {
-				if (Is.string(m.method)) {
-					return m.method === jwtHeader.kid;
-				}
-				return m.method.id === jwtHeader.kid;
-			});
+			Guards.stringValue(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(jwtHeader.kid),
+				jwtHeader.kid
+			);
+			const publicKeyJwk = DocumentHelper.getJwk(
+				issuerDidDocument,
+				jwtHeader.kid,
+				DidVerificationMethodType.AssertionMethod
+			);
 
-			if (!methodAndArray) {
-				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "methodMissing", {
-					method: jwtHeader.kid
-				});
-			}
-
-			const didMethod = methodAndArray.method;
-			if (!Is.stringValue(didMethod.publicKeyJwk?.x)) {
-				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "publicKeyJwkMissing", {
-					method: jwtHeader.kid
-				});
-			}
-
-			await Jwt.verifySignature(credential, await Jwk.toCryptoKey(didMethod.publicKeyJwk));
+			await Jwt.verifySignature(credential, await Jwk.toCryptoKey(publicKeyJwk));
 
 			const verifiableCredential = jwtPayload.vc as IDidVerifiableCredentialV1;
 			if (Is.object(verifiableCredential)) {
@@ -1054,6 +1083,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				if (Is.number(jwtPayload.nbf)) {
 					verifiableCredential.issuanceDate = new Date(jwtPayload.nbf * 1000).toISOString();
 				}
+				if (Is.number(jwtPayload.exp)) {
+					verifiableCredential.expirationDate = new Date(jwtPayload.exp * 1000).toISOString();
+				}
 				if (Is.array(verifiableCredential.credentialSubject)) {
 					verifiableCredential.credentialSubject = verifiableCredential.credentialSubject.map(c => {
 						ObjectHelper.propertySet(c, "id", jwtPayload.sub);
@@ -1063,25 +1095,12 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					ObjectHelper.propertySet(verifiableCredential.credentialSubject, "id", jwtPayload.sub);
 				}
 			}
+			VerificationHelper.checkValidityPeriod(verifiableCredential);
 
-			const credentialStatus = verifiableCredential.credentialStatus;
-			let revoked = false;
-			if (Is.object(credentialStatus)) {
-				revoked = await this.checkRevocation(
-					issuerDidDocument,
-					credentialStatus.revocationBitmapIndex
-				);
-			} else if (Is.arrayValue(credentialStatus)) {
-				for (let i = 0; i < credentialStatus.length; i++) {
-					revoked = await this.checkRevocation(
-						issuerDidDocument,
-						credentialStatus[i].revocationBitmapIndex
-					);
-					if (revoked) {
-						break;
-					}
-				}
-			}
+			const revoked = await this.checkCredentialStatusRevoked(
+				issuerDidDocument,
+				verifiableCredential.credentialStatus
+			);
 
 			return {
 				revoked,
@@ -1454,7 +1473,17 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					"signatureVerificationFailed"
 				);
 			}
-			return { revoked: false, verifiablePresentation: doc };
+
+			let revoked = false;
+			for (const embeddedCredential of doc.verifiableCredential ?? []) {
+				const credentialCheck = await this.checkVerifiableCredential(embeddedCredential);
+				if (credentialCheck.revoked) {
+					revoked = true;
+					break;
+				}
+			}
+
+			return { revoked, verifiablePresentation: doc };
 		}
 
 		Guards.stringValue(
@@ -1503,7 +1532,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				Is.array(verifiablePresentation.verifiableCredential)
 			) {
 				for (const vcJwt of verifiablePresentation.verifiableCredential) {
-					let revoked = true;
+					let revoked = false;
 					if (Is.stringValue(vcJwt)) {
 						const jwt = await Jwt.decode(vcJwt);
 
@@ -1527,36 +1556,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 								"@context": DidContexts.Context,
 								...issuerDidDocument
 							});
-
-							const vc = jwt.payload.vc as IDidVerifiableCredentialV1;
-							if (Is.object<IDidVerifiableCredentialV1>(vc)) {
-								const credentialStatus = vc.credentialStatus;
-								if (Is.object(credentialStatus)) {
-									revoked = await this.checkRevocation(
-										{
-											"@context": DidContexts.Context,
-											...issuerDidDocument
-										},
-										credentialStatus.revocationBitmapIndex
-									);
-								} else if (Is.arrayValue(credentialStatus)) {
-									for (let i = 0; i < credentialStatus.length; i++) {
-										revoked = await this.checkRevocation(
-											{
-												"@context": DidContexts.Context,
-												...issuerDidDocument
-											},
-											credentialStatus[i].revocationBitmapIndex
-										);
-										if (revoked) {
-											break;
-										}
-									}
-								}
-							}
 						}
-					} else {
-						revoked = false;
+
+						const credentialCheck = await this.checkVerifiableCredential(vcJwt);
+						revoked = credentialCheck.revoked;
 					}
 					tokensRevoked.push(revoked);
 				}
@@ -1836,6 +1839,64 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Resolve the issuer document for a verification method, verified against its stored signature.
+	 * @param verificationMethodId The verification method id whose owning DID to resolve.
+	 * @returns The resolved document.
+	 * @throws NotFoundError if the id has no DID, or the DID cannot be resolved.
+	 * @internal
+	 */
+	private async resolveAssertionMethodDocument(
+		verificationMethodId: string
+	): Promise<IDidDocument> {
+		const idParts = DocumentHelper.parseId(verificationMethodId);
+		if (Is.empty(idParts.fragment)) {
+			throw new NotFoundError(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				"missingDid",
+				verificationMethodId
+			);
+		}
+
+		const identityDocument = await this._didDocumentEntityStorage.get(idParts.id);
+		if (Is.undefined(identityDocument)) {
+			throw new NotFoundError(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				"documentNotFound",
+				idParts.id
+			);
+		}
+		await EntityStorageIdentityConnector.verifyDocument(identityDocument, this._vaultConnector);
+
+		return identityDocument.document;
+	}
+
+	/**
+	 * Check whether a credential's status entry or entries report it as revoked.
+	 * @param document The issuer document owning the revocation bitmap service.
+	 * @param credentialStatus The credential's status entry or entries to check.
+	 * @returns True if any entry is reported revoked.
+	 * @internal
+	 */
+	private async checkCredentialStatusRevoked(
+		document: IDidDocument,
+		credentialStatus: IDidCredentialStatus | IDidCredentialStatus[] | undefined
+	): Promise<boolean> {
+		let statuses: IDidCredentialStatus[] = [];
+		if (Is.array<IDidCredentialStatus>(credentialStatus)) {
+			statuses = credentialStatus;
+		} else if (Is.object<IDidCredentialStatus>(credentialStatus)) {
+			statuses = [credentialStatus];
+		}
+
+		for (const status of statuses) {
+			if (await this.checkRevocation(document, status.revocationBitmapIndex)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Check if a revocation index is revoked.
 	 * @param document The document to check.
 	 * @param revocationBitmapIndex The revocation index to check.
@@ -1846,30 +1907,28 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		document: IDidDocument,
 		revocationBitmapIndex?: unknown
 	): Promise<boolean> {
-		if (Is.stringValue(revocationBitmapIndex)) {
-			const revocationIndex = Coerce.number(revocationBitmapIndex);
-			if (Is.number(revocationIndex)) {
-				const revocationService = document.service?.find(s => s.id.endsWith("#revocation"));
-				if (
-					revocationService &&
-					Is.string(revocationService.serviceEndpoint) &&
-					revocationService.type === "BitstringStatusList"
-				) {
-					const revocationParts = revocationService.serviceEndpoint.split(",");
-					if (revocationParts.length === 2) {
-						const compressedRevocationBytes = Converter.base64UrlToBytes(revocationParts[1]);
-						const decompressed = await Compression.decompress(
-							compressedRevocationBytes,
-							CompressionType.Gzip
-						);
+		const revocationIndex = Coerce.number(revocationBitmapIndex);
+		if (Is.number(revocationIndex)) {
+			const revocationService = document.service?.find(s => s.id.endsWith("#revocation"));
+			if (
+				revocationService &&
+				Is.string(revocationService.serviceEndpoint) &&
+				revocationService.type === "BitstringStatusList"
+			) {
+				const revocationParts = revocationService.serviceEndpoint.split(",");
+				if (revocationParts.length === 2) {
+					const compressedRevocationBytes = Converter.base64UrlToBytes(revocationParts[1]);
+					const decompressed = await Compression.decompress(
+						compressedRevocationBytes,
+						CompressionType.Gzip
+					);
 
-						const bitString = BitString.fromBits(
-							decompressed,
-							EntityStorageIdentityConnector._REVOCATION_BITS_SIZE
-						);
+					const bitString = BitString.fromBits(
+						decompressed,
+						EntityStorageIdentityConnector._REVOCATION_BITS_SIZE
+					);
 
-						return bitString.getBit(revocationIndex);
-					}
+					return bitString.getBit(revocationIndex);
 				}
 			}
 		}

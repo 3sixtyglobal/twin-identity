@@ -34,6 +34,7 @@
 			"gasStationTransactionBuildFailed": "Building the gas station transaction failed",
 			"identityNotFound": "The identity could not be found \"{notFoundId}\"",
 			"invalidAlias": "The alias is invalid it must be a Url or Urn, it is \"{alias}\"",
+			"issuerMismatch": "The credential issuer \"{issuer}\" does not match the DID of the proof verification method \"{method}\"",
 			"invalidSubjectId": "The subject id format is invalid it must be a Url or Urn, it is \"{subjectId}\"",
 			"methodMissing": "The verification method specified does not exist \"{method}\"",
 			"missingControllerToken": "The controller token is missing",
