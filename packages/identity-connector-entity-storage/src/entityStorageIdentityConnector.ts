@@ -12,6 +12,7 @@ import {
 	Guards,
 	Is,
 	JsonHelper,
+	LruCache,
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
@@ -59,6 +60,7 @@ import {
 } from "@twin.org/vault-models";
 import { Jwk, Jwt, type IJwk, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
 import type { IdentityDocument } from "./entities/identityDocument.js";
+import type { IEntityStorageIdentityConnectorConfig } from "./models/IEntityStorageIdentityConnectorConfig.js";
 import type { IEntityStorageIdentityConnectorConstructorOptions } from "./models/IEntityStorageIdentityConnectorConstructorOptions.js";
 
 /**
@@ -94,6 +96,32 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	protected readonly _vaultConnector: IVaultConnector;
 
 	/**
+	 * TTL in ms for caching DID documents resolved for this connector's own sign/mutate
+	 * operations. 0 disables caching (see resolveOwnDocumentCached). Never applied to proof or
+	 * credential verification of third-party claims.
+	 * @internal
+	 */
+	private readonly _didResolutionCacheTtlMs: number;
+
+	/**
+	 * Maximum number of own DID documents retained in cache.
+	 * @internal
+	 */
+	private readonly _didResolutionCacheCapacity: number;
+
+	/**
+	 * Maximum wait time for own DID cache getOrSet mutex acquisition in milliseconds.
+	 * @internal
+	 */
+	private readonly _didResolutionCacheMutexTimeoutMs?: number;
+
+	/**
+	 * LRU cache for own DID documents. Undefined when caching is disabled (ttl is 0).
+	 * @internal
+	 */
+	private readonly _didResolutionCache?: LruCache<IdentityDocument>;
+
+	/**
 	 * Create a new instance of EntityStorageIdentityConnector.
 	 * @param options The options for the identity connector.
 	 */
@@ -102,6 +130,19 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			options?.didDocumentEntityStorageType ?? "identity-document"
 		);
 		this._vaultConnector = VaultConnectorFactory.get(options?.vaultConnectorType ?? "vault");
+
+		const config: IEntityStorageIdentityConnectorConfig = options?.config ?? {};
+		this._didResolutionCacheTtlMs = config.didResolutionCacheTtlMs ?? 30_000;
+		this._didResolutionCacheCapacity = config.didResolutionCacheCapacity ?? 1000;
+		this._didResolutionCacheMutexTimeoutMs = config.didResolutionCacheMutexTimeoutMs;
+		this._didResolutionCache =
+			this._didResolutionCacheTtlMs > 0
+				? new LruCache<IdentityDocument>({
+						capacity: this._didResolutionCacheCapacity,
+						ttiMs: this._didResolutionCacheTtlMs,
+						mutexTimeoutMs: this._didResolutionCacheMutexTimeoutMs
+					})
+				: undefined;
 	}
 
 	/**
@@ -150,6 +191,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 */
 	public className(): string {
 		return EntityStorageIdentityConnector.CLASS_NAME;
+	}
+
+	/**
+	 * Stop the service.
+	 * Destroys in-memory resources owned by this component.
+	 * @param nodeLoggingComponentType The node logging component type.
+	 * @returns A promise that resolves when the service has stopped.
+	 */
+	public async stop(nodeLoggingComponentType?: string): Promise<void> {
+		this._didResolutionCache?.destroy();
 	}
 
 	/**
@@ -223,6 +274,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			}
 
 			await this._didDocumentEntityStorage.remove(documentId);
+			this._didResolutionCache?.delete(this.ownDidCacheKey(documentId));
 
 			if (options?.removeKeys ?? false) {
 				const methods = this.getAllMethods(didDocument.document);
@@ -279,19 +331,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 		let tempKeyId;
 		try {
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					documentId
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
-
+			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
 			const didDocument = didIdentityDocument.document;
 
 			let methodKeyPublic;
@@ -418,18 +458,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(idParts.id);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					idParts.id
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
+			const didIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
 			const didDocument = didIdentityDocument.document;
 
 			const methods = this.getAllMethods(didDocument);
@@ -525,18 +554,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		try {
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					documentId
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
+			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
 			const didDocument = didIdentityDocument.document;
 
 			const fullServiceId = serviceId.includes("#") ? serviceId : `${documentId}#${serviceId}`;
@@ -587,18 +605,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(EntityStorageIdentityConnector.CLASS_NAME, "missingDid", serviceId);
 			}
 
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(idParts.id);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					idParts.id
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
+			const didIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
 			const didDocument = didIdentityDocument.document;
 
 			if (Is.array(didDocument.service)) {
@@ -657,18 +664,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		try {
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					documentId
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
+			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
 			const didDocument = didIdentityDocument.document;
 
 			const existing = Is.array(didDocument.alsoKnownAs) ? didDocument.alsoKnownAs : [];
@@ -712,18 +708,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		try {
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(documentId);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					documentId
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
+			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
 			const didDocument = didIdentityDocument.document;
 
 			if (!Is.array(didDocument.alsoKnownAs) || !didDocument.alsoKnownAs.includes(alias)) {
@@ -813,18 +798,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const issuerIdentityDocument = await this._didDocumentEntityStorage.get(idParts.id);
-			if (Is.undefined(issuerIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					idParts.id
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				issuerIdentityDocument,
-				this._vaultConnector
-			);
+			const issuerIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
 			const methods = this.getAllMethods(issuerDidDocument);
@@ -900,7 +874,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				controller,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiableCredential)
+				JsonLdHelper.toNodeObject(verifiableCredential),
+				issuerDidDocument
 			);
 
 			// As we are adding the receipt to the data we update the JSON-LD context
@@ -1141,18 +1116,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		);
 
 		try {
-			const issuerIdentityDocument = await this._didDocumentEntityStorage.get(issuerDocumentId);
-			if (Is.undefined(issuerIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					issuerDocumentId
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				issuerIdentityDocument,
-				this._vaultConnector
-			);
+			const issuerIdentityDocument = await this.resolveOwnDocumentCached(issuerDocumentId);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
 			const revocationService = issuerDidDocument.service?.find(s => s.id.endsWith("#revocation"));
@@ -1219,18 +1183,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		);
 
 		try {
-			const issuerIdentityDocument = await this._didDocumentEntityStorage.get(issuerDocumentId);
-			if (Is.undefined(issuerIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					issuerDocumentId
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				issuerIdentityDocument,
-				this._vaultConnector
-			);
+			const issuerIdentityDocument = await this.resolveOwnDocumentCached(issuerDocumentId);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
 			const revocationService = issuerDidDocument.service?.find(s => s.id.endsWith("#revocation"));
@@ -1337,18 +1290,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const holderIdentityDocument = await this._didDocumentEntityStorage.get(idParts.id);
-			if (Is.undefined(holderIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					idParts.id
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				holderIdentityDocument,
-				this._vaultConnector
-			);
+			const holderIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
 			const holderDidDocument = holderIdentityDocument.document;
 
 			const methods = this.getAllMethods(holderDidDocument);
@@ -1410,7 +1352,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				controller,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiablePresentation)
+				JsonLdHelper.toNodeObject(verifiablePresentation),
+				holderDidDocument
 			);
 
 			const jwtPayload: IJwtPayload = {
@@ -1594,6 +1537,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
+	 * @param resolvedDocument Optional already-resolved document for the DID, so a caller that
+	 * just resolved it (e.g. createVerifiableCredential) skips a redundant re-resolve. Resolves
+	 * it itself if omitted.
 	 * @returns The proof.
 	 * @throws NotFoundError if the identity or method is not found.
 	 * @throws GeneralError if algorithm doesn't match key type or proof creation fails.
@@ -1602,7 +1548,8 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		controller: string,
 		verificationMethodId: string,
 		proofType: ProofTypes,
-		unsecureDocument: IJsonLdNodeObject
+		unsecureDocument: IJsonLdNodeObject,
+		resolvedDocument?: IDidDocument
 	): Promise<IProof> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(
@@ -1621,6 +1568,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			nameof(unsecureDocument),
 			unsecureDocument
 		);
+		if (!Is.undefined(resolvedDocument)) {
+			Guards.object<IDidDocument>(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(resolvedDocument),
+				resolvedDocument
+			);
+		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -1632,19 +1586,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const didIdentityDocument = await this._didDocumentEntityStorage.get(idParts.id);
-			if (Is.undefined(didIdentityDocument)) {
-				throw new NotFoundError(
-					EntityStorageIdentityConnector.CLASS_NAME,
-					"documentNotFound",
-					idParts.id
-				);
-			}
-			await EntityStorageIdentityConnector.verifyDocument(
-				didIdentityDocument,
-				this._vaultConnector
-			);
-			const didDocument = didIdentityDocument.document;
+			const didDocument = Is.undefined(resolvedDocument)
+				? (await this.resolveOwnDocumentCached(idParts.id)).document
+				: resolvedDocument;
 
 			const methods = this.getAllMethods(didDocument);
 			const methodAndArray = methods.find(m => {
@@ -1871,6 +1815,63 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Cache key for a DID resolved for this connector's own sign/mutate operations (role 1).
+	 * Deliberately namespaced ("own") and never shared with proof/credential verification of
+	 * third-party claims (role 2/3), which this connector never caches.
+	 * @param documentId The DID being resolved.
+	 * @returns The cache key.
+	 * @internal
+	 */
+	private ownDidCacheKey(documentId: string): string {
+		return `${EntityStorageIdentityConnector.CLASS_NAME}:own:${documentId}`;
+	}
+
+	/**
+	 * Load and verify a document's own storage entity, uncached.
+	 * @param documentId The DID to load.
+	 * @returns The verified storage entity.
+	 * @throws NotFoundError if the DID could not be resolved.
+	 * @internal
+	 */
+	private async loadOwnDocument(documentId: string): Promise<IdentityDocument> {
+		const identityDocument = await this._didDocumentEntityStorage.get(documentId);
+		if (Is.undefined(identityDocument)) {
+			throw new NotFoundError(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				"documentNotFound",
+				documentId
+			);
+		}
+		await EntityStorageIdentityConnector.verifyDocument(identityDocument, this._vaultConnector);
+
+		return identityDocument;
+	}
+
+	/**
+	 * Resolve a document's own storage entity for this connector's own sign/mutate operations,
+	 * cached for didResolutionCacheTtlMs (0 disables caching and resolves fresh every call).
+	 * Only ever used for the connector's own create/update/revoke paths - never for verifyProof
+	 * or credential/presentation verification, which must stay uncached.
+	 * A clone is always returned: mutators edit the entity in place before storing it, and the
+	 * cached instance must never be handed out by reference.
+	 * @param documentId The DID to resolve.
+	 * @returns The verified storage entity.
+	 * @throws NotFoundError if the DID could not be resolved.
+	 * @internal
+	 */
+	private async resolveOwnDocumentCached(documentId: string): Promise<IdentityDocument> {
+		if (Is.undefined(this._didResolutionCache)) {
+			return this.loadOwnDocument(documentId);
+		}
+
+		const identityDocument = await this._didResolutionCache.getOrSet(
+			this.ownDidCacheKey(documentId),
+			async () => this.loadOwnDocument(documentId)
+		);
+		return ObjectHelper.clone(identityDocument);
+	}
+
+	/**
 	 * Check whether a credential's status entry or entries report it as revoked.
 	 * @param document The issuer document owning the revocation bitmap service.
 	 * @param credentialStatus The credential's status entry or entries to check.
@@ -1951,11 +1952,18 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			docBytes
 		);
 
-		await this._didDocumentEntityStorage.set({
+		const identityDocument: IdentityDocument = {
 			id: didDocument.id,
 			document: didDocument,
 			signature: Converter.bytesToBase64(signature),
 			controller
-		});
+		};
+
+		await this._didDocumentEntityStorage.set(identityDocument);
+
+		this._didResolutionCache?.set(
+			this.ownDidCacheKey(didDocument.id),
+			ObjectHelper.clone(identityDocument)
+		);
 	}
 }

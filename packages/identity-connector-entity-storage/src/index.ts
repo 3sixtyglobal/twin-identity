@@ -5,6 +5,7 @@ export * from "./entities/identityProfile.js";
 export * from "./entityStorageIdentityConnector.js";
 export * from "./entityStorageIdentityProfileConnector.js";
 export * from "./entityStorageIdentityResolverConnector.js";
+export * from "./models/IEntityStorageIdentityConnectorConfig.js";
 export * from "./models/IEntityStorageIdentityConnectorConstructorOptions.js";
 export * from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions.js";
 export * from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions.js";

@@ -10,6 +10,7 @@
 
 ## Interfaces
 
+- [IEntityStorageIdentityConnectorConfig](interfaces/IEntityStorageIdentityConnectorConfig.md)
 - [IEntityStorageIdentityConnectorConstructorOptions](interfaces/IEntityStorageIdentityConnectorConstructorOptions.md)
 - [IEntityStorageIdentityProfileConnectorConstructorOptions](interfaces/IEntityStorageIdentityProfileConnectorConstructorOptions.md)
 - [IEntityStorageIdentityResolverConnectorConstructorOptions](interfaces/IEntityStorageIdentityResolverConnectorConstructorOptions.md)

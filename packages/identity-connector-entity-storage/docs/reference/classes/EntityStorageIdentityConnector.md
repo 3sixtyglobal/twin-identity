@@ -62,6 +62,33 @@ The class name of the component.
 
 ***
 
+### stop() {#stop}
+
+> **stop**(`nodeLoggingComponentType?`): `Promise`\<`void`\>
+
+Stop the service.
+Destroys in-memory resources owned by this component.
+
+#### Parameters
+
+##### nodeLoggingComponentType?
+
+`string`
+
+The node logging component type.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+A promise that resolves when the service has stopped.
+
+#### Implementation of
+
+`IIdentityConnector.stop`
+
+***
+
 ### createDocument() {#createdocument}
 
 > **createDocument**(`controller`): `Promise`\<`IDidDocument`\>
@@ -704,7 +731,7 @@ The presentation stored in the jwt and the revocation status.
 
 ### createProof() {#createproof}
 
-> **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`): `Promise`\<`IProof`\>
+> **createProof**(`controller`, `verificationMethodId`, `proofType`, `unsecureDocument`, `resolvedDocument?`): `Promise`\<`IProof`\>
 
 Create a proof for arbitrary data with the specified verification method.
 This method uses async signing to ensure the private key never leaves the vault,
@@ -735,6 +762,14 @@ The type of proof to create.
 `IJsonLdNodeObject`
 
 The unsecure document to create the proof for.
+
+##### resolvedDocument?
+
+`IDidDocument`
+
+Optional already-resolved document for the DID, so a caller that
+just resolved it (e.g. createVerifiableCredential) skips a redundant re-resolve. Resolves
+it itself if omitted.
 
 #### Returns
 
