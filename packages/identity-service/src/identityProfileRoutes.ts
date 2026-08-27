@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import {
 	HttpParameterHelper,
+	type IRouteAuthorization,
 	type IConflictResponse,
 	type IForbiddenResponse,
 	type IHttpRequestContext,
@@ -47,6 +48,19 @@ export const tagsIdentityProfile: ITag[] = [
 		description: "Service to provide all features related to digital identity profiles."
 	}
 ];
+
+/**
+ * The default authorization for the routes, used to seed authorization rules.
+ */
+const DEFAULT_AUTHORIZATION_READER: IRouteAuthorization = {
+	permission: "user:read",
+	role: "user-admin"
+};
+const DEFAULT_AUTHORIZATION_WRITER: IRouteAuthorization = {
+	permission: "user:write",
+	role: "user-admin",
+	inherits: [DEFAULT_AUTHORIZATION_READER.permission]
+};
 
 /**
  * The REST routes for identity.
@@ -161,7 +175,6 @@ export function generateRestRoutesIdentityProfile(
 		tag: tagsIdentityProfile[0].name,
 		method: "GET",
 		path: `${baseRouteName}/:userIdentity`,
-		requiredScope: ["user-admin"],
 		handler: async (httpRequestContext, request) =>
 			identityProfileAdminGet(httpRequestContext, componentName, request),
 		requestType: {
@@ -208,7 +221,8 @@ export function generateRestRoutesIdentityProfile(
 			{
 				type: nameof<IForbiddenResponse>()
 			}
-		]
+		],
+		defaultAuthorization: DEFAULT_AUTHORIZATION_READER
 	};
 
 	const identityProfileGetPublicRoute: IRestRoute<
@@ -318,7 +332,6 @@ export function generateRestRoutesIdentityProfile(
 		tag: tagsIdentityProfile[0].name,
 		method: "PUT",
 		path: `${baseRouteName}/:userIdentity`,
-		requiredScope: ["user-admin"],
 		handler: async (httpRequestContext, request) =>
 			identityProfileAdminUpdate(httpRequestContext, componentName, request),
 		requestType: {
@@ -359,7 +372,8 @@ export function generateRestRoutesIdentityProfile(
 			{
 				type: nameof<IForbiddenResponse>()
 			}
-		]
+		],
+		defaultAuthorization: DEFAULT_AUTHORIZATION_WRITER
 	};
 
 	const identityProfileAdminRemoveRoute: IRestRoute<
@@ -371,7 +385,6 @@ export function generateRestRoutesIdentityProfile(
 		tag: tagsIdentityProfile[0].name,
 		method: "DELETE",
 		path: `${baseRouteName}/:userIdentity`,
-		requiredScope: ["user-admin"],
 		handler: async (httpRequestContext, request) =>
 			identityProfileAdminRemove(httpRequestContext, componentName, request),
 		requestType: {
@@ -398,7 +411,8 @@ export function generateRestRoutesIdentityProfile(
 			{
 				type: nameof<IForbiddenResponse>()
 			}
-		]
+		],
+		defaultAuthorization: DEFAULT_AUTHORIZATION_WRITER
 	};
 
 	const identityProfileRemoveRoute: IRestRoute<INoContentRequest, INoContentResponse> = {
@@ -487,7 +501,6 @@ export function generateRestRoutesIdentityProfile(
 		tag: tagsIdentityProfile[0].name,
 		method: "GET",
 		path: `${baseRouteName}/admin/query/`,
-		requiredScope: ["user-admin"],
 		handler: async (httpRequestContext, request) =>
 			identitiesAdminList(httpRequestContext, componentName, request),
 		requestType: {
@@ -544,7 +557,8 @@ export function generateRestRoutesIdentityProfile(
 			{
 				type: nameof<IForbiddenResponse>()
 			}
-		]
+		],
+		defaultAuthorization: DEFAULT_AUTHORIZATION_WRITER
 	};
 
 	return [

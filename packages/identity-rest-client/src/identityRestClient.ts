@@ -417,7 +417,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityVerifiableCredentialRevokeRequest, INoContentResponse>(
 			"/:identity/verifiable-credential/revoke/:revocationIndex",
-			HttpMethod.GET,
+			HttpMethod.POST,
 			{
 				pathParams: {
 					identity: issuerId,
@@ -442,7 +442,7 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 
 		await this.fetch<IIdentityVerifiableCredentialUnrevokeRequest, INoContentResponse>(
 			"/:identity/verifiable-credential/unrevoke/:revocationIndex",
-			HttpMethod.GET,
+			HttpMethod.POST,
 			{
 				pathParams: {
 					identity: issuerId,
