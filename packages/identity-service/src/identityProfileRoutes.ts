@@ -53,12 +53,12 @@ export const tagsIdentityProfile: ITag[] = [
  * The default authorization for the routes, used to seed authorization rules.
  */
 const DEFAULT_AUTHORIZATION_READER: IRouteAuthorization = {
-	permission: "user:read",
-	role: "user-admin"
+	permission: "identity-profile:read",
+	role: "identity-profile-admin"
 };
 const DEFAULT_AUTHORIZATION_WRITER: IRouteAuthorization = {
-	permission: "user:write",
-	role: "user-admin",
+	permission: "identity-profile:write",
+	role: "identity-profile-admin",
 	inherits: [DEFAULT_AUTHORIZATION_READER.permission]
 };
 
@@ -234,6 +234,7 @@ export function generateRestRoutesIdentityProfile(
 		tag: tagsIdentityProfile[0].name,
 		method: "GET",
 		path: `${baseRouteName}/:identity/public`,
+		skipAuth: true,
 		handler: async (httpRequestContext, request) =>
 			identityGetPublic(httpRequestContext, componentName, request),
 		requestType: {
@@ -558,7 +559,7 @@ export function generateRestRoutesIdentityProfile(
 				type: nameof<IForbiddenResponse>()
 			}
 		],
-		defaultAuthorization: DEFAULT_AUTHORIZATION_WRITER
+		defaultAuthorization: DEFAULT_AUTHORIZATION_READER
 	};
 
 	return [
