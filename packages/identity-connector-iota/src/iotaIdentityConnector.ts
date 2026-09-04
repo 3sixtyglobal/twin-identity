@@ -1093,7 +1093,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 
 			// Promote the proof's @context to the VC root so JSON-LD processors can resolve DataIntegrity terms (proofValue, cryptosuite, etc.)
 			const proofContext = vc.proof["@context"];
-			if (!Is.empty(proofContext)) {
+			if (Is.notEmpty(proofContext)) {
 				vc["@context"] = (JsonLdProcessor.combineContexts(vc["@context"], proofContext) ??
 					vc["@context"]) as IDidVerifiableCredential["@context"];
 				delete vc.proof["@context"];
@@ -1562,7 +1562,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 
 			// Promote the proof's @context to the VP root so JSON-LD processors can resolve DataIntegrity terms
 			const proofContext = verifiablePresentation.proof["@context"];
-			if (!Is.empty(proofContext)) {
+			if (Is.notEmpty(proofContext)) {
 				verifiablePresentation["@context"] = (JsonLdProcessor.combineContexts(
 					verifiablePresentation["@context"],
 					proofContext

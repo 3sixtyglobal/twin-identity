@@ -85,7 +85,7 @@ export class IdentityProfileRestClient<
 		publicProfile?: Partial<T>;
 		privateProfile?: Partial<U>;
 	}> {
-		if (!Is.empty(identity)) {
+		if (Is.notEmpty(identity)) {
 			Guards.string(IdentityProfileRestClient.CLASS_NAME, nameof(identity), identity);
 			const response = await this.fetch<
 				IIdentityProfileAdminGetRequest,
@@ -155,7 +155,7 @@ export class IdentityProfileRestClient<
 	 * @returns A promise that resolves when the profile has been updated.
 	 */
 	public async update(publicProfile?: T, privateProfile?: U, identity?: string): Promise<void> {
-		if (!Is.empty(identity)) {
+		if (Is.notEmpty(identity)) {
 			Guards.string(IdentityProfileRestClient.CLASS_NAME, nameof(identity), identity);
 			await this.fetch<IIdentityProfileAdminUpdateRequest, never>(
 				"/:userIdentity",
@@ -186,7 +186,7 @@ export class IdentityProfileRestClient<
 	 * @returns A promise that resolves when the profile has been removed.
 	 */
 	public async remove(identity?: string): Promise<void> {
-		if (!Is.empty(identity)) {
+		if (Is.notEmpty(identity)) {
 			Guards.string(IdentityProfileRestClient.CLASS_NAME, nameof(identity), identity);
 			await this.fetch<IIdentityProfileAdminRemoveRequest, never>(
 				"/:userIdentity",

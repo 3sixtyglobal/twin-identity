@@ -89,7 +89,13 @@ describe("EntityStorageIdentityConnector", () => {
 			);
 
 		identityConnector = new EntityStorageIdentityConnector();
-		identityResolverConnector = new EntityStorageIdentityResolverConnector();
+		// Caching disabled: this suite asserts that mutations made through identityConnector are
+		// visible on the next resolve, and it freezes Date.now above, so a cached entry on this
+		// long-lived resolver would never idle out. Resolution caching has its own coverage in
+		// entityStorageIdentityResolverConnectorCache.spec.ts.
+		identityResolverConnector = new EntityStorageIdentityResolverConnector({
+			config: { didResolutionCacheTtlMs: 0 }
+		});
 
 		// Create initial document so testDocumentId is available to all tests
 		const document = await identityConnector.createDocument(TEST_USER_IDENTITY);

@@ -13,4 +13,25 @@ export interface IIotaIdentityResolverConnectorConfig extends IIotaConfig {
 	 * For devnet: "0x03242ae6b87406bd0eb5d669fbe874ed4003694c0be9c6a9ee7c315e6461a553"
 	 */
 	identityPkgId?: string;
+
+	/**
+	 * TTL in ms for caching resolved DID documents. 0 disables caching. As the documents
+	 * resolved here can belong to third parties, a non-zero TTL means revocation and
+	 * verification method changes made on the ledger are only observed once the entry expires.
+	 * @default 30000
+	 */
+	didResolutionCacheTtlMs?: number;
+
+	/**
+	 * Maximum number of DID documents kept in the resolution cache.
+	 * Only used when didResolutionCacheTtlMs > 0.
+	 * @default 1000
+	 */
+	didResolutionCacheCapacity?: number;
+
+	/**
+	 * Maximum time in milliseconds to wait for resolution cache getOrSet mutex acquisition.
+	 * Only used when didResolutionCacheTtlMs > 0.
+	 */
+	didResolutionCacheMutexTimeoutMs?: number;
 }

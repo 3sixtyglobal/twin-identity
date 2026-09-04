@@ -62,11 +62,16 @@ describe("IotaIdentityConnector", () => {
 				}
 			});
 
+			// Caching disabled: this suite shares one resolver across tests and asserts that
+			// mutations made through identityConnector are visible on the next resolve, so a
+			// cached entry would mask them. Resolution caching has its own coverage in
+			// iotaIdentityResolverConnectorCache.spec.ts.
 			identityResolverConnector = new IotaIdentityResolverConnector({
 				config: {
 					clientOptions: TEST_CLIENT_OPTIONS,
 					vaultMnemonicId: TEST_MNEMONIC_NAME,
-					network: TEST_NETWORK
+					network: TEST_NETWORK,
+					didResolutionCacheTtlMs: 0
 				}
 			});
 

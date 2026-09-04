@@ -60,7 +60,6 @@ import {
 } from "@twin.org/vault-models";
 import { Jwk, Jwt, type IJwk, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
 import type { IdentityDocument } from "./entities/identityDocument.js";
-import type { IEntityStorageIdentityConnectorConfig } from "./models/IEntityStorageIdentityConnectorConfig.js";
 import type { IEntityStorageIdentityConnectorConstructorOptions } from "./models/IEntityStorageIdentityConnectorConstructorOptions.js";
 
 /**
@@ -131,10 +130,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		);
 		this._vaultConnector = VaultConnectorFactory.get(options?.vaultConnectorType ?? "vault");
 
-		const config: IEntityStorageIdentityConnectorConfig = options?.config ?? {};
-		this._didResolutionCacheTtlMs = config.didResolutionCacheTtlMs ?? 30_000;
-		this._didResolutionCacheCapacity = config.didResolutionCacheCapacity ?? 1000;
-		this._didResolutionCacheMutexTimeoutMs = config.didResolutionCacheMutexTimeoutMs;
+		this._didResolutionCacheTtlMs = options?.config?.didResolutionCacheTtlMs ?? 30_000;
+		this._didResolutionCacheCapacity = options?.config?.didResolutionCacheCapacity ?? 1000;
+		this._didResolutionCacheMutexTimeoutMs = options?.config?.didResolutionCacheMutexTimeoutMs;
 		this._didResolutionCache =
 			this._didResolutionCacheTtlMs > 0
 				? new LruCache<IdentityDocument>({
@@ -880,7 +878,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 			// As we are adding the receipt to the data we update the JSON-LD context
 			const proofContext = verifiableCredential.proof["@context"];
-			if (!Is.empty(proofContext)) {
+			if (Is.notEmpty(proofContext)) {
 				verifiableCredential["@context"] = (JsonLdProcessor.combineContexts(
 					verifiableCredential["@context"],
 					proofContext
