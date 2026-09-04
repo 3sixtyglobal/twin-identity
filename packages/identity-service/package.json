@@ -1,6 +1,6 @@
 {
 	"name": "@twin.org/identity-service",
-	"version": "0.9.3-next.1",
+	"version": "0.9.3-next.2",
 	"description": "Service contracts and REST endpoint definitions for exposing identity workflows through stable interfaces.",
 	"repository": {
 		"type": "git",
@@ -36,7 +36,7 @@
 		"@twin.org/data-json-ld": "next",
 		"@twin.org/dlt-account": "next",
 		"@twin.org/entity": "next",
-		"@twin.org/identity-models": "0.9.3-next.1",
+		"@twin.org/identity-models": "0.9.3-next.2",
 		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/telemetry-models": "next",
@@ -49,7 +49,7 @@
 		"@twin.org/crypto": "next",
 		"@twin.org/entity-storage-connector-memory": "next",
 		"@twin.org/entity-storage-models": "next",
-		"@twin.org/identity-connector-entity-storage": "0.9.3-next.1",
+		"@twin.org/identity-connector-entity-storage": "0.9.3-next.2",
 		"@twin.org/nameof-transformer": "next",
 		"@twin.org/nameof-vitest-plugin": "next",
 		"@twin.org/ts-to-openapi": "next",
