@@ -51,8 +51,14 @@ runs:
     # Inject secrets as env vars so subsequent steps can reference them without re-expanding the secret.
     - name: Load Test Environment Variables
       shell: bash
+      env:
+        TEST_ENV_VARS: ${{ inputs.test_env_vars }}
       run: |
-        printf '%s\n' "${{ inputs.test_env_vars }}" >> "$GITHUB_ENV"
+        while IFS= read -r line; do
+          [[ -z "$line" ]] && continue
+          echo "::add-mask::${line#*=}"
+          printf '%s\n' "$line" >> "$GITHUB_ENV"
+        done <<< "$TEST_ENV_VARS"
 
     # Import GPG key for signing commits
     - name: Import GPG key
