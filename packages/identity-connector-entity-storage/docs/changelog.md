@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.9.3-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.9.3-next.2...identity-connector-entity-storage-v0.9.3-next.3) (2026-09-07)
+
+
+### Miscellaneous Chores
+
+* **identity-connector-entity-storage:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.3-next.2 to 0.9.3-next.3
+
 ## [0.9.3-next.2](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.9.3-next.1...identity-connector-entity-storage-v0.9.3-next.2) (2026-09-04)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.3-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.3-next.2...identity-connector-iota-v0.9.3-next.3) (2026-09-07)
+
+
+### Bug Fixes
+
+* memoise iota client ([#225](https://github.com/iotaledger/twin-identity/issues/225)) ([c9ccc22](https://github.com/iotaledger/twin-identity/commit/c9ccc2290ab766dfabaf0e1e5b99ff46443febc1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.3-next.2 to 0.9.3-next.3
+
 ## [0.9.3-next.2](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.3-next.1...identity-connector-iota-v0.9.3-next.2) (2026-09-04)
 
 
