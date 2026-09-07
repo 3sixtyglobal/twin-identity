@@ -56,3 +56,33 @@ Only used when didResolutionCacheTtlMs > 0.
 
 Maximum time in milliseconds to wait for resolution cache getOrSet mutex acquisition.
 Only used when didResolutionCacheTtlMs > 0.
+
+***
+
+### clientCreationTimeoutMs? {#clientcreationtimeoutms}
+
+> `optional` **clientCreationTimeoutMs?**: `number`
+
+Timeout in ms for creating the read only identity client used for resolution. Its
+construction makes an RPC call which can fail without ever settling, so the timeout
+bounds it. 0 waits indefinitely.
+
+#### Default
+
+```ts
+3000
+```
+
+***
+
+### didResolutionTimeoutMs? {#didresolutiontimeoutms}
+
+> `optional` **didResolutionTimeoutMs?**: `number`
+
+Timeout in ms for a single DID resolution call. 0 waits indefinitely.
+
+#### Default
+
+```ts
+5000
+```
