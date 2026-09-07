@@ -211,7 +211,7 @@ runs:
       run: |
         cd "$TARGET_DIR"
         for i in {1..5}; do
-          npm install --no-audit && break || {
+          npm install --no-audit --no-fund && break || {
             if [ $i -eq 5 ]; then
               echo "npm install failed after 5 attempts"
               exit 1

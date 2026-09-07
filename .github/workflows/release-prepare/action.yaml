@@ -89,7 +89,7 @@ runs:
       shell: bash
       run: |
         for i in {1..5}; do
-          npm ci --no-audit && break || {
+          npm ci --no-audit --no-fund && break || {
             if [ $i -eq 5 ]; then
               echo "npm ci failed after 5 attempts"
               exit 1
