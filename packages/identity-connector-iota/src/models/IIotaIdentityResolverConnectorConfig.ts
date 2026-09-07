@@ -34,4 +34,18 @@ export interface IIotaIdentityResolverConnectorConfig extends IIotaConfig {
 	 * Only used when didResolutionCacheTtlMs > 0.
 	 */
 	didResolutionCacheMutexTimeoutMs?: number;
+
+	/**
+	 * Timeout in ms for creating the read only identity client used for resolution. Its
+	 * construction makes an RPC call which can fail without ever settling, so the timeout
+	 * bounds it. 0 waits indefinitely.
+	 * @default 3000
+	 */
+	clientCreationTimeoutMs?: number;
+
+	/**
+	 * Timeout in ms for a single DID resolution call. 0 waits indefinitely.
+	 * @default 5000
+	 */
+	didResolutionTimeoutMs?: number;
 }

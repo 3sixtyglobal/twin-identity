@@ -57,6 +57,20 @@ export interface IIotaIdentityConnectorConfig extends IIotaConfig {
 	didResolutionCacheMutexTimeoutMs?: number;
 
 	/**
+	 * Timeout in ms for creating the read only identity client used for resolution and
+	 * verification. Its construction makes an RPC call which can fail without ever settling,
+	 * so the timeout bounds it. 0 waits indefinitely.
+	 * @default 3000
+	 */
+	clientCreationTimeoutMs?: number;
+
+	/**
+	 * Timeout in ms for a single DID resolution call. 0 waits indefinitely.
+	 * @default 5000
+	 */
+	didResolutionTimeoutMs?: number;
+
+	/**
 	 * Number of times to retry resolving a DID after a successful transaction,
 	 * to handle propagation delays between transaction confirmation and ledger availability.
 	 * @default 10

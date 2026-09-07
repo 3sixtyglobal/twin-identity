@@ -57,6 +57,7 @@ import {
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
+	TimeoutHelper,
 	Url,
 	Urn
 } from "@twin.org/core";
@@ -203,6 +204,26 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	private readonly _didResolutionRetryDelayMs: number;
 
 	/**
+	 * Timeout in ms for creating the read only identity client. 0 waits indefinitely.
+	 * @internal
+	 */
+	private readonly _clientCreationTimeoutMs: number;
+
+	/**
+	 * Timeout in ms for a single DID resolution call. 0 waits indefinitely.
+	 * @internal
+	 */
+	private readonly _didResolutionTimeoutMs: number;
+
+	/**
+	 * Memoised read only identity client used by the verification paths, created on first use
+	 * and reused afterwards. Cleared whenever its construction fails so the next caller retries.
+	 * Never used by getIdentityClient, see the note there.
+	 * @internal
+	 */
+	private _identityClientReadOnly?: Promise<IdentityClientReadOnly>;
+
+	/**
 	 * Create a new instance of IotaIdentityConnector.
 	 * @param options The options for the identity connector.
 	 */
@@ -239,6 +260,8 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				: undefined;
 		this._didResolutionRetries = Math.max(this._config.didResolutionRetries ?? 10, 1);
 		this._didResolutionRetryDelayMs = this._config.didResolutionRetryDelayMs ?? 500;
+		this._clientCreationTimeoutMs = this._config.clientCreationTimeoutMs ?? 3_000;
+		this._didResolutionTimeoutMs = this._config.didResolutionTimeoutMs ?? 5_000;
 
 		Iota.populateConfig(this._config);
 	}
@@ -342,6 +365,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	 */
 	public async stop(nodeLoggingComponentType?: string): Promise<void> {
 		this._didResolutionCache?.destroy();
+		this._identityClientReadOnly = undefined;
 	}
 
 	/**
@@ -1177,17 +1201,15 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(credential), credential);
 
 		try {
-			const iotaClient = Iota.createClient(this._config);
-			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				// @ts-expect-error IotaClient has a mismatch with the library types
-				iotaClient,
-				this._config?.identityPkgId
-			);
+			const identityClientReadOnly = await this.getIdentityClientReadOnly();
 			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(credential);
 			const issuerDocumentId = JwtCredentialValidator.extractIssuerFromJwt(jwt);
 			const issuerDid = this.stringifyIdentityValue(issuerDocumentId);
-			const issuerDocument = await resolver.resolve(issuerDid);
+			const issuerDocument = await this.withResolutionTimeout(
+				resolver.resolve(issuerDid),
+				issuerDid
+			);
 
 			if (Is.undefined(issuerDocument)) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", issuerDid);
@@ -1636,17 +1658,15 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		const presentationJwt = presentation;
 
 		try {
-			const iotaClient = Iota.createClient(this._config);
-			const identityClientReadOnly = await IdentityClientReadOnly.create(
-				// @ts-expect-error IotaClient has a mismatch with the library types
-				iotaClient,
-				this._config?.identityPkgId
-			);
+			const identityClientReadOnly = await this.getIdentityClientReadOnly();
 			const resolver = new Resolver<IotaDocument>({ client: identityClientReadOnly });
 			const jwt = new Jwt(presentationJwt);
 			const holderId = JwtPresentationValidator.extractHolder(jwt);
 			const holderDid = this.stringifyIdentityValue(holderId);
-			const holderDocument = await resolver.resolve(holderDid);
+			const holderDocument = await this.withResolutionTimeout(
+				resolver.resolve(holderDid),
+				holderDid
+			);
 
 			if (Is.undefined(holderDocument)) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", holderDid);
@@ -1684,7 +1704,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				issuers.push(this.stringifyIdentityValue(issuer));
 			}
 
-			const resolvedIssuers = await resolver.resolveMultiple(issuers);
+			const resolvedIssuers = await this.withResolutionTimeout(
+				resolver.resolveMultiple(issuers),
+				issuers.join(", ")
+			);
 
 			for (let i = 0; i < jwtCredentials.length; i++) {
 				credentialValidator.validate(
@@ -1865,7 +1888,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			}
 
 			const identityClient = await this.getIdentityClient();
-			const resolvedDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
+			const resolvedDocument = await this.withResolutionTimeout(
+				identityClient.resolveDid(IotaDID.parse(idParts.id)),
+				idParts.id
+			);
 
 			if (Is.undefined(resolvedDocument)) {
 				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
@@ -1918,7 +1944,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		}
 
 		const identityClient = await this.getIdentityClient();
-		const resolvedDocument = await identityClient.resolveDid(IotaDID.parse(idParts.id));
+		const resolvedDocument = await this.withResolutionTimeout(
+			identityClient.resolveDid(IotaDID.parse(idParts.id)),
+			idParts.id
+		);
 
 		if (Is.undefined(resolvedDocument)) {
 			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", idParts.id);
@@ -1988,7 +2017,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		let lastError: unknown;
 		for (let attempt = 0; attempt <= this._didResolutionRetries; attempt++) {
 			try {
-				const candidate = await identityClient.resolveDid(did);
+				const candidate = await this.withResolutionTimeout(
+					identityClient.resolveDid(did),
+					this.stringifyIdentityValue(did)
+				);
 				if (!Is.undefined(candidate)) {
 					const isSettled =
 						Is.undefined(preMutationUpdated) ||
@@ -2025,7 +2057,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	): Promise<void> {
 		for (let attempt = 0; attempt <= this._didResolutionRetries; attempt++) {
 			try {
-				await identityClient.resolveDid(did);
+				await this.withResolutionTimeout(
+					identityClient.resolveDid(did),
+					this.stringifyIdentityValue(did)
+				);
 			} catch {
 				return;
 			}
@@ -2073,22 +2108,86 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	}
 
 	/**
+	 * Get the read only identity client, memoised for the lifetime of the connector.
+	 * Constructing it fetches the chain identifier over RPC, and neither the network nor the
+	 * package id change for an instance, so only the first caller pays for that call and
+	 * concurrent first callers share the single construction. Only the resolution paths use
+	 * this, getIdentityClient must build its own, see the note there.
+	 * @returns The read only identity client.
+	 * @internal
+	 */
+	private async getIdentityClientReadOnly(): Promise<IdentityClientReadOnly> {
+		this._identityClientReadOnly ??= this.createIdentityClientReadOnly();
+		const pending = this._identityClientReadOnly;
+
+		try {
+			return await pending;
+		} catch (error) {
+			// Drop the memoised promise so the next caller retries. Without this a single failed
+			// construction, or one abandoned by its timeout, would be replayed for the lifetime of
+			// the connector.
+			if (this._identityClientReadOnly === pending) {
+				this._identityClientReadOnly = undefined;
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Create a read only identity client, bounded by the client creation timeout.
+	 * The timeout is required because the wasm binding panics instead of rejecting when the
+	 * chain identifier RPC fails, leaving the promise it returned pending forever.
+	 * @returns The read only identity client.
+	 * @internal
+	 */
+	private async createIdentityClientReadOnly(): Promise<IdentityClientReadOnly> {
+		const iotaClient = Iota.createClient(this._config);
+
+		return TimeoutHelper.withTimeout(
+			IdentityClientReadOnly.create(
+				// @ts-expect-error IotaClient has a mismatch with the library types
+				iotaClient,
+				this._config?.identityPkgId
+			),
+			this._clientCreationTimeoutMs,
+			() => {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "identityClientCreationTimeout", {
+					timeoutMs: this._clientCreationTimeoutMs
+				});
+			}
+		);
+	}
+
+	/**
+	 * Bound a resolution call by the configured resolution timeout, so a resolve which never
+	 * settles fails the request instead of hanging it.
+	 * @param resolution The resolution to bound.
+	 * @param did The DID being resolved, for the timeout error.
+	 * @returns The result of the resolution.
+	 * @internal
+	 */
+	private async withResolutionTimeout<T>(resolution: Promise<T>, did: string): Promise<T> {
+		return TimeoutHelper.withTimeout(resolution, this._didResolutionTimeoutMs, () => {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "didResolutionTimeout", {
+				did,
+				timeoutMs: this._didResolutionTimeoutMs
+			});
+		});
+	}
+
+	/**
 	 * Get an identity client.
 	 * @param controller The controller to get the client for.
 	 * @returns The identity client.
 	 * @internal
 	 */
 	private async getIdentityClient(controller?: string): Promise<IdentityClient> {
-		// Deliberately built fresh on every call, not memoized: IdentityClient.create() below
-		// calls client.__destroy_into_raw() on the read-only client it's given (a wasm-bindgen
-		// move, not a borrow) - reusing the same instance across calls passes an
-		// already-destroyed handle into WASM on the second use ("null pointer passed to rust").
-		const iotaClient = Iota.createClient(this._config);
-		const identityClientReadOnly = await IdentityClientReadOnly.create(
-			// @ts-expect-error IotaClient has a mismatch with the library types
-			iotaClient,
-			this._config?.identityPkgId
-		);
+		// Deliberately built fresh on every call, never the memoized client from
+		// getIdentityClientReadOnly: IdentityClient.create() below calls
+		// client.__destroy_into_raw() on the read-only client it's given (a wasm-bindgen move,
+		// not a borrow) - handing it the shared instance would pass an already-destroyed handle
+		// into WASM on the second use ("null pointer passed to rust").
+		const identityClientReadOnly = await this.createIdentityClientReadOnly();
 		if (Is.undefined(controller)) {
 			const jwkMemStore = new JwkMemStore();
 			const keyIdMemStore = new KeyIdMemStore();
@@ -2166,7 +2265,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		identityClient: IdentityClient,
 		did: string
 	): Promise<IotaDocument> {
-		const document = await identityClient.resolveDid(IotaDID.parse(did));
+		const document = await this.withResolutionTimeout(
+			identityClient.resolveDid(IotaDID.parse(did)),
+			did
+		);
 		if (Is.undefined(document)) {
 			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", did);
 		}
