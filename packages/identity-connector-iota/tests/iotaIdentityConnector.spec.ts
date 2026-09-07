@@ -927,6 +927,11 @@ describe("IotaIdentityConnector", () => {
 			"object-form-expiry-repro-key"
 		);
 
+		// The jwt exp claim is stored with second precision and identity.rs treats a credential as
+		// valid for the whole of its expiry second (checkExpiresOnOrAfter is inclusive), so anchor
+		// the expiry to a second boundary rather than relying on sub-second timing.
+		const expirationDate = new Date((Math.floor(Date.now() / 1000) + 2) * 1000);
+
 		const result = await identityConnector.createVerifiableCredential(
 			TEST_USER_IDENTITY,
 			verificationMethod.id,
@@ -936,11 +941,14 @@ describe("IotaIdentityConnector", () => {
 				name: "Object Form Expiry Repro"
 			},
 			// Valid at creation time (checked internally when the JWT is first signed), but
-			// expires 2s later so the checks below run against a genuinely expired credential.
-			{ expirationDate: new Date(Date.now() + 2000) }
+			// expires shortly after so the checks below run against a genuinely expired credential.
+			{ expirationDate }
 		);
 
-		await new Promise(resolve => setTimeout(resolve, 2500));
+		// Wait until well past the end of the expiry second.
+		await new Promise(resolve =>
+			setTimeout(resolve, Math.max(0, expirationDate.getTime() + 1500 - Date.now()))
+		);
 
 		await expect(identityConnector.checkVerifiableCredential(result.jwt)).rejects.toMatchObject({
 			name: "GeneralError",
