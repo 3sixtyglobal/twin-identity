@@ -299,7 +299,7 @@ jobs:
         run: |
           cd ${{ matrix.package }}
           for i in {1..5}; do
-            npm install && break || {
+            npm install --no-audit && break || {
               if [ $i -eq 5 ]; then
                 echo "npm install failed after 5 attempts"
                 exit 1
