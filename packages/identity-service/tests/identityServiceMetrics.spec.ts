@@ -1,6 +1,6 @@
 // Copyright 2026 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { AlreadyExistsError, ComponentFactory, RandomHelper } from "@twin.org/core";
+import { AlreadyExistsError, ComponentFactory, Is, RandomHelper } from "@twin.org/core";
 import { Bip39 } from "@twin.org/crypto";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -50,13 +50,19 @@ function makeMockTelemetry(): {
 		start: async () => {},
 		stop: async () => {},
 		createMetric: async m => {
-			created.push({ ...m });
+			for (const metric of Is.array(m) ? m : [m]) {
+				created.push({ ...metric });
+			}
 		},
 		getMetric: async () => ({ metric: {} as never, value: {} as never }),
 		updateMetric: async () => {},
 		addMetricValue: async (id, value, customData) => {
 			values.push({ id, value, customData });
 			return "v";
+		},
+		addMetricValues: async entries => {
+			values.push(...entries);
+			return entries.map(() => "v");
 		},
 		getMetricValue: async (id, valueId) => ({
 			id: valueId,

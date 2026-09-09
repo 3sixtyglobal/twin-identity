@@ -40,7 +40,6 @@
 		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/telemetry-models": "next",
-		"@twin.org/tracing-models": "next",
 		"@twin.org/vault-models": "next",
 		"@twin.org/wallet-models": "next",
 		"@twin.org/web": "next"
