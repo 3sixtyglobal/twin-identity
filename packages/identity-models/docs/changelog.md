@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3-next.4](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.9.3-next.3...identity-models-v0.9.3-next.4) (2026-09-09)
+
+
+### Features
+
+* remove inline service tracing in favour of the tracing facade ([#228](https://github.com/iotaledger/twin-identity/issues/228)) ([583e587](https://github.com/iotaledger/twin-identity/commit/583e5873fa396b26207db5ac0ae9a1779866853c))
+
 ## [0.9.3-next.3](https://github.com/iotaledger/twin-identity/compare/identity-models-v0.9.3-next.2...identity-models-v0.9.3-next.3) (2026-09-07)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.3-next.4](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.3-next.3...identity-connector-iota-v0.9.3-next.4) (2026-09-09)
+
+
+### Bug Fixes
+
+* jwt expiration timing ([823ea72](https://github.com/iotaledger/twin-identity/commit/823ea725959562705a53870b40ed94a2de1f1b91))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.9.3-next.3 to 0.9.3-next.4
+
 ## [0.9.3-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.9.3-next.2...identity-connector-iota-v0.9.3-next.3) (2026-09-07)
 
 
