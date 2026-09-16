@@ -65,10 +65,18 @@ describe("IdentityService", () => {
 		VaultConnectorFactory.register("vault", () => new EntityStorageVaultConnector());
 
 		IdentityConnectorFactory.register("entity-storage", () => new EntityStorageIdentityConnector());
+		// Caching disabled: the factory hands every test the same resolver instance, and these
+		// tests assert that a mutation made through IdentityService is visible on the next
+		// resolve. Resolution caching is covered in the connector's own cache spec.
 		IdentityResolverConnectorFactory.register(
 			"entity-storage",
-			() => new EntityStorageIdentityResolverConnector()
+			() => new EntityStorageIdentityResolverConnector({ config: { didResolutionCacheTtlMs: 0 } })
 		);
+
+		// Force the connector to be constructed now, so its LruCache's internal
+		// RandomHelper.generate call doesn't consume a tick of the deterministic
+		// mock installed in beforeEach below.
+		IdentityConnectorFactory.get("entity-storage");
 	});
 
 	beforeEach(() => {
@@ -295,9 +303,12 @@ describe("IdentityService", () => {
 				"entity-storage",
 				() => new EntityStorageIdentityConnector()
 			);
+			// Caching disabled: the health lifecycle resolves the temporary DID during
+			// healthApplication and then asserts it is gone after healthApplicationTeardown, so
+			// the second resolve has to reach storage.
 			IdentityResolverConnectorFactory.register(
 				"entity-storage",
-				() => new EntityStorageIdentityResolverConnector()
+				() => new EntityStorageIdentityResolverConnector({ config: { didResolutionCacheTtlMs: 0 } })
 			);
 		});
 
@@ -320,7 +331,7 @@ describe("IdentityService", () => {
 			);
 			IdentityResolverConnectorFactory.register(
 				"entity-storage",
-				() => new EntityStorageIdentityResolverConnector()
+				() => new EntityStorageIdentityResolverConnector({ config: { didResolutionCacheTtlMs: 0 } })
 			);
 		});
 

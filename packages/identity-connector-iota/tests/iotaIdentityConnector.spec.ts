@@ -62,11 +62,16 @@ describe("IotaIdentityConnector", () => {
 				}
 			});
 
+			// Caching disabled: this suite shares one resolver across tests and asserts that
+			// mutations made through identityConnector are visible on the next resolve, so a
+			// cached entry would mask them. Resolution caching has its own coverage in
+			// iotaIdentityResolverConnectorCache.spec.ts.
 			identityResolverConnector = new IotaIdentityResolverConnector({
 				config: {
 					clientOptions: TEST_CLIENT_OPTIONS,
 					vaultMnemonicId: TEST_MNEMONIC_NAME,
-					network: TEST_NETWORK
+					network: TEST_NETWORK,
+					didResolutionCacheTtlMs: 0
 				}
 			});
 
@@ -878,6 +883,272 @@ describe("IotaIdentityConnector", () => {
 		]);
 	});
 
+	// checkVerifiableCredential must enforce credentialStatus the same way on both input forms.
+	test("object-form credential verification detects revocation the same as the jwt form", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"assertionMethod",
+			"object-form-revocation-repro-key"
+		);
+
+		const revocationIndex = 9101;
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			"https://example.edu/credentials/object-form-revocation-repro",
+			{
+				id: testDocumentId,
+				name: "Object Form Revocation Repro"
+			},
+			{ revocationIndex }
+		);
+
+		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [
+			revocationIndex
+		]);
+
+		const jwtCheck = await identityConnector.checkVerifiableCredential(result.jwt);
+		expect(jwtCheck.revoked).toBeTruthy();
+
+		const objectCheck = await identityConnector.checkVerifiableCredential(
+			result.verifiableCredential
+		);
+		expect(objectCheck.revoked).toBeTruthy();
+		expect(objectCheck.verifiableCredential).toBeUndefined();
+	});
+
+	// checkVerifiableCredential must enforce the validity period the same way on both input forms.
+	test("object-form credential verification enforces expiry the same as the jwt form", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"assertionMethod",
+			"object-form-expiry-repro-key"
+		);
+
+		// The jwt exp claim is stored with second precision and identity.rs treats a credential as
+		// valid for the whole of its expiry second (checkExpiresOnOrAfter is inclusive), so anchor
+		// the expiry to a second boundary rather than relying on sub-second timing.
+		const expirationDate = new Date((Math.floor(Date.now() / 1000) + 2) * 1000);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			"https://example.edu/credentials/object-form-expiry-repro",
+			{
+				id: testDocumentId,
+				name: "Object Form Expiry Repro"
+			},
+			// Valid at creation time (checked internally when the JWT is first signed), but
+			// expires shortly after so the checks below run against a genuinely expired credential.
+			{ expirationDate }
+		);
+
+		// Wait until well past the end of the expiry second.
+		await new Promise(resolve =>
+			setTimeout(resolve, Math.max(0, expirationDate.getTime() + 1500 - Date.now()))
+		);
+
+		await expect(identityConnector.checkVerifiableCredential(result.jwt)).rejects.toMatchObject({
+			name: "GeneralError",
+			message: `${StringHelper.camelCase(identityConnector.className())}.checkingVerifiableCredentialFailed`
+		});
+
+		await expect(
+			identityConnector.checkVerifiableCredential(result.verifiableCredential)
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "verificationHelper.credentialExpired"
+		});
+	});
+
+	test("a revoked verifiable credential document with a numeric revocation index reports revoked", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"assertionMethod",
+			"numeric-revocation-index-key"
+		);
+
+		const revocationIndex = 9303;
+		const unsignedCredential = {
+			"@context": DidContexts.ContextVCv1,
+			id: "https://example.edu/credentials/numeric-revocation-index",
+			type: DidTypes.VerifiableCredential,
+			credentialSubject: { id: testDocumentId, name: "Numeric Revocation Index Test" },
+			issuer: testDocumentId,
+			issuanceDate: new Date(Date.now() - 60000).toISOString(),
+			credentialStatus: {
+				id: `${testDocumentId}#revocation`,
+				type: CREDENTIAL_STATUS_TYPE,
+				revocationBitmapIndex: revocationIndex
+			}
+		};
+		const proof = await identityConnector.createProof(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			ProofTypes.DataIntegrityProof,
+			unsignedCredential
+		);
+
+		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [
+			revocationIndex
+		]);
+
+		const objectCheck = await identityConnector.checkVerifiableCredential({
+			...unsignedCredential,
+			proof
+		});
+		expect(objectCheck.revoked).toBeTruthy();
+	});
+
+	test("cannot validate a verifiable credential document whose issuer does not match the proof signer", async () => {
+		const mismatched = {
+			...testVc,
+			issuer: "did:iota:testnet:0x9999999999999999999999999999999999999999999999999999999999999999"
+		};
+
+		await expect(identityConnector.checkVerifiableCredential(mismatched)).rejects.toMatchObject({
+			name: "GeneralError",
+			message: `${StringHelper.camelCase(identityConnector.className())}.issuerMismatch`
+		});
+	});
+
+	// The validity period is checked before the signature, so a tampered date field is a valid
+	// way to exercise the not-yet-valid path which createVerifiableCredential cannot produce.
+	test("cannot validate a verifiable credential document that is not yet valid", async () => {
+		const notYetValid = {
+			...testVc,
+			issuanceDate: "2030-01-01T00:00:00.000Z"
+		};
+
+		await expect(identityConnector.checkVerifiableCredential(notYetValid)).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "verificationHelper.credentialNotYetValid"
+		});
+	});
+
+	// A proof made by a method outside the assertionMethod relationship must be rejected on both input forms.
+	test("cannot validate a verifiable credential jwt signed by a method outside the assertionMethod relationship", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"authentication",
+			"wrong-relationship-jwt-key"
+		);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			"https://example.edu/credentials/wrong-relationship-jwt",
+			{
+				id: testDocumentId,
+				name: "Wrong Relationship Jwt Test"
+			}
+		);
+
+		await expect(identityConnector.checkVerifiableCredential(result.jwt)).rejects.toMatchObject({
+			name: "GeneralError",
+			message: `${StringHelper.camelCase(identityConnector.className())}.checkingVerifiableCredentialFailed`
+		});
+	});
+
+	test("cannot validate a verifiable credential document signed by a method outside the assertionMethod relationship", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"authentication",
+			"wrong-relationship-document-key"
+		);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			"https://example.edu/credentials/wrong-relationship-document",
+			{
+				id: testDocumentId,
+				name: "Wrong Relationship Document Test"
+			}
+		);
+
+		await expect(
+			identityConnector.checkVerifiableCredential(result.verifiableCredential)
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "documentHelper.verificationMethodNotFound"
+		});
+	});
+
+	// Mirrors the shape twin-immutable-proof relies on: no credentialStatus, no expirationDate.
+	test("can validate a verifiable credential document with no status and no expiry", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"assertionMethod",
+			"no-status-no-expiry-key"
+		);
+
+		const result = await identityConnector.createVerifiableCredential(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			"https://example.edu/credentials/no-status-no-expiry",
+			{
+				id: testDocumentId,
+				name: "No Status No Expiry Test"
+			}
+		);
+
+		const objectCheck = await identityConnector.checkVerifiableCredential(
+			result.verifiableCredential
+		);
+		expect(objectCheck.revoked).toBeFalsy();
+		expect(objectCheck.verifiableCredential).toBeDefined();
+	});
+
+	test("a revoked embedded credential is reflected in checkVerifiablePresentation for both input forms", async () => {
+		const verificationMethod = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			testDocumentId,
+			"assertionMethod",
+			"vp-embedded-revocation-key"
+		);
+
+		const revocationIndex = 9202;
+		const credentialResult = await identityConnector.createVerifiableCredential(
+			TEST_USER_IDENTITY,
+			verificationMethod.id,
+			"https://example.edu/credentials/vp-embedded-revocation",
+			{
+				id: testDocumentId,
+				name: "VP Embedded Revocation Test"
+			},
+			{ revocationIndex }
+		);
+
+		const presentationResult = await identityConnector.createVerifiablePresentation(
+			TEST_USER_IDENTITY,
+			testVerificationMethodId,
+			"http://example.com/vp-embedded-revocation",
+			DidContexts.ContextVCv1,
+			["Person"],
+			[credentialResult.jwt],
+			{ expirationDate: new Date(Date.now() + 14400000) }
+		);
+
+		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [
+			revocationIndex
+		]);
+
+		const jwtCheck = await identityConnector.checkVerifiablePresentation(presentationResult.jwt);
+		expect(jwtCheck.revoked).toBeTruthy();
+
+		const objectCheck = await identityConnector.checkVerifiablePresentation(
+			presentationResult.verifiablePresentation
+		);
+		expect(objectCheck.revoked).toBeTruthy();
+	});
+
 	test("can fail to create a verifiable presentation with no verification method id", async () => {
 		await expect(
 			identityConnector.createVerifiablePresentation(
@@ -1380,7 +1651,9 @@ describe("IotaIdentityConnector", () => {
 		const documentId = testDocumentId;
 
 		const verificationMethodType = "verificationMethod";
-		const verificationMethodId = "testVerificationMethod";
+		// Must not reuse the testVcJwt signing key's fragment: inserting a method under an
+		// existing fragment id replaces its relationship, which would break the scoped fixtures.
+		const verificationMethodId = "resolvedMethodsGenericKey";
 
 		await identityConnector.addVerificationMethod(
 			TEST_USER_IDENTITY,

@@ -67,6 +67,11 @@ describe("IdentityResolverService", () => {
 			"entity-storage",
 			() => new EntityStorageIdentityResolverConnector()
 		);
+
+		// Force the connector to be constructed now, so its LruCache's internal
+		// RandomHelper.generate call doesn't consume a tick of the deterministic
+		// mock installed in beforeEach below.
+		IdentityConnectorFactory.get("entity-storage");
 	});
 
 	beforeEach(() => {

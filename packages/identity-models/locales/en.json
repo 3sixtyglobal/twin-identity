@@ -2,7 +2,10 @@
 	"error": {
 		"verificationHelper": {
 			"jwtDecodeFailed": "Decoding the JWT failed",
-			"proofMissingVerificationMethod": "The proof is missing the verification method"
+			"proofMissingVerificationMethod": "The proof is missing the verification method",
+			"credentialNotYetValid": "The credential is not valid until \"{validFrom}\"",
+			"credentialExpired": "The credential expired at \"{validUntil}\"",
+			"credentialValidityDateInvalid": "The credential validity date is not a valid ISO 8601 timestamp \"{date}\""
 		},
 		"documentHelper": {
 			"verificationMethodNotFound": "The verification method \"{methodName}\" of type \"{methodType}\" could not be found",

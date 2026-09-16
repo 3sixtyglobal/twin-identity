@@ -85,3 +85,27 @@ The secure document to verify.
 `Promise`\<`boolean`\>
 
 True if all proofs in the document are verified successfully.
+
+***
+
+### checkValidityPeriod() {#checkvalidityperiod}
+
+> `static` **checkValidityPeriod**(`credential`): `void`
+
+Check a verifiable credential is within its validity period.
+
+#### Parameters
+
+##### credential
+
+`IDidVerifiableCredential`
+
+The credential to check, either VC data model v1 or v2.
+
+#### Returns
+
+`void`
+
+#### Throws
+
+GeneralError if the credential has expired or is not yet valid.

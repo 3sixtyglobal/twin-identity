@@ -199,7 +199,10 @@ describe("CLI Commands", () => {
 		await actionCommandVerificationMethodAdd({
 			seed: getEnvValue(walletEnv, 1),
 			did,
-			type: DidVerificationMethodType.VerificationMethod,
+			// assertionMethod: the fixture is used later to issue and verify credentials/
+			// presentations, and it requires the signing method to be in this
+			// relationship for the verification to succeed.
+			type: DidVerificationMethodType.AssertionMethod,
 			id: "my-id",
 			connector: IdentityConnectorTypes.Iota,
 			node: getEnvValue(configEnv, 0),

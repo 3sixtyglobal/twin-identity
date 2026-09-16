@@ -8,6 +8,18 @@ Options for the entity storage identity connector constructor.
 
 ## Properties
 
+### config? {#config}
+
+> `optional` **config?**: [`IEntityStorageIdentityConnectorConfig`](IEntityStorageIdentityConnectorConfig.md)
+
+Configuration for the connector.
+
+#### Overrides
+
+[`IEntityStorageIdentityResolverConnectorConstructorOptions`](IEntityStorageIdentityResolverConnectorConstructorOptions.md).[`config`](IEntityStorageIdentityResolverConnectorConstructorOptions.md#config)
+
+***
+
 ### didDocumentEntityStorageType? {#diddocumententitystoragetype}
 
 > `optional` **didDocumentEntityStorageType?**: `string`

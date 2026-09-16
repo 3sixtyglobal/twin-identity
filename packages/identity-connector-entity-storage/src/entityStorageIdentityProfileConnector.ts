@@ -78,7 +78,7 @@ export class EntityStorageIdentityProfileConnector<
 		try {
 			const profile = await this._profileEntityStorage.get(identity);
 
-			if (!Is.empty(profile)) {
+			if (Is.notEmpty(profile)) {
 				throw new AlreadyExistsError(
 					EntityStorageIdentityProfileConnector.CLASS_NAME,
 					"alreadyExists",
