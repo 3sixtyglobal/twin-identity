@@ -1,6 +1,6 @@
 {
 	"name": "@twin.org/identity-connector-entity-storage",
-	"version": "0.9.3-next.4",
+	"version": "0.10.1-next.0",
 	"description": "Entity storage connector for persisting and retrieving identity records through a consistent data layer.",
 	"repository": {
 		"type": "git",
@@ -33,7 +33,7 @@
 		"@twin.org/data-json-ld": "next",
 		"@twin.org/entity": "next",
 		"@twin.org/entity-storage-models": "next",
-		"@twin.org/identity-models": "0.9.3-next.4",
+		"@twin.org/identity-models": "0.10.1-next.0",
 		"@twin.org/nameof": "next",
 		"@twin.org/standards-w3c-did": "next",
 		"@twin.org/vault-models": "next",
