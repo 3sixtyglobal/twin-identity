@@ -11,7 +11,7 @@ export class IdentityDocument {
 	/**
 	 * The identity of the document.
 	 */
-	@property({ type: "string", isPrimary: true })
+	@property({ type: "string", isPrimary: true, maxLength: 255 })
 	public id!: string;
 
 	/**
@@ -29,6 +29,6 @@ export class IdentityDocument {
 	/**
 	 * The controller of the document.
 	 */
-	@property({ type: "string" })
+	@property({ type: "string", maxLength: 255 })
 	public controller!: string;
 }

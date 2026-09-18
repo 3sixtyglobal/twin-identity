@@ -10,7 +10,7 @@ export class IdentityProfile {
 	/**
 	 * The id for the identity.
 	 */
-	@property({ type: "string", isPrimary: true })
+	@property({ type: "string", isPrimary: true, maxLength: 255 })
 	public identity!: string;
 
 	/**
