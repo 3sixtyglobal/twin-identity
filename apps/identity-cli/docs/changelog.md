@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.10.1-next.1](https://github.com/iotaledger/twin-identity/compare/identity-cli-v0.10.1-next.0...identity-cli-v0.10.1-next.1) (2026-09-18)
+
+
+### Features
+
+* add addressIndex option to all commands ([a644674](https://github.com/iotaledger/twin-identity/commit/a644674017d1a8fe5d8685950316bec922a9b195))
+* add context id features ([#62](https://github.com/iotaledger/twin-identity/issues/62)) ([e02ecca](https://github.com/iotaledger/twin-identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add expiration date option to vc creation ([73e05e1](https://github.com/iotaledger/twin-identity/commit/73e05e1ae61112c7e056889969751f4ff82d9f29))
+* add mainnet support ([af56a38](https://github.com/iotaledger/twin-identity/commit/af56a382837896cd4e13d5814c0924c46658b99c))
+* add validate-locales ([04d74b4](https://github.com/iotaledger/twin-identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* add vault signing ([#153](https://github.com/iotaledger/twin-identity/issues/153)) ([9458e4c](https://github.com/iotaledger/twin-identity/commit/9458e4c96ce19e0fc704905dfb3aac04dc6cf237))
+* common connector tests ([4f9642c](https://github.com/iotaledger/twin-identity/commit/4f9642ceb09843870909fc6819bf69fb20ef952a))
+* eslint migration to flat config ([fd6246d](https://github.com/iotaledger/twin-identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+* expanded cli methods ([#121](https://github.com/iotaledger/twin-identity/issues/121)) ([80a52b7](https://github.com/iotaledger/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
+* health and key removal ([#191](https://github.com/iotaledger/twin-identity/issues/191)) ([8504101](https://github.com/iotaledger/twin-identity/commit/8504101a7a08b2a042a4e59f666c245308527088))
+* identity key separator use slash ([1319d0d](https://github.com/iotaledger/twin-identity/commit/1319d0d07164a36b3ec279e6421b8835ffefc3d3))
+* implement async proof signing with vault security ([#110](https://github.com/iotaledger/twin-identity/issues/110)) ([9651c24](https://github.com/iotaledger/twin-identity/commit/9651c2492d63eca6545735f5638d3191e25bd185))
+* iota rebased release ([5d14674](https://github.com/iotaledger/twin-identity/commit/5d146744ca9eed622ef7eb34a7fa935216f9e975))
+* support mainnet for alias extraction ([1114e0f](https://github.com/iotaledger/twin-identity/commit/1114e0f518070ef930d7d6ed73a616cce647206c))
+* typescript 6 update ([e8806ad](https://github.com/iotaledger/twin-identity/commit/e8806ad6858c37be3c0f54c41cf654023773bef3))
+* update dependencies ([c4d9393](https://github.com/iotaledger/twin-identity/commit/c4d939309ffea6937fe938f6097fd811677ab220))
+* update framework core ([c824497](https://github.com/iotaledger/twin-identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+* update namespaces and contexts ([#90](https://github.com/iotaledger/twin-identity/issues/90)) ([0c34d64](https://github.com/iotaledger/twin-identity/commit/0c34d64add8cca77856fa2d0357e774d72fbbfc1))
+* use new generateKid method ([f0fe779](https://github.com/iotaledger/twin-identity/commit/f0fe779323b675575bb9f80aa74f1957dc57a094))
+* use shared store mechanism ([#27](https://github.com/iotaledger/twin-identity/issues/27)) ([ce41f3f](https://github.com/iotaledger/twin-identity/commit/ce41f3fc3da1b206ec06da7ea5b2c968f788804d))
+* verification method output JWK and hex on CLI ([49db9da](https://github.com/iotaledger/twin-identity/commit/49db9da2371eafdcd7176ce44303961b9b8b8380))
+
+
+### Bug Fixes
+
+* correct vault usage in cli commands ([#106](https://github.com/iotaledger/twin-identity/issues/106)) ([d81671d](https://github.com/iotaledger/twin-identity/commit/d81671d994390c9db7ded82e5f42b4bc521603fc))
+* correctly display mainnet explorer urls ([45a9f3c](https://github.com/iotaledger/twin-identity/commit/45a9f3cc041cce7b40a86e98df306931a95f48ea))
+* enforce credentialStatus, validity period and assertionMethod scope on object-form verification ([#215](https://github.com/iotaledger/twin-identity/issues/215)) ([8e6eb92](https://github.com/iotaledger/twin-identity/commit/8e6eb920564e0fe4ebdc984bdf682b7779f747d0))
+* expiration date coerced to full date time ([83e94e3](https://github.com/iotaledger/twin-identity/commit/83e94e3fc2b982fbb41f87a177e0e79a7f2e4079))
+* explorer urls in CLI ([82a745d](https://github.com/iotaledger/twin-identity/commit/82a745d536e8fe42554e7ad92a7468a653fc0cfb))
+* Import path and bump version ([#21](https://github.com/iotaledger/twin-identity/issues/21)) ([ccea845](https://github.com/iotaledger/twin-identity/commit/ccea845bf32562267280bc1b3dde1c9af1a00360))
+* Install sdk-wasm ([#20](https://github.com/iotaledger/twin-identity/issues/20)) ([75ec14e](https://github.com/iotaledger/twin-identity/commit/75ec14e072f8c219863a1c028a3b0783802086e9))
+* remove unused address index params in CLI ([c4c0cc1](https://github.com/iotaledger/twin-identity/commit/c4c0cc18e17804380cf52330e1b9de8716cc193d))
+* update vault key naming convention to use document ID prefix ([#94](https://github.com/iotaledger/twin-identity/issues/94)) ([ab125c1](https://github.com/iotaledger/twin-identity/commit/ab125c1b7eb189b5dceaddc69e5e53e33a0886db))
+* use async getStore in tests ([47d361a](https://github.com/iotaledger/twin-identity/commit/47d361ae333fe39885df96b40abcb6cd22c3f67d))
+* use async getStore in tests ([cfc0d87](https://github.com/iotaledger/twin-identity/commit/cfc0d873532e8ab2010f86f05bffaad3bbaf5786))
+* use async getStore in tests ([3424c81](https://github.com/iotaledger/twin-identity/commit/3424c81cf7407ede4a89a026072720d52bf689b2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-connector-iota bumped from 0.10.1-next.0 to 0.10.1-next.1
+    * @twin.org/identity-models bumped from 0.10.1-next.0 to 0.10.1-next.1
+
 ## [0.10.0](https://github.com/iotaledger/twin-identity/compare/identity-cli-v0.10.0...identity-cli-v0.10.0) (2026-09-16)
 
 
