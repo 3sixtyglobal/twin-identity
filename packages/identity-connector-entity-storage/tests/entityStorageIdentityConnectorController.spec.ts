@@ -257,4 +257,43 @@ describe("EntityStorageIdentityConnector - controller enforcement", () => {
 
 		expect(await didDocumentEntityStorage.get(documentId)).toBeUndefined();
 	});
+
+	test("the document's own DID controls a document created with a temporary controller", async () => {
+		const bootstrap = await identityConnector.createDocument("did:temp:bootstrap");
+
+		const method = await identityConnector.addVerificationMethod(
+			bootstrap.id,
+			bootstrap.id,
+			DidVerificationMethodType.AssertionMethod,
+			"key-1"
+		);
+
+		const stored = await didDocumentEntityStorage.get(bootstrap.id);
+		expect(stored?.controller).toEqual(bootstrap.id);
+
+		const proof = await identityConnector.createProof(
+			bootstrap.id,
+			method.id,
+			ProofTypes.DataIntegrityProof,
+			TEST_SUBJECT
+		);
+		expect(proof).toBeDefined();
+
+		await expect(
+			identityConnector.addVerificationMethod(
+				TENANT_B,
+				bootstrap.id,
+				DidVerificationMethodType.AssertionMethod,
+				"hijacked"
+			)
+		).rejects.toMatchObject({
+			name: "GeneralError",
+			message: "entityStorageIdentityConnector.addVerificationMethodFailed",
+			cause: {
+				name: "UnauthorizedError",
+				message: "entityStorageIdentityConnector.notController",
+				properties: { documentId: bootstrap.id }
+			}
+		});
+	});
 });

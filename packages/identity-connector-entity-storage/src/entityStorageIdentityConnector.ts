@@ -185,14 +185,14 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
-	 * Confirm the caller matches the controller stored against the document.
+	 * Confirm the caller is the stored controller or the document's own DID.
 	 * @param controller The controller making the request.
 	 * @param identityDocument The stored entity to check against.
-	 * @throws UnauthorizedError if the caller is not the stored controller.
+	 * @throws UnauthorizedError if the caller is neither the stored controller nor the document itself.
 	 * @internal
 	 */
 	private static assertController(controller: string, identityDocument: IdentityDocument): void {
-		if (identityDocument.controller !== controller) {
+		if (identityDocument.controller !== controller && identityDocument.id !== controller) {
 			throw new UnauthorizedError(EntityStorageIdentityConnector.CLASS_NAME, "notController", {
 				documentId: identityDocument.id
 			});
