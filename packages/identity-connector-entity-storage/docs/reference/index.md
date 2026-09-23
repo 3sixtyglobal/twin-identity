@@ -3,7 +3,9 @@
 ## Classes
 
 - [IdentityDocument](classes/IdentityDocument.md)
+- [IdentityDocumentV0](classes/IdentityDocumentV0.md)
 - [IdentityProfile](classes/IdentityProfile.md)
+- [IdentityProfileV0](classes/IdentityProfileV0.md)
 - [EntityStorageIdentityConnector](classes/EntityStorageIdentityConnector.md)
 - [EntityStorageIdentityProfileConnector](classes/EntityStorageIdentityProfileConnector.md)
 - [EntityStorageIdentityResolverConnector](classes/EntityStorageIdentityResolverConnector.md)
