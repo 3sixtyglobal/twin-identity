@@ -6,7 +6,7 @@ import type { IDidDocument } from "@twin.org/standards-w3c-did";
 /**
  * Class describing the identity document.
  */
-@entity()
+@entity({ version: 1 })
 export class IdentityDocument {
 	/**
 	 * The identity of the document.
@@ -31,4 +31,16 @@ export class IdentityDocument {
 	 */
 	@property({ type: "string", maxLength: 255 })
 	public controller!: string;
+
+	/**
+	 * The date the document was created, undefined for documents stored before it was captured.
+	 */
+	@property({ type: "string", format: "date-time", optional: true })
+	public dateCreated?: string;
+
+	/**
+	 * The date the document was last modified.
+	 */
+	@property({ type: "string", format: "date-time", optional: true })
+	public dateModified?: string;
 }

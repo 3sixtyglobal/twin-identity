@@ -5,7 +5,7 @@ import { entity, property } from "@twin.org/entity";
 /**
  * Class representing profile details for the identity.
  */
-@entity()
+@entity({ version: 1 })
 export class IdentityProfile {
 	/**
 	 * The id for the identity.
@@ -24,4 +24,16 @@ export class IdentityProfile {
 	 */
 	@property({ type: "object", optional: true })
 	public privateProfile?: unknown;
+
+	/**
+	 * The date the profile was created, undefined for profiles stored before it was captured.
+	 */
+	@property({ type: "string", format: "date-time", optional: true })
+	public dateCreated?: string;
+
+	/**
+	 * The date the profile was last modified.
+	 */
+	@property({ type: "string", format: "date-time", optional: true })
+	public dateModified?: string;
 }

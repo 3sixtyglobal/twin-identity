@@ -409,7 +409,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			didDocument[verificationMethodType] ??= [];
 			didDocument[verificationMethodType]?.push(didVerificationMethod);
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 
 			return didVerificationMethod;
 		} catch (error) {
@@ -475,7 +475,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 
 			if (options?.removeKeys ?? false) {
 				try {
@@ -566,7 +566,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			didDocument.service ??= [];
 			didDocument.service.push(didService);
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 
 			return didService;
 		} catch (error) {
@@ -624,7 +624,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -671,7 +671,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 			didDocument.alsoKnownAs = [...existing, alias];
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -722,7 +722,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				didDocument.alsoKnownAs = filtered;
 			}
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -1167,7 +1167,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			await this.updateDocument(controller, issuerDidDocument);
+			await this.updateDocument(controller, issuerDidDocument, issuerIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -1237,7 +1237,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			await this.updateDocument(controller, issuerDidDocument);
+			await this.updateDocument(controller, issuerDidDocument, issuerIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -2057,10 +2057,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Update the document in storage.
 	 * @param controller The controller of the document.
 	 * @param didDocument The did document to store.
+	 * @param existingDocument The currently stored entity, undefined when creating.
 	 * @returns A promise that resolves when the document has been signed and persisted.
 	 * @internal
 	 */
-	private async updateDocument(controller: string, didDocument: IDidDocument): Promise<void> {
+	private async updateDocument(
+		controller: string,
+		didDocument: IDidDocument,
+		existingDocument?: IdentityDocument
+	): Promise<void> {
 		const stringifiedDocument = JsonHelper.canonicalize(didDocument);
 		const docBytes = Converter.utf8ToBytes(stringifiedDocument);
 
@@ -2069,11 +2074,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			docBytes
 		);
 
+		const now = new Date(Date.now()).toISOString();
+
 		const identityDocument: IdentityDocument = {
 			id: didDocument.id,
 			document: didDocument,
 			signature: Converter.bytesToBase64(signature),
-			controller
+			controller,
+			dateCreated: Is.undefined(existingDocument) ? now : existingDocument.dateCreated,
+			dateModified: now
 		};
 
 		await this._didDocumentEntityStorage.set(identityDocument);

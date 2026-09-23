@@ -274,6 +274,28 @@ describe("EntityStorageIdentityProfileConnector", () => {
 		});
 	});
 
+	test("Can keep the created date and advance the modified date on update", async () => {
+		const createdTime = Date.UTC(2026, 0, 1);
+		const modifiedTime = Date.UTC(2026, 0, 2);
+		const nowSpy = vi.spyOn(Date, "now").mockReturnValue(createdTime);
+
+		const service = new EntityStorageIdentityProfileConnector();
+		await service.create(TEST_IDENTITY_ID, { name: "Jane Doe" });
+
+		const created = await identityProfileEntityStorage.get(TEST_IDENTITY_ID);
+		expect(created?.dateCreated).toEqual(new Date(createdTime).toISOString());
+		expect(created?.dateModified).toEqual(new Date(createdTime).toISOString());
+
+		nowSpy.mockReturnValue(modifiedTime);
+		await service.update(TEST_IDENTITY_ID, { name: "Jane Doe2" });
+
+		const updated = await identityProfileEntityStorage.get(TEST_IDENTITY_ID);
+		expect(updated?.dateCreated).toEqual(new Date(createdTime).toISOString());
+		expect(updated?.dateModified).toEqual(new Date(modifiedTime).toISOString());
+
+		nowSpy.mockRestore();
+	});
+
 	test("Can fail get a list of identities when connector fails", async () => {
 		identityProfileEntityStorage.query = vi.fn().mockImplementation(() => {
 			throw new Error("Test Error");
