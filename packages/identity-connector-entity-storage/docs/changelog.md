@@ -1,5 +1,20 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.10.1-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.10.1-next.2...identity-connector-entity-storage-v0.10.1-next.3) (2026-09-23)
+
+
+### Bug Fixes
+
+* check vp holder ([#241](https://github.com/iotaledger/twin-identity/issues/241)) ([e752a45](https://github.com/iotaledger/twin-identity/commit/e752a45bd2949c4d9c9cc4882379304879f9ef45))
+* identity controller check ([#240](https://github.com/iotaledger/twin-identity/issues/240)) ([6bb8bc4](https://github.com/iotaledger/twin-identity/commit/6bb8bc448d8fcd96280062eeb37abb08b2a28081))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.10.1-next.2 to 0.10.1-next.3
+
 ## [0.10.1-next.2](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.10.1-next.1...identity-connector-entity-storage-v0.10.1-next.2) (2026-09-23)
 
 
