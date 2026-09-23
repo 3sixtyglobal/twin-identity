@@ -394,22 +394,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				tempKeyId = undefined;
 			}
 
-			const methods = this.getAllMethods(didDocument);
-			const existingMethodIndex = methods.findIndex(m => {
-				if (Is.string(m.method)) {
-					return m.method === methodId;
-				}
-				return m.method.id === methodId;
-			});
-
-			if (existingMethodIndex !== -1) {
-				const methodArray =
-					didDocument[methods[existingMethodIndex].arrayKey as keyof IDidDocument];
-
-				if (Is.array(methodArray)) {
-					methodArray.splice(existingMethodIndex, 1);
-				}
-			}
+			this.removeMethodById(didDocument, methodId);
 
 			const didVerificationMethod: IDidDocumentVerificationMethod = {
 				id: methodId,
@@ -482,25 +467,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			);
 			const didDocument = didIdentityDocument.document;
 
-			const methods = this.getAllMethods(didDocument);
-			const existingMethodIndex = methods.findIndex(m => {
-				if (Is.string(m.method)) {
-					return m.method === verificationMethodId;
-				}
-				return m.method.id === verificationMethodId;
-			});
-
-			if (existingMethodIndex !== -1) {
-				const methodArray =
-					didDocument[methods[existingMethodIndex].arrayKey as keyof IDidDocument];
-
-				if (Is.array(methodArray)) {
-					methodArray.splice(existingMethodIndex, 1);
-					if (methodArray.length === 0) {
-						delete didDocument[methods[existingMethodIndex].arrayKey as keyof IDidDocument];
-					}
-				}
-			} else {
+			if (!this.removeMethodById(didDocument, verificationMethodId)) {
 				throw new NotFoundError(
 					EntityStorageIdentityConnector.CLASS_NAME,
 					"verificationMethodNotFound",
@@ -812,6 +779,21 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				nameof(options.revocationIndex),
 				options.revocationIndex
 			);
+			// An index outside the bitmap would be accepted here and then throw on every later
+			// revocation check, so it is rejected while the credential can still be reissued.
+			if (
+				options.revocationIndex < 0 ||
+				options.revocationIndex >= EntityStorageIdentityConnector._REVOCATION_BITS_SIZE
+			) {
+				throw new GeneralError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"revocationIndexOutOfRange",
+					{
+						revocationIndex: options.revocationIndex,
+						maxIndex: EntityStorageIdentityConnector._REVOCATION_BITS_SIZE - 1
+					}
+				);
+			}
 		}
 		if (!Is.undefined(options?.expirationDate)) {
 			Guards.date(
@@ -1449,6 +1431,20 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
 			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
 			Guards.objectValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(proofEntry), proofEntry);
+			Guards.stringValue(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(proofEntry.verificationMethod),
+				proofEntry.verificationMethod
+			);
+
+			const signerDid = DocumentHelper.parseId(proofEntry.verificationMethod).id;
+			if (Is.stringValue(doc.holder) && doc.holder !== signerDid) {
+				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "holderMismatch", {
+					holder: doc.holder,
+					method: proofEntry.verificationMethod
+				});
+			}
+
 			const presentationVerified = await this.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
 				proofEntry
@@ -1509,23 +1505,34 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				holderIdentityDocument,
 				this._vaultConnector
 			);
+			const holderDidDocument = holderIdentityDocument.document;
+
+			Guards.stringValue(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(jwtHeader.kid),
+				jwtHeader.kid
+			);
+
+			// Resolving the key from the holder's own document is what binds the signature to the
+			// holder named by iss.
+			const publicKeyJwk = this.getMethodJwk(holderDidDocument, jwtHeader.kid);
+
+			await Jwt.verifySignature(presentationJwt, await Jwk.toCryptoKey(publicKeyJwk));
 
 			const issuers: IDidDocument[] = [];
 			const tokensRevoked: boolean[] = [];
 			const verifiablePresentation = jwtPayload?.vp as IDidVerifiablePresentationV1;
-			if (
-				Is.object<IDidVerifiablePresentationV1>(verifiablePresentation) &&
-				Is.array(verifiablePresentation.verifiableCredential)
-			) {
-				for (const vcJwt of verifiablePresentation.verifiableCredential) {
-					let revoked = false;
-					if (Is.stringValue(vcJwt)) {
-						const jwt = await Jwt.decode(vcJwt);
+			if (Is.object<IDidVerifiablePresentationV1>(verifiablePresentation)) {
+				// The holder is not carried in the vp claim, so restore it from the token issuer.
+				verifiablePresentation.holder = holderDocumentId;
 
-						if (Is.string(jwt.payload?.iss)) {
-							const issuerDocumentId = jwt.payload.iss;
-							verifiablePresentation.holder = issuerDocumentId;
+				if (Is.array(verifiablePresentation.verifiableCredential)) {
+					for (const embeddedCredential of verifiablePresentation.verifiableCredential) {
+						const issuerDocumentId = Is.stringValue(embeddedCredential)
+							? (await Jwt.decode(embeddedCredential)).payload?.iss
+							: this.getCredentialIssuer(embeddedCredential);
 
+						if (Is.stringValue(issuerDocumentId)) {
 							const issuerDidDocument = await this._didDocumentEntityStorage.get(issuerDocumentId);
 							if (Is.undefined(issuerDidDocument)) {
 								throw new NotFoundError(
@@ -1544,10 +1551,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 							});
 						}
 
-						const credentialCheck = await this.checkVerifiableCredential(vcJwt);
-						revoked = credentialCheck.revoked;
+						const credentialCheck = await this.checkVerifiableCredential(embeddedCredential);
+						tokensRevoked.push(credentialCheck.revoked);
 					}
-					tokensRevoked.push(revoked);
 				}
 			}
 
@@ -1732,26 +1738,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	): Promise<IProof> {
 		const idParts = DocumentHelper.parseId(verificationMethodId);
 
-		const methods = this.getAllMethods(didDocument);
-		const methodAndArray = methods.find(m => {
-			if (Is.string(m.method)) {
-				return m.method === verificationMethodId;
-			}
-			return m.method.id === verificationMethodId;
-		});
-
-		if (!methodAndArray) {
-			throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "methodMissing", {
-				method: verificationMethodId
-			});
-		}
-
-		const didMethod = methodAndArray.method;
-		if (!Is.stringValue(didMethod.publicKeyJwk?.x)) {
-			throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "publicKeyJwkMissing", {
-				method: verificationMethodId
-			});
-		}
+		this.getMethodJwk(didDocument, verificationMethodId);
 
 		const vaultKey = EntityStorageIdentityConnector.buildVaultKey(
 			didDocument.id,
@@ -1835,6 +1822,63 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		return methods;
+	}
+
+	/**
+	 * Get the issuer DID from a credential in object form.
+	 * @param credential The credential to read.
+	 * @returns The issuer DID, or undefined if it has none.
+	 * @internal
+	 */
+	private getCredentialIssuer(credential: IDidVerifiableCredential): string | undefined {
+		return Is.object<{ id: string }>(credential.issuer) ? credential.issuer.id : credential.issuer;
+	}
+
+	/**
+	 * Remove a verification method from whichever relationship holds it.
+	 * The relationship arrays are searched individually, because an index taken from the flat list
+	 * getAllMethods returns does not address the per-relationship array it came from.
+	 * @param didDocument The document to update.
+	 * @param verificationMethodId The full id of the method to remove.
+	 * @returns True if the method was found and removed.
+	 * @internal
+	 */
+	private removeMethodById(didDocument: IDidDocument, verificationMethodId: string): boolean {
+		for (const methodType of Object.values(DidVerificationMethodType)) {
+			const methodArray = didDocument[methodType];
+			if (Is.arrayValue(methodArray)) {
+				const index = methodArray.findIndex(
+					m => (Is.string(m) ? m : m.id) === verificationMethodId
+				);
+				if (index !== -1) {
+					methodArray.splice(index, 1);
+					if (methodArray.length === 0) {
+						delete didDocument[methodType];
+					}
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the public key for a verification method from whichever relationship holds it.
+	 * getJwk looks in a single relationship, defaulting to verificationMethod, but a method is
+	 * only ever added to the relationship it was created under.
+	 * @param didDocument The document owning the method.
+	 * @param verificationMethodId The full id of the method.
+	 * @returns The public key.
+	 * @throws GeneralError if the method is not on the document or carries no public key.
+	 * @internal
+	 */
+	private getMethodJwk(didDocument: IDidDocument, verificationMethodId: string): IJwk {
+		const methodType = Object.values(DidVerificationMethodType).find(type =>
+			didDocument[type]?.some(m => (Is.string(m) ? m : m.id) === verificationMethodId)
+		);
+
+		return DocumentHelper.getJwk(didDocument, verificationMethodId, methodType);
 	}
 
 	/**

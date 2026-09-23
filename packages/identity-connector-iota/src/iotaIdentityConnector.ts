@@ -1632,6 +1632,20 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
 			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
 			Guards.objectValue(IotaIdentityConnector.CLASS_NAME, nameof(proof), proofEntry);
+			Guards.stringValue(
+				IotaIdentityConnector.CLASS_NAME,
+				nameof(proofEntry.verificationMethod),
+				proofEntry.verificationMethod
+			);
+
+			const signerDid = DocumentHelper.parseId(proofEntry.verificationMethod).id;
+			if (Is.stringValue(doc.holder) && doc.holder !== signerDid) {
+				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "holderMismatch", {
+					holder: doc.holder,
+					method: proofEntry.verificationMethod
+				});
+			}
+
 			const presentationVerified = await this.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
 				proofEntry

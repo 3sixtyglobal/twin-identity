@@ -33,6 +33,10 @@ const DID_PREFIX = "did:entity-storage";
 
 const CREDENTIAL_STATUS_TYPE = "BitstringStatusList";
 
+// Verifying a presentation JWT validates its exp claim against the real clock, so presentation
+// expiry dates cannot be derived from the Date.now frozen for this suite.
+const VP_EXPIRY = new Date("2100-01-01T00:00:00.000Z");
+
 async function debugOutput(documentId: string): Promise<void> {
 	console.debug("DID Document", documentId);
 }
@@ -1122,7 +1126,7 @@ describe("EntityStorageIdentityConnector", () => {
 			DidContexts.ContextVCv1,
 			["Person"],
 			[credentialResult.jwt],
-			{ expirationDate: new Date(Date.now() + 14400000) }
+			{ expirationDate: VP_EXPIRY }
 		);
 
 		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [
@@ -1147,7 +1151,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[testVcJwt],
-				{ expirationDate: new Date(Date.now() + 14400000) }
+				{ expirationDate: VP_EXPIRY }
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -1168,7 +1172,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[],
-				{ expirationDate: new Date(Date.now() + 14400000) }
+				{ expirationDate: VP_EXPIRY }
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -1203,7 +1207,7 @@ describe("EntityStorageIdentityConnector", () => {
 			DidContexts.ContextVCv1,
 			["Person"],
 			[testVcJwt],
-			{ expirationDate: new Date(Date.now() + 14400000) }
+			{ expirationDate: VP_EXPIRY }
 		);
 
 		expect(result.verifiablePresentation["@context"]).toContain(DidContexts.ContextVCv1);
@@ -1224,7 +1228,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtHeaderFields: { "x-custom": "header-value" }
 			}
 		);
@@ -1248,7 +1252,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtPayloadFields: { "x-custom": "payload-value" }
 			}
 		);
@@ -1274,7 +1278,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtHeaderFields: { alg: "RS256", typ: "at+JWT", kid: "evil-kid" }
 			}
 		);
@@ -1298,7 +1302,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtPayloadFields: { iss: "evil-issuer" }
 			}
 		);
@@ -1330,7 +1334,7 @@ describe("EntityStorageIdentityConnector", () => {
 			"https://schema.org",
 			["Person"],
 			[testVcJwt],
-			{ expirationDate: new Date(Date.now() + 14400000) }
+			{ expirationDate: VP_EXPIRY }
 		);
 
 		const vpJwt = createResult.jwt;
