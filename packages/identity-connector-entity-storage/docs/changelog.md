@@ -1,5 +1,19 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.10.1-next.4](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.10.1-next.3...identity-connector-entity-storage-v0.10.1-next.4) (2026-09-23)
+
+
+### Bug Fixes
+
+* allow document as self controller ([2cb57da](https://github.com/iotaledger/twin-identity/commit/2cb57da488b729c412a5fcceda7554ce9aaa6016))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.10.1-next.3 to 0.10.1-next.4
+
 ## [0.10.1-next.3](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.10.1-next.2...identity-connector-entity-storage-v0.10.1-next.3) (2026-09-23)
 
 
