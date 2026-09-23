@@ -385,12 +385,11 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			const revocationServiceId = document.id().join("#revocation");
 			document.insertService(revocationBitmap.toService(revocationServiceId));
 
-			const executionResult = await this.executeIdentityTransaction(
-				controller,
-				identityClient.createIdentity(document).finish() as unknown as TransactionBuilder<
-					Transaction<unknown>
-				>
-			);
+			const builder = identityClient
+				.createIdentity(document)
+				.finish() as unknown as TransactionBuilder<Transaction<unknown>>;
+
+			const executionResult = await this.executeIdentityTransaction(controller, builder);
 
 			const did = this.extractDidFromExecutionResult(executionResult, networkHrp);
 			const resolved = await this.waitForDocument(identityClient, did);
@@ -2437,9 +2436,9 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 					output: createIdentity,
 					response: txResponse,
 					networkHrp: identityClient.network()
-				};
+				} as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 
-				return result as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+				return result;
 			}
 		}
 
@@ -2488,7 +2487,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		// the cache key is guaranteed to match.
 		// Both branches are captured into `result` (instead of returning directly) so the cache
 		// update runs after either one succeeds, and a throw from either skips it automatically.
-		let result: TransactionOutput<Transaction<OnChainIdentity>>;
+		let result;
 		let resolverClient: IdentityClient;
 		if (Is.object(this._config.gasStation)) {
 			result = await this.executeGasStationTransaction(controller, updateBuilder, "update");
@@ -2496,7 +2495,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		} else {
 			resolverClient = await this.getIdentityClient(controller);
 			const executionResult = await updateBuilder.buildAndExecute(resolverClient);
-			result = executionResult as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+			result = executionResult;
 		}
 
 		const settled = await this.waitForDocument(
@@ -2512,7 +2511,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			}
 		}
 
-		return result;
+		return result as TransactionOutput<Transaction<OnChainIdentity>>;
 	}
 
 	/**
@@ -2571,7 +2570,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				const [txBytes, signatures] = buildResult;
 				// const iotaClient = Iota.createClient(this._config);
 
-				const confirmedResponse = await Iota.executeAndConfirmGasStationTransaction(
+				const confirmedResponse = (await Iota.executeAndConfirmGasStationTransaction(
 					this._config,
 					identityClient.iotaClient() as unknown as IIotaClient,
 					gasReservation.reservationId,
@@ -2583,7 +2582,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 						showEvents: true,
 						showObjectChanges: true
 					}
-				);
+				)) as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 
 				if (operationType === "identity") {
 					// For identity creation, include the output and network HRP
@@ -2592,11 +2591,11 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 						output: createIdentity,
 						response: confirmedResponse,
 						networkHrp: identityClient.network()
-					};
-					return result as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+					} as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+					return result;
 				}
 
-				return confirmedResponse as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+				return confirmedResponse;
 			}
 
 			throw new GeneralError(
