@@ -1109,12 +1109,11 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 
 			const vc = decoded.credential().toJSON() as IDidVerifiableCredential;
 
-			vc.proof = await this.createProof(
-				controller,
+			vc.proof = await this.buildProof(
+				issuerDocument,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(vc),
-				issuerDocument
+				JsonLdHelper.toNodeObject(vc)
 			);
 
 			// Promote the proof's @context to the VC root so JSON-LD processors can resolve DataIntegrity terms (proofValue, cryptosuite, etc.)
@@ -1576,12 +1575,11 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				new JwtPresentationValidationOptions()
 			);
 
-			verifiablePresentation.proof = await this.createProof(
-				controller,
+			verifiablePresentation.proof = await this.buildProof(
+				holderDocument,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiablePresentation),
-				holderDocument
+				JsonLdHelper.toNodeObject(verifiablePresentation)
 			);
 
 			// Promote the proof's @context to the VP root so JSON-LD processors can resolve DataIntegrity terms
@@ -1773,7 +1771,6 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
-	 * @param resolvedDocument Optional already-resolved document for the DID, so a caller that just resolved it (e.g. createVerifiableCredential) skips a redundant re-resolve. Resolves it itself if omitted.
 	 * @returns The proof.
 	 * @throws NotFoundError if the id can not be resolved.
 	 * @throws GeneralError if proof creation fails or the algorithm does not match the key type.
@@ -1782,8 +1779,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		controller: string,
 		verificationMethodId: string,
 		proofType: ProofTypes,
-		unsecureDocument: IJsonLdNodeObject,
-		resolvedDocument?: IotaDocument
+		unsecureDocument: IJsonLdNodeObject
 	): Promise<IProof> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(
@@ -1802,13 +1798,6 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			nameof(unsecureDocument),
 			unsecureDocument
 		);
-		if (!Is.undefined(resolvedDocument)) {
-			Guards.object<IotaDocument>(
-				IotaIdentityConnector.CLASS_NAME,
-				nameof(resolvedDocument),
-				resolvedDocument
-			);
-		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -1820,39 +1809,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				);
 			}
 
-			let document = resolvedDocument;
-			if (Is.undefined(document)) {
-				const identityClient = await this.getIdentityClient();
-				document = await this.resolveOwnDidCached(identityClient, idParts.id);
-			}
+			const identityClient = await this.getIdentityClient();
+			const document = await this.resolveOwnDidCached(identityClient, idParts.id);
 
-			const methods = document.methods();
-			const method = methods.find(
-				m => this.stringifyIdentityValue(m.id()) === verificationMethodId
-			);
-
-			if (!method) {
-				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
-					method: verificationMethodId
-				});
-			}
-
-			const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment);
-			const keyType = await this._vaultConnector.getKeyType(keyId);
-
-			if (Is.undefined(keyType)) {
-				throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "privateKeyMissing", { keyId });
-			}
-
-			const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
-
-			const signedProof = await ProofHelper.createProofWithSigner(
-				proofType,
-				unsecureDocument,
-				unsignedProof,
-				async (data, algorithm) => this.signWithVault(keyId, keyType, data, algorithm)
-			);
-			return signedProof;
+			return await this.buildProof(document, verificationMethodId, proofType, unsecureDocument);
 		} catch (error) {
 			throw new GeneralError(
 				IotaIdentityConnector.CLASS_NAME,
@@ -2070,6 +2030,50 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				await new Promise<void>(resolve => setTimeout(resolve, this._didResolutionRetryDelayMs));
 			}
 		}
+	}
+
+	/**
+	 * Build a proof against a document the caller has already resolved.
+	 * @param document The resolved DID document owning the verification method.
+	 * @param verificationMethodId The verification method id to use.
+	 * @param proofType The type of proof to create.
+	 * @param unsecureDocument The unsecure document to create the proof for.
+	 * @returns The proof.
+	 * @throws GeneralError if the method or its key material is missing.
+	 * @internal
+	 */
+	private async buildProof(
+		document: IotaDocument,
+		verificationMethodId: string,
+		proofType: ProofTypes,
+		unsecureDocument: IJsonLdNodeObject
+	): Promise<IProof> {
+		const idParts = DocumentHelper.parseId(verificationMethodId);
+
+		const methods = document.methods();
+		const method = methods.find(m => this.stringifyIdentityValue(m.id()) === verificationMethodId);
+
+		if (!method) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "methodMissing", {
+				method: verificationMethodId
+			});
+		}
+
+		const keyId = VaultConnectorHelper.buildKeyName(idParts.id, idParts.fragment ?? "");
+		const keyType = await this._vaultConnector.getKeyType(keyId);
+
+		if (Is.undefined(keyType)) {
+			throw new GeneralError(IotaIdentityConnector.CLASS_NAME, "privateKeyMissing", { keyId });
+		}
+
+		const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
+
+		return ProofHelper.createProofWithSigner(
+			proofType,
+			unsecureDocument,
+			unsignedProof,
+			async (data, algorithm) => this.signWithVault(keyId, keyType, data, algorithm)
+		);
 	}
 
 	/**

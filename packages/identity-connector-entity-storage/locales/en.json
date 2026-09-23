@@ -21,6 +21,7 @@
 			"jwkSignatureFailed": "The signature on the JWK failed verification",
 			"methodMissing": "The verification method specified does not exist \"{method}\"",
 			"missingDid": "The full id including DID is required",
+			"notController": "Only the controller of the document can perform this action \"{documentId}\"",
 			"privateKeyMissing": "The private key could not be found for key \"{keyId}\"",
 			"publicKeyJwkMissing": "The verification method contains no publicKeyJwk in method \"{method}\"",
 			"removeAlsoKnownAsFailed": "Removing from the alsoKnownAs property failed",

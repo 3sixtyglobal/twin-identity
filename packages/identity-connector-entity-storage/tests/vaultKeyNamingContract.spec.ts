@@ -131,10 +131,8 @@ describe("Vault Key Naming Contract", () => {
 			"correct-vm-id"
 		);
 
-		const vmParts = DocumentHelper.parseId(verificationMethod.id);
-
 		const result = await identityConnector.createVerifiableCredential(
-			vmParts.id,
+			TEST_IDENTITY_ID,
 			verificationMethod.id,
 			"https://example.com/credentials/test",
 			{
@@ -161,10 +159,8 @@ describe("Vault Key Naming Contract", () => {
 			"proof-vm-id"
 		);
 
-		const vmParts = DocumentHelper.parseId(verificationMethod.id);
-
 		const proof = await identityConnector.createProof(
-			vmParts.id,
+			TEST_IDENTITY_ID,
 			verificationMethod.id,
 			"DataIntegrityProof",
 			{

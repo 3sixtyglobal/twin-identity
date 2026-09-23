@@ -11,7 +11,6 @@ import {
 	DidContexts,
 	DidTypes,
 	type DidVerificationMethodType,
-	type IDidDocument,
 	type IDidService,
 	type IDidVerifiableCredential,
 	type IProof,
@@ -1407,30 +1406,6 @@ describe("EntityStorageIdentityConnector", () => {
 			properties: {
 				property: "unsecureDocument",
 				value: "undefined"
-			}
-		});
-	});
-
-	test("can fail to create a proof with an invalid resolvedDocument", async () => {
-		const testDocument = {
-			"@context": "https://www.w3.org/ns/did/v1",
-			id: "did:example:123456789abcdefghi",
-			name: "Test Document"
-		};
-		await expect(
-			identityConnector.createProof(
-				TEST_USER_IDENTITY,
-				testVerificationMethodId,
-				ProofTypes.DataIntegrityProof,
-				testDocument,
-				"not-a-document" as unknown as IDidDocument
-			)
-		).rejects.toMatchObject({
-			name: "GuardError",
-			message: "guard.object",
-			properties: {
-				property: "resolvedDocument",
-				value: "not-a-document"
 			}
 		});
 	});

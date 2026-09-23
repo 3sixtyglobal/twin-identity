@@ -66,6 +66,12 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	private readonly _telemetryComponent?: ITelemetryComponent;
 
 	/**
+	 * The DID document created by healthApplicationInit, for teardown to remove.
+	 * @internal
+	 */
+	private _healthDocument?: { controller: string; documentId: string };
+
+	/**
 	 * Create a new instance of IdentityService.
 	 * @param options The options for the service.
 	 * @throws GeneralError if no connectors are registered.
@@ -119,6 +125,7 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 		try {
 			const connector = this.getConnectorByNamespace();
 			const doc = await connector.createDocument(controller);
+			this._healthDocument = { controller, documentId: doc.id };
 			await connector.addVerificationMethod(
 				controller,
 				doc.id,
@@ -208,17 +215,22 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	 * Removes the DID document created in healthApplicationInit.
 	 */
 	public async healthApplicationTeardown(): Promise<void> {
-		const contextIds = await ContextIdStore.getContextIds();
-		const orgId = contextIds?.[ContextIdKeys.Organization];
-		if (!Is.stringValue(orgId)) {
+		if (Is.empty(this._healthDocument)) {
 			return;
 		}
+		const healthDocument = this._healthDocument;
+		this._healthDocument = undefined;
+
 		try {
 			const connector = this.getConnectorByNamespace();
-			await connector.removeVerificationMethod(orgId, `${orgId}#health-assertion`, {
-				removeKeys: true
-			});
-			await connector.removeDocument(orgId, orgId);
+			await connector.removeVerificationMethod(
+				healthDocument.controller,
+				`${healthDocument.documentId}#health-assertion`,
+				{
+					removeKeys: true
+				}
+			);
+			await connector.removeDocument(healthDocument.controller, healthDocument.documentId);
 		} catch {}
 	}
 
