@@ -379,17 +379,22 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		try {
 			const identityClient = await this.getIdentityClient(controller);
 			const networkHrp = identityClient.network();
-			const document = new IotaDocument(networkHrp);
 
-			const revocationBitmap = new RevocationBitmap();
-			const revocationServiceId = document.id().join("#revocation");
-			document.insertService(revocationBitmap.toService(revocationServiceId));
+			// Built through a factory so a retry after an object conflict produces a fresh builder,
+			// re-resolving the gas coin at its current version instead of reusing the stale one.
+			const buildCreate = (): TransactionBuilder<Transaction<unknown>> => {
+				const document = new IotaDocument(networkHrp);
 
-			const builder = identityClient
-				.createIdentity(document)
-				.finish() as unknown as TransactionBuilder<Transaction<unknown>>;
+				const revocationBitmap = new RevocationBitmap();
+				const revocationServiceId = document.id().join("#revocation");
+				document.insertService(revocationBitmap.toService(revocationServiceId));
 
-			const executionResult = await this.executeIdentityTransaction(controller, builder);
+				return identityClient.createIdentity(document).finish() as unknown as TransactionBuilder<
+					Transaction<unknown>
+				>;
+			};
+
+			const executionResult = await this.executeIdentityTransaction(controller, buildCreate);
 
 			const did = this.extractDidFromExecutionResult(executionResult, networkHrp);
 			const resolved = await this.waitForDocument(identityClient, did);
@@ -435,25 +440,23 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 					.filter(id => Is.stringValue(id));
 			}
 
-			const identity = await identityClient.getIdentity(Did.parse(documentId).id);
-			const onChain = identity.toFullFledged();
-			if (Is.undefined(onChain)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
-			}
+			// Built through a factory so a retry after an object conflict reloads the identity,
+			// controller token and gas coin at their current versions.
+			const buildDelete = async (): Promise<TransactionBuilder<Transaction<unknown>>> => {
+				const { identityOnChain, controllerToken } = await this.reloadOnChainIdentity(
+					identityClient,
+					documentId
+				);
 
-			const controllerToken = await onChain.getControllerToken(identityClient);
-			if (Is.undefined(controllerToken)) {
-				throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
-			}
-
-			const deleteBuilder = onChain
-				.deleteDid(controllerToken)
-				.withGasBudget(BigInt(this._gasBudget));
+				return identityOnChain.deleteDid(controllerToken).withGasBudget(BigInt(this._gasBudget));
+			};
 
 			if (Is.object(this._config.gasStation)) {
-				await this.executeGasStationTransaction(controller, deleteBuilder, "update");
+				await this.executeGasStationTransaction(controller, buildDelete, "update");
 			} else {
-				await deleteBuilder.buildAndExecute(identityClient);
+				await Iota.executeWithReservationRetry(this._config, async () =>
+					(await buildDelete()).buildAndExecute(identityClient)
+				);
 			}
 
 			await this.waitForDocumentDeletion(identityClient, IotaDID.parse(documentId));
@@ -2385,74 +2388,106 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	/**
 	 * Execute identity transaction with conditional gas station support.
 	 * @param controller The controller identity.
-	 * @param transactionBuilder The finished transaction builder from createIdentity().finish().
+	 * @param buildTransaction Builds the finished transaction builder from createIdentity().finish().
 	 * @returns The execution result.
 	 * @internal
 	 */
 	private async executeIdentityTransaction(
 		controller: string,
-		transactionBuilder: TransactionBuilder<Transaction<unknown>>
+		buildTransaction: () =>
+			TransactionBuilder<Transaction<unknown>> | Promise<TransactionBuilder<Transaction<unknown>>>
 	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		if (Is.object(this._config.gasStation)) {
-			return this.executeGasStationTransaction(controller, transactionBuilder, "identity");
+			return this.executeGasStationTransaction(controller, buildTransaction, "identity");
 		}
 
 		const identityClient = await this.getIdentityClient(controller);
 
-		const buildResult = await transactionBuilder.build(identityClient);
+		// The build is inside the retry so each attempt re-resolves the owned objects it consumes;
+		// reusing the already built bytes would resubmit the same stale versions and fail again.
+		return Iota.executeWithReservationRetry(this._config, async () => {
+			const transactionBuilder = await buildTransaction();
+			const buildResult = await transactionBuilder.build(identityClient);
 
-		if (Is.arrayValue(buildResult) && buildResult.length === 3 && Is.uint8Array(buildResult[0])) {
-			const [txBytes, signatures, createIdentity] = buildResult;
+			if (Is.arrayValue(buildResult) && buildResult.length === 3 && Is.uint8Array(buildResult[0])) {
+				const [txBytes, signatures, createIdentity] = buildResult;
 
-			if (Is.arrayValue(signatures)) {
-				const iotaClient = Iota.createClient(this._config);
+				if (Is.arrayValue(signatures)) {
+					const iotaClient = Iota.createClient(this._config);
 
-				const txResponse = await iotaClient.executeTransactionBlock({
-					transactionBlock: txBytes,
-					signature: signatures,
-					options: {
-						showEffects: true,
-						showEvents: true,
-						showObjectChanges: true
-					}
-				});
+					const txResponse = await iotaClient.executeTransactionBlock({
+						transactionBlock: txBytes,
+						signature: signatures,
+						options: {
+							showEffects: true,
+							showEvents: true,
+							showObjectChanges: true
+						}
+					});
 
-				const confirmedTx = await Iota.waitForTransactionConfirmation(
-					iotaClient,
-					txResponse.digest,
-					this._config
-				);
-
-				if (!confirmedTx) {
-					throw new GeneralError(
-						IotaIdentityConnector.CLASS_NAME,
-						"transactionConfirmationTimeout",
-						undefined,
-						txResponse.digest
+					const confirmedTx = await Iota.waitForTransactionConfirmation(
+						iotaClient,
+						txResponse.digest,
+						this._config
 					);
+
+					if (!confirmedTx) {
+						throw new GeneralError(
+							IotaIdentityConnector.CLASS_NAME,
+							"transactionConfirmationTimeout",
+							undefined,
+							txResponse.digest
+						);
+					}
+
+					const result = {
+						output: createIdentity,
+						response: txResponse,
+						networkHrp: identityClient.network()
+					} as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+
+					return result;
 				}
-
-				const result = {
-					output: createIdentity,
-					response: txResponse,
-					networkHrp: identityClient.network()
-				} as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
-
-				return result;
 			}
+
+			throw new GeneralError(
+				IotaIdentityConnector.CLASS_NAME,
+				"transactionBuildFailed",
+				{
+					buildResultType: typeof buildResult,
+					isArray: Is.arrayValue(buildResult),
+					length: Is.arrayValue(buildResult) ? buildResult.length : 0,
+					hasUint8Array: Is.arrayValue(buildResult) && Is.uint8Array(buildResult[0])
+				},
+				Iota.extractPayloadError(buildResult)
+			);
+		});
+	}
+
+	/**
+	 * Resolve the on-chain identity and its controller token for a document.
+	 * Called again on each retry attempt so a rebuilt transaction references current versions.
+	 * @param identityClient The identity client to resolve with.
+	 * @param documentId The id of the document to resolve.
+	 * @returns The on-chain identity and its controller token.
+	 * @internal
+	 */
+	private async reloadOnChainIdentity(
+		identityClient: IdentityClient,
+		documentId: string
+	): Promise<{ identityOnChain: OnChainIdentity; controllerToken: ControllerToken }> {
+		const identity = await identityClient.getIdentity(Did.parse(documentId).id);
+		const identityOnChain = identity.toFullFledged();
+		if (Is.undefined(identityOnChain)) {
+			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
 		}
 
-		throw new GeneralError(
-			IotaIdentityConnector.CLASS_NAME,
-			"transactionBuildFailed",
-			{
-				buildResultType: typeof buildResult,
-				isArray: Is.arrayValue(buildResult),
-				length: Is.arrayValue(buildResult) ? buildResult.length : 0,
-				hasUint8Array: Is.arrayValue(buildResult) && Is.uint8Array(buildResult[0])
-			},
-			Iota.extractPayloadError(buildResult)
-		);
+		const controllerToken = await identityOnChain.getControllerToken(identityClient);
+		if (Is.undefined(controllerToken)) {
+			throw new NotFoundError(IotaIdentityConnector.CLASS_NAME, "documentNotFound", documentId);
+		}
+
+		return { identityOnChain, controllerToken };
 	}
 
 	/**
@@ -2478,9 +2513,25 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(controllerToken), controllerToken);
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(did), did);
 
-		const updateBuilder = identityOnChain
-			.updateDidDocument(document.clone(), controllerToken)
-			.withGasBudget(BigInt(this._gasBudget));
+		// The caller has already resolved the identity and controller token, so the first attempt
+		// reuses them; any retry reloads both so the rebuilt transaction references the current
+		// object versions rather than the ones a concurrent transaction has already consumed.
+		let resolved:
+			{ identityOnChain: OnChainIdentity; controllerToken: ControllerToken } | undefined = {
+			identityOnChain,
+			controllerToken
+		};
+
+		const buildUpdate = async (): Promise<TransactionBuilder<Transaction<unknown>>> => {
+			const current =
+				resolved ??
+				(await this.reloadOnChainIdentity(await this.getIdentityClient(controller), did));
+			resolved = undefined;
+
+			return current.identityOnChain
+				.updateDidDocument(document.clone(), current.controllerToken)
+				.withGasBudget(BigInt(this._gasBudget));
+		};
 
 		// `did` is passed through from the caller - the exact string already used to populate the
 		// role-1 cache via resolveOwnDidCached - rather than re-derived from `document.id()`, so
@@ -2490,12 +2541,13 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		let result;
 		let resolverClient: IdentityClient;
 		if (Is.object(this._config.gasStation)) {
-			result = await this.executeGasStationTransaction(controller, updateBuilder, "update");
+			result = await this.executeGasStationTransaction(controller, buildUpdate, "update");
 			resolverClient = await this.getIdentityClient();
 		} else {
 			resolverClient = await this.getIdentityClient(controller);
-			const executionResult = await updateBuilder.buildAndExecute(resolverClient);
-			result = executionResult;
+			result = await Iota.executeWithReservationRetry(this._config, async () =>
+				(await buildUpdate()).buildAndExecute(resolverClient)
+			);
 		}
 
 		const settled = await this.waitForDocument(
@@ -2511,24 +2563,25 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 			}
 		}
 
-		return result as TransactionOutput<Transaction<OnChainIdentity>>;
+		return result;
 	}
 
 	/**
 	 * Execute a transaction with gas station sponsoring (consolidated method).
 	 * @param controller The controller identity.
-	 * @param builder The transaction builder (either finished identity builder or update builder).
+	 * @param buildTransaction Builds the transaction (either finished identity builder or update builder).
 	 * @param operationType The type of operation for error messaging and result formatting.
 	 * @returns The execution result.
 	 * @internal
 	 */
 	private async executeGasStationTransaction(
 		controller: string,
-		builder: TransactionBuilder<Transaction<unknown>>,
+		buildTransaction: () =>
+			TransactionBuilder<Transaction<unknown>> | Promise<TransactionBuilder<Transaction<unknown>>>,
 		operationType: "identity" | "update"
 	): Promise<TransactionOutput<Transaction<OnChainIdentity>>> {
 		Guards.stringValue(IotaIdentityConnector.CLASS_NAME, nameof(controller), controller);
-		Guards.object(IotaIdentityConnector.CLASS_NAME, nameof(builder), builder);
+		Guards.function(IotaIdentityConnector.CLASS_NAME, nameof(buildTransaction), buildTransaction);
 
 		try {
 			const identityClient = await this.getIdentityClient(controller);
@@ -2542,72 +2595,80 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 				this._walletAddressIndex
 			);
 
-			// Reserve exactly the budget this transaction will declare via
-			// this._gasBudget (see the constructor), instead of letting Iota.reserveGas
-			// re-derive its own default from this._config - otherwise the two can
-			// diverge whenever gasBudget is left unset in config.
-			const gasReservation = await Iota.reserveGas({
-				...this._config,
-				gasBudget: this._gasBudget
-			});
+			// Sponsored transactions still reference the sender's own objects, so the same conflict
+			// can occur. Each attempt takes a fresh gas reservation and rebuilds the transaction,
+			// because the sponsor coins and the object versions both change between attempts.
+			return await Iota.executeWithReservationRetry(this._config, async () => {
+				// Reserve exactly the budget this transaction will declare via
+				// this._gasBudget (see the constructor), instead of letting Iota.reserveGas
+				// re-derive its own default from this._config - otherwise the two can
+				// diverge whenever gasBudget is left unset in config.
+				const gasReservation = await Iota.reserveGas({
+					...this._config,
+					gasBudget: this._gasBudget
+				});
 
-			const gasCoinsWithStringVersions = gasReservation.gasCoins.map(coin => ({
-				objectId: coin.objectId,
-				version: String(coin.version),
-				digest: coin.digest
-			}));
+				const gasCoinsWithStringVersions = gasReservation.gasCoins.map(coin => ({
+					objectId: coin.objectId,
+					version: String(coin.version),
+					digest: coin.digest
+				}));
 
-			const gasConfiguredBuilder = builder
-				.withSender(controllerAddress)
-				.withGasBudget(BigInt(this._gasBudget))
-				.withGasOwner(gasReservation.sponsorAddress)
-				.withGasPayment(gasCoinsWithStringVersions)
-				.withGasPrice(this._standardGasPrice);
+				const gasConfiguredBuilder = (await buildTransaction())
+					.withSender(controllerAddress)
+					.withGasBudget(BigInt(this._gasBudget))
+					.withGasOwner(gasReservation.sponsorAddress)
+					.withGasPayment(gasCoinsWithStringVersions)
+					.withGasPrice(this._standardGasPrice);
 
-			const buildResult = await gasConfiguredBuilder.build(identityClient);
+				const buildResult = await gasConfiguredBuilder.build(identityClient);
 
-			if (Is.arrayValue(buildResult) && buildResult.length === 3 && Is.uint8Array(buildResult[0])) {
-				const [txBytes, signatures] = buildResult;
-				// const iotaClient = Iota.createClient(this._config);
+				if (
+					Is.arrayValue(buildResult) &&
+					buildResult.length === 3 &&
+					Is.uint8Array(buildResult[0])
+				) {
+					const [txBytes, signatures] = buildResult;
 
-				const confirmedResponse = (await Iota.executeAndConfirmGasStationTransaction(
-					this._config,
-					identityClient.iotaClient() as unknown as IIotaClient,
-					gasReservation.reservationId,
-					txBytes,
-					signatures[0],
-					{
-						waitForConfirmation: true,
-						showEffects: true,
-						showEvents: true,
-						showObjectChanges: true
+					const confirmedResponse = (await Iota.executeAndConfirmGasStationTransaction(
+						this._config,
+						identityClient.iotaClient() as unknown as IIotaClient,
+						gasReservation.reservationId,
+						txBytes,
+						signatures[0],
+						{
+							waitForConfirmation: true,
+							showEffects: true,
+							showEvents: true,
+							showObjectChanges: true
+						}
+					)) as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+
+					if (operationType === "identity") {
+						// For identity creation, include the output and network HRP
+						const createIdentity = buildResult[2];
+						const result = {
+							output: createIdentity,
+							response: confirmedResponse,
+							networkHrp: identityClient.network()
+						} as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
+						return result;
 					}
-				)) as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
 
-				if (operationType === "identity") {
-					// For identity creation, include the output and network HRP
-					const createIdentity = buildResult[2];
-					const result = {
-						output: createIdentity,
-						response: confirmedResponse,
-						networkHrp: identityClient.network()
-					} as unknown as TransactionOutput<Transaction<OnChainIdentity>>;
-					return result;
+					return confirmedResponse;
 				}
 
-				return confirmedResponse;
-			}
-
-			throw new GeneralError(
-				IotaIdentityConnector.CLASS_NAME,
-				"gasStationTransactionBuildFailed",
-				{
-					buildResultType: typeof buildResult,
-					isArray: Is.arrayValue(buildResult),
-					length: Is.arrayValue(buildResult) ? buildResult.length : 0
-				},
-				Iota.extractPayloadError(buildResult)
-			);
+				throw new GeneralError(
+					IotaIdentityConnector.CLASS_NAME,
+					"gasStationTransactionBuildFailed",
+					{
+						buildResultType: typeof buildResult,
+						isArray: Is.arrayValue(buildResult),
+						length: Is.arrayValue(buildResult) ? buildResult.length : 0
+					},
+					Iota.extractPayloadError(buildResult)
+				);
+			});
 		} catch (error) {
 			const errorMessage =
 				operationType === "identity"
