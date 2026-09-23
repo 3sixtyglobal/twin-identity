@@ -261,12 +261,12 @@ importers:
         version: 0.10.1-next.9
       '@twin.org/entity-storage-models':
         specifier: next
-        version: 0.10.1-next.9
+        version: 0.10.1-next.10
       '@twin.org/identity-connector-iota':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../../packages/identity-connector-iota
       '@twin.org/identity-models':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../../packages/identity-models
       '@twin.org/nameof':
         specifier: next
@@ -364,9 +364,9 @@ importers:
         version: 0.10.1-next.10
       '@twin.org/entity-storage-models':
         specifier: next
-        version: 0.10.1-next.9
+        version: 0.10.1-next.10
       '@twin.org/identity-models':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../identity-models
       '@twin.org/nameof':
         specifier: next
@@ -466,7 +466,7 @@ importers:
         specifier: next
         version: 0.10.1-next.10
       '@twin.org/identity-models':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../identity-models
       '@twin.org/nameof':
         specifier: next
@@ -489,7 +489,7 @@ importers:
         version: 0.10.1-next.9
       '@twin.org/entity-storage-models':
         specifier: next
-        version: 0.10.1-next.9
+        version: 0.10.1-next.10
       '@twin.org/nameof-transformer':
         specifier: next
         version: 0.10.1-next.10
@@ -545,7 +545,7 @@ importers:
         specifier: next
         version: 0.10.1-next.10
       '@twin.org/identity-models':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../identity-models
       '@twin.org/nameof':
         specifier: next
@@ -691,7 +691,7 @@ importers:
         specifier: next
         version: 0.10.1-next.10
       '@twin.org/identity-models':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../identity-models
       '@twin.org/nameof':
         specifier: next
@@ -767,7 +767,7 @@ importers:
         specifier: next
         version: 0.10.1-next.10
       '@twin.org/identity-models':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../identity-models
       '@twin.org/nameof':
         specifier: next
@@ -796,9 +796,9 @@ importers:
         version: 0.10.1-next.9
       '@twin.org/entity-storage-models':
         specifier: next
-        version: 0.10.1-next.9
+        version: 0.10.1-next.10
       '@twin.org/identity-connector-entity-storage':
-        specifier: 0.10.1-next.1
+        specifier: 0.10.1-next.2
         version: link:../identity-connector-entity-storage
       '@twin.org/nameof-transformer':
         specifier: next
@@ -1730,6 +1730,10 @@ packages:
 
   '@twin.org/entity-storage-connector-memory@0.10.1-next.9':
     resolution: {integrity: sha512-6HnXc1FigwL7wjn68KV/1C9YacXD+7UzLiDhzIspRQdwAI/RVjAgzLilBvbvHmIVg9s2gP6pQMiRPT2a/jc3FA==}
+    engines: {node: '>=24.0.0'}
+
+  '@twin.org/entity-storage-models@0.10.1-next.10':
+    resolution: {integrity: sha512-NNvQiIsL/JHgk4vruhRuY6LxzpJpSH6S+9xwRgAma2qLpRMlS0NEON2Np/9QWRCekNN2VeAG92SDFGDhap45tA==}
     engines: {node: '>=24.0.0'}
 
   '@twin.org/entity-storage-models@0.10.1-next.9':
@@ -5252,6 +5256,15 @@ snapshots:
       '@twin.org/logging-models': 0.10.1-next.2
       '@twin.org/nameof': 0.10.1-next.10
 
+  '@twin.org/entity-storage-models@0.10.1-next.10':
+    dependencies:
+      '@twin.org/context': 0.10.1-next.10
+      '@twin.org/core': 0.10.1-next.10
+      '@twin.org/crypto': 0.10.1-next.10
+      '@twin.org/entity': 0.10.1-next.10
+      '@twin.org/logging-models': 0.10.1-next.2
+      '@twin.org/nameof': 0.10.1-next.10
+
   '@twin.org/entity-storage-models@0.10.1-next.9':
     dependencies:
       '@twin.org/context': 0.10.1-next.10
@@ -5372,7 +5385,7 @@ snapshots:
       '@twin.org/core': 0.10.1-next.10
       '@twin.org/crypto': 0.10.1-next.10
       '@twin.org/entity': 0.10.1-next.10
-      '@twin.org/entity-storage-models': 0.10.1-next.9
+      '@twin.org/entity-storage-models': 0.10.1-next.10
       '@twin.org/nameof': 0.10.1-next.10
       '@twin.org/vault-models': 0.10.1-next.3
 
@@ -5390,7 +5403,7 @@ snapshots:
       '@twin.org/crypto-cli': 0.10.1-next.10
       '@twin.org/entity': 0.10.1-next.10
       '@twin.org/entity-storage-connector-memory': 0.10.1-next.9
-      '@twin.org/entity-storage-models': 0.10.1-next.9
+      '@twin.org/entity-storage-models': 0.10.1-next.10
       '@twin.org/nameof': 0.10.1-next.10
       '@twin.org/vault-connector-entity-storage': 0.10.1-next.3
       '@twin.org/vault-models': 0.10.1-next.3

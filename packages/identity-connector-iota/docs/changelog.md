@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.1-next.2](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.10.1-next.1...identity-connector-iota-v0.10.1-next.2) (2026-09-23)
+
+
+### Features
+
+* on-chain retry ([bfeb829](https://github.com/iotaledger/twin-identity/commit/bfeb829c5e8384355fbe25cfe561a5dfebb18e38))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.10.1-next.1 to 0.10.1-next.2
+
 ## [0.10.1-next.1](https://github.com/iotaledger/twin-identity/compare/identity-connector-iota-v0.10.1-next.0...identity-connector-iota-v0.10.1-next.1) (2026-09-18)
 
 
