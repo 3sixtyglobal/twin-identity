@@ -1076,7 +1076,10 @@ export async function identityRemove(
 
 	await component.identityRemove(
 		request.pathParams.identity,
-		{ removeKeys: Coerce.boolean(request.query?.removeKeys) },
+		{
+			removeKeys: Coerce.boolean(request.query?.removeKeys),
+			removeDocumentKey: Coerce.boolean(request.query?.removeDocumentKey)
+		},
 		contextIds[ContextIdKeys.Organization]
 	);
 

@@ -260,12 +260,13 @@ export class IdentityService implements IIdentityComponent, IHealthProviderCompo
 	 * @param identity The id of the document to remove.
 	 * @param options Optional settings.
 	 * @param options.removeKeys Also remove any associated private keys from the vault.
+	 * @param options.removeDocumentKey Also remove the document key from the vault.
 	 * @param controller The controller of the identity who can make changes.
 	 * @returns A promise that resolves when the identity has been removed.
 	 */
 	public async identityRemove(
 		identity: string,
-		options?: { removeKeys?: boolean },
+		options?: { removeKeys?: boolean; removeDocumentKey?: boolean },
 		controller?: string
 	): Promise<void> {
 		Guards.stringValue(IdentityService.CLASS_NAME, nameof(identity), identity);

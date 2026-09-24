@@ -267,12 +267,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param documentId The id of the document to remove.
 	 * @param options Optional settings.
 	 * @param options.removeKeys Also remove any associated private keys from the vault.
+	 * @param options.removeDocumentKey Also remove the document key from the vault.
 	 * @returns A promise that resolves when the document has been removed.
 	 */
 	public async removeDocument(
 		controller: string,
 		documentId: string,
-		options?: { removeKeys?: boolean }
+		options?: { removeKeys?: boolean; removeDocumentKey?: boolean }
 	): Promise<void> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
@@ -307,6 +308,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 							}
 						}
 					}
+				}
+			}
+
+			if (options?.removeDocumentKey ?? false) {
+				const documentKey = EntityStorageIdentityConnector.buildVaultKey(documentId, "did");
+				if (await this._vaultConnector.keyExists(documentKey)) {
+					await this._vaultConnector.removeKey(documentKey);
 				}
 			}
 		} catch (error) {

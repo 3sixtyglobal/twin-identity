@@ -132,6 +132,27 @@ describe("EntityStorageIdentityConnector", () => {
 		});
 	});
 
+	test("can delete a document and keep the document key by default", async () => {
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
+		const documentKey = EntityStorageIdentityConnector.buildVaultKey(testDocument.id, "did");
+
+		await identityConnector.removeDocument(TEST_USER_IDENTITY, testDocument.id);
+
+		expect(await vaultKeyEntityStorageConnector.get(documentKey)).toBeDefined();
+	});
+
+	test("can delete a document and remove the document key", async () => {
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
+		const documentKey = EntityStorageIdentityConnector.buildVaultKey(testDocument.id, "did");
+		expect(await vaultKeyEntityStorageConnector.get(documentKey)).toBeDefined();
+
+		await identityConnector.removeDocument(TEST_USER_IDENTITY, testDocument.id, {
+			removeDocumentKey: true
+		});
+
+		expect(await vaultKeyEntityStorageConnector.get(documentKey)).toBeUndefined();
+	});
+
 	test("can fail to resolve a document with no id", async () => {
 		await expect(
 			identityResolverConnector.resolveDocument(undefined as unknown as string)
