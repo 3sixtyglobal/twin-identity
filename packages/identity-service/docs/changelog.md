@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.1-next.6](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.10.1-next.5...identity-service-v0.10.1-next.6) (2026-09-24)
+
+
+### Features
+
+* remove document key option ([#251](https://github.com/iotaledger/twin-identity/issues/251)) ([06d0141](https://github.com/iotaledger/twin-identity/commit/06d01414cae275702fe94b8b7694c43ca13a95f7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.10.1-next.5 to 0.10.1-next.6
+  * devDependencies
+    * @twin.org/identity-connector-entity-storage bumped from 0.10.1-next.5 to 0.10.1-next.6
+
 ## [0.10.1-next.5](https://github.com/iotaledger/twin-identity/compare/identity-service-v0.10.1-next.4...identity-service-v0.10.1-next.5) (2026-09-23)
 
 
