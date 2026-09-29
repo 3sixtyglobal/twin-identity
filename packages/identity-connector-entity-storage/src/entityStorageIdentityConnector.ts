@@ -16,6 +16,7 @@ import {
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
+	UnauthorizedError,
 	Url,
 	Urn
 } from "@twin.org/core";
@@ -184,6 +185,21 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Confirm the caller is the stored controller or the document's own DID.
+	 * @param controller The controller making the request.
+	 * @param identityDocument The stored entity to check against.
+	 * @throws UnauthorizedError if the caller is neither the stored controller nor the document itself.
+	 * @internal
+	 */
+	private static assertController(controller: string, identityDocument: IdentityDocument): void {
+		if (identityDocument.controller !== controller && identityDocument.id !== controller) {
+			throw new UnauthorizedError(EntityStorageIdentityConnector.CLASS_NAME, "notController", {
+				documentId: identityDocument.id
+			});
+		}
+	}
+
+	/**
 	 * Returns the class name of the component.
 	 * @returns The class name of the component.
 	 */
@@ -251,12 +267,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param documentId The id of the document to remove.
 	 * @param options Optional settings.
 	 * @param options.removeKeys Also remove any associated private keys from the vault.
+	 * @param options.removeDocumentKey Also remove the document key from the vault.
 	 * @returns A promise that resolves when the document has been removed.
 	 */
 	public async removeDocument(
 		controller: string,
 		documentId: string,
-		options?: { removeKeys?: boolean }
+		options?: { removeKeys?: boolean; removeDocumentKey?: boolean }
 	): Promise<void> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(documentId), documentId);
@@ -270,6 +287,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 					documentId
 				);
 			}
+			EntityStorageIdentityConnector.assertController(controller, didDocument);
 
 			await this._didDocumentEntityStorage.remove(documentId);
 			this._didResolutionCache?.delete(this.ownDidCacheKey(documentId));
@@ -290,6 +308,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 							}
 						}
 					}
+				}
+			}
+
+			if (options?.removeDocumentKey ?? false) {
+				const documentKey = EntityStorageIdentityConnector.buildVaultKey(documentId, "did");
+				if (await this._vaultConnector.keyExists(documentKey)) {
+					await this._vaultConnector.removeKey(documentKey);
 				}
 			}
 		} catch (error) {
@@ -329,7 +354,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 		let tempKeyId;
 		try {
-			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
+			const didIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				documentId
+			);
 			const didDocument = didIdentityDocument.document;
 
 			let methodKeyPublic;
@@ -374,22 +402,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				tempKeyId = undefined;
 			}
 
-			const methods = this.getAllMethods(didDocument);
-			const existingMethodIndex = methods.findIndex(m => {
-				if (Is.string(m.method)) {
-					return m.method === methodId;
-				}
-				return m.method.id === methodId;
-			});
-
-			if (existingMethodIndex !== -1) {
-				const methodArray =
-					didDocument[methods[existingMethodIndex].arrayKey as keyof IDidDocument];
-
-				if (Is.array(methodArray)) {
-					methodArray.splice(existingMethodIndex, 1);
-				}
-			}
+			this.removeMethodById(didDocument, methodId);
 
 			const didVerificationMethod: IDidDocumentVerificationMethod = {
 				id: methodId,
@@ -404,7 +417,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			didDocument[verificationMethodType] ??= [];
 			didDocument[verificationMethodType]?.push(didVerificationMethod);
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 
 			return didVerificationMethod;
 		} catch (error) {
@@ -456,28 +469,13 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const didIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
+			const didIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				idParts.id
+			);
 			const didDocument = didIdentityDocument.document;
 
-			const methods = this.getAllMethods(didDocument);
-			const existingMethodIndex = methods.findIndex(m => {
-				if (Is.string(m.method)) {
-					return m.method === verificationMethodId;
-				}
-				return m.method.id === verificationMethodId;
-			});
-
-			if (existingMethodIndex !== -1) {
-				const methodArray =
-					didDocument[methods[existingMethodIndex].arrayKey as keyof IDidDocument];
-
-				if (Is.array(methodArray)) {
-					methodArray.splice(existingMethodIndex, 1);
-					if (methodArray.length === 0) {
-						delete didDocument[methods[existingMethodIndex].arrayKey as keyof IDidDocument];
-					}
-				}
-			} else {
+			if (!this.removeMethodById(didDocument, verificationMethodId)) {
 				throw new NotFoundError(
 					EntityStorageIdentityConnector.CLASS_NAME,
 					"verificationMethodNotFound",
@@ -485,7 +483,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 
 			if (options?.removeKeys ?? false) {
 				try {
@@ -552,7 +550,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		try {
-			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
+			const didIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				documentId
+			);
 			const didDocument = didIdentityDocument.document;
 
 			const fullServiceId = serviceId.includes("#") ? serviceId : `${documentId}#${serviceId}`;
@@ -573,7 +574,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			didDocument.service ??= [];
 			didDocument.service.push(didService);
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 
 			return didService;
 		} catch (error) {
@@ -603,7 +604,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				throw new NotFoundError(EntityStorageIdentityConnector.CLASS_NAME, "missingDid", serviceId);
 			}
 
-			const didIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
+			const didIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				idParts.id
+			);
 			const didDocument = didIdentityDocument.document;
 
 			if (Is.array(didDocument.service)) {
@@ -628,7 +632,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -662,7 +666,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		try {
-			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
+			const didIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				documentId
+			);
 			const didDocument = didIdentityDocument.document;
 
 			const existing = Is.array(didDocument.alsoKnownAs) ? didDocument.alsoKnownAs : [];
@@ -672,7 +679,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 			didDocument.alsoKnownAs = [...existing, alias];
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -706,7 +713,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		try {
-			const didIdentityDocument = await this.resolveOwnDocumentCached(documentId);
+			const didIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				documentId
+			);
 			const didDocument = didIdentityDocument.document;
 
 			if (!Is.array(didDocument.alsoKnownAs) || !didDocument.alsoKnownAs.includes(alias)) {
@@ -720,7 +730,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				didDocument.alsoKnownAs = filtered;
 			}
 
-			await this.updateDocument(controller, didDocument);
+			await this.updateDocument(controller, didDocument, didIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -777,6 +787,21 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				nameof(options.revocationIndex),
 				options.revocationIndex
 			);
+			// An index outside the bitmap would be accepted here and then throw on every later
+			// revocation check, so it is rejected while the credential can still be reissued.
+			if (
+				options.revocationIndex < 0 ||
+				options.revocationIndex >= EntityStorageIdentityConnector._REVOCATION_BITS_SIZE
+			) {
+				throw new GeneralError(
+					EntityStorageIdentityConnector.CLASS_NAME,
+					"revocationIndexOutOfRange",
+					{
+						revocationIndex: options.revocationIndex,
+						maxIndex: EntityStorageIdentityConnector._REVOCATION_BITS_SIZE - 1
+					}
+				);
+			}
 		}
 		if (!Is.undefined(options?.expirationDate)) {
 			Guards.date(
@@ -796,7 +821,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const issuerIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
+			const issuerIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				idParts.id
+			);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
 			const methods = this.getAllMethods(issuerDidDocument);
@@ -868,12 +896,11 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 			// Add the proof to the VC after extracting the jwt data
 			// as the jwt does not include the proof
-			verifiableCredential.proof = await this.createProof(
-				controller,
+			verifiableCredential.proof = await this.buildProof(
+				issuerDidDocument,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiableCredential),
-				issuerDidDocument
+				JsonLdHelper.toNodeObject(verifiableCredential)
 			);
 
 			// As we are adding the receipt to the data we update the JSON-LD context
@@ -1114,7 +1141,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		);
 
 		try {
-			const issuerIdentityDocument = await this.resolveOwnDocumentCached(issuerDocumentId);
+			const issuerIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				issuerDocumentId
+			);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
 			const revocationService = issuerDidDocument.service?.find(s => s.id.endsWith("#revocation"));
@@ -1145,7 +1175,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			await this.updateDocument(controller, issuerDidDocument);
+			await this.updateDocument(controller, issuerDidDocument, issuerIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -1181,7 +1211,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		);
 
 		try {
-			const issuerIdentityDocument = await this.resolveOwnDocumentCached(issuerDocumentId);
+			const issuerIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				issuerDocumentId
+			);
 			const issuerDidDocument = issuerIdentityDocument.document;
 
 			const revocationService = issuerDidDocument.service?.find(s => s.id.endsWith("#revocation"));
@@ -1212,7 +1245,7 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				}
 			}
 
-			await this.updateDocument(controller, issuerDidDocument);
+			await this.updateDocument(controller, issuerDidDocument, issuerIdentityDocument);
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -1288,7 +1321,10 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const holderIdentityDocument = await this.resolveOwnDocumentCached(idParts.id);
+			const holderIdentityDocument = await this.resolveOwnDocumentForController(
+				controller,
+				idParts.id
+			);
 			const holderDidDocument = holderIdentityDocument.document;
 
 			const methods = this.getAllMethods(holderDidDocument);
@@ -1346,12 +1382,11 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 
 			// Add the proof to the VP after extracting the jwt data
 			// as the jwt does not include the proof
-			verifiablePresentation.proof = await this.createProof(
-				controller,
+			verifiablePresentation.proof = await this.buildProof(
+				holderDidDocument,
 				verificationMethodId,
 				ProofTypes.DataIntegrityProof,
-				JsonLdHelper.toNodeObject(verifiablePresentation),
-				holderDidDocument
+				JsonLdHelper.toNodeObject(verifiablePresentation)
 			);
 
 			const jwtPayload: IJwtPayload = {
@@ -1404,6 +1439,20 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			const { proof, ...doc } = presentation as IDidVerifiablePresentationV1;
 			const proofEntry = ArrayHelper.fromObjectOrArray(proof)[0];
 			Guards.objectValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(proofEntry), proofEntry);
+			Guards.stringValue(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(proofEntry.verificationMethod),
+				proofEntry.verificationMethod
+			);
+
+			const signerDid = DocumentHelper.parseId(proofEntry.verificationMethod).id;
+			if (Is.stringValue(doc.holder) && doc.holder !== signerDid) {
+				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "holderMismatch", {
+					holder: doc.holder,
+					method: proofEntry.verificationMethod
+				});
+			}
+
 			const presentationVerified = await this.verifyProof(
 				JsonLdHelper.toNodeObject(doc),
 				proofEntry
@@ -1464,23 +1513,34 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				holderIdentityDocument,
 				this._vaultConnector
 			);
+			const holderDidDocument = holderIdentityDocument.document;
+
+			Guards.stringValue(
+				EntityStorageIdentityConnector.CLASS_NAME,
+				nameof(jwtHeader.kid),
+				jwtHeader.kid
+			);
+
+			// Resolving the key from the holder's own document is what binds the signature to the
+			// holder named by iss.
+			const publicKeyJwk = this.getMethodJwk(holderDidDocument, jwtHeader.kid);
+
+			await Jwt.verifySignature(presentationJwt, await Jwk.toCryptoKey(publicKeyJwk));
 
 			const issuers: IDidDocument[] = [];
 			const tokensRevoked: boolean[] = [];
 			const verifiablePresentation = jwtPayload?.vp as IDidVerifiablePresentationV1;
-			if (
-				Is.object<IDidVerifiablePresentationV1>(verifiablePresentation) &&
-				Is.array(verifiablePresentation.verifiableCredential)
-			) {
-				for (const vcJwt of verifiablePresentation.verifiableCredential) {
-					let revoked = false;
-					if (Is.stringValue(vcJwt)) {
-						const jwt = await Jwt.decode(vcJwt);
+			if (Is.object<IDidVerifiablePresentationV1>(verifiablePresentation)) {
+				// The holder is not carried in the vp claim, so restore it from the token issuer.
+				verifiablePresentation.holder = holderDocumentId;
 
-						if (Is.string(jwt.payload?.iss)) {
-							const issuerDocumentId = jwt.payload.iss;
-							verifiablePresentation.holder = issuerDocumentId;
+				if (Is.array(verifiablePresentation.verifiableCredential)) {
+					for (const embeddedCredential of verifiablePresentation.verifiableCredential) {
+						const issuerDocumentId = Is.stringValue(embeddedCredential)
+							? (await Jwt.decode(embeddedCredential)).payload?.iss
+							: this.getCredentialIssuer(embeddedCredential);
 
+						if (Is.stringValue(issuerDocumentId)) {
 							const issuerDidDocument = await this._didDocumentEntityStorage.get(issuerDocumentId);
 							if (Is.undefined(issuerDidDocument)) {
 								throw new NotFoundError(
@@ -1499,10 +1559,9 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 							});
 						}
 
-						const credentialCheck = await this.checkVerifiableCredential(vcJwt);
-						revoked = credentialCheck.revoked;
+						const credentialCheck = await this.checkVerifiableCredential(embeddedCredential);
+						tokensRevoked.push(credentialCheck.revoked);
 					}
-					tokensRevoked.push(revoked);
 				}
 			}
 
@@ -1535,19 +1594,16 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * @param verificationMethodId The verification method id to use.
 	 * @param proofType The type of proof to create.
 	 * @param unsecureDocument The unsecure document to create the proof for.
-	 * @param resolvedDocument Optional already-resolved document for the DID, so a caller that
-	 * just resolved it (e.g. createVerifiableCredential) skips a redundant re-resolve. Resolves
-	 * it itself if omitted.
 	 * @returns The proof.
 	 * @throws NotFoundError if the identity or method is not found.
+	 * @throws UnauthorizedError if the caller is not the stored controller.
 	 * @throws GeneralError if algorithm doesn't match key type or proof creation fails.
 	 */
 	public async createProof(
 		controller: string,
 		verificationMethodId: string,
 		proofType: ProofTypes,
-		unsecureDocument: IJsonLdNodeObject,
-		resolvedDocument?: IDidDocument
+		unsecureDocument: IJsonLdNodeObject
 	): Promise<IProof> {
 		Guards.stringValue(EntityStorageIdentityConnector.CLASS_NAME, nameof(controller), controller);
 		Guards.stringValue(
@@ -1566,13 +1622,6 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			nameof(unsecureDocument),
 			unsecureDocument
 		);
-		if (!Is.undefined(resolvedDocument)) {
-			Guards.object<IDidDocument>(
-				EntityStorageIdentityConnector.CLASS_NAME,
-				nameof(resolvedDocument),
-				resolvedDocument
-			);
-		}
 
 		try {
 			const idParts = DocumentHelper.parseId(verificationMethodId);
@@ -1584,53 +1633,14 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 				);
 			}
 
-			const didDocument = Is.undefined(resolvedDocument)
-				? (await this.resolveOwnDocumentCached(idParts.id)).document
-				: resolvedDocument;
+			const identityDocument = await this.resolveOwnDocumentForController(controller, idParts.id);
 
-			const methods = this.getAllMethods(didDocument);
-			const methodAndArray = methods.find(m => {
-				if (Is.string(m.method)) {
-					return m.method === verificationMethodId;
-				}
-				return m.method.id === verificationMethodId;
-			});
-
-			if (!methodAndArray) {
-				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "methodMissing", {
-					method: verificationMethodId
-				});
-			}
-
-			const didMethod = methodAndArray.method;
-			if (!Is.stringValue(didMethod.publicKeyJwk?.x)) {
-				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "publicKeyJwkMissing", {
-					method: verificationMethodId
-				});
-			}
-
-			const vaultKey = EntityStorageIdentityConnector.buildVaultKey(
-				didDocument.id,
-				idParts.fragment ?? ""
-			);
-			const keyType = await this._vaultConnector.getKeyType(vaultKey);
-
-			if (Is.undefined(keyType)) {
-				throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "privateKeyMissing", {
-					keyId: vaultKey
-				});
-			}
-
-			const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
-
-			const signedProof = await ProofHelper.createProofWithSigner(
+			return await this.buildProof(
+				identityDocument.document,
+				verificationMethodId,
 				proofType,
-				unsecureDocument,
-				unsignedProof,
-				async (data, algorithm) => this.signWithVault(vaultKey, keyType, data, algorithm)
+				unsecureDocument
 			);
-
-			return signedProof;
 		} catch (error) {
 			throw new GeneralError(
 				EntityStorageIdentityConnector.CLASS_NAME,
@@ -1719,6 +1729,48 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Build a proof against a document whose controller has already been verified by the caller.
+	 * @param didDocument The resolved DID document owning the verification method.
+	 * @param verificationMethodId The verification method id to use.
+	 * @param proofType The type of proof to create.
+	 * @param unsecureDocument The unsecure document to create the proof for.
+	 * @returns The proof.
+	 * @throws GeneralError if the method or its key material is missing.
+	 * @internal
+	 */
+	private async buildProof(
+		didDocument: IDidDocument,
+		verificationMethodId: string,
+		proofType: ProofTypes,
+		unsecureDocument: IJsonLdNodeObject
+	): Promise<IProof> {
+		const idParts = DocumentHelper.parseId(verificationMethodId);
+
+		this.getMethodJwk(didDocument, verificationMethodId);
+
+		const vaultKey = EntityStorageIdentityConnector.buildVaultKey(
+			didDocument.id,
+			idParts.fragment ?? ""
+		);
+		const keyType = await this._vaultConnector.getKeyType(vaultKey);
+
+		if (Is.undefined(keyType)) {
+			throw new GeneralError(EntityStorageIdentityConnector.CLASS_NAME, "privateKeyMissing", {
+				keyId: vaultKey
+			});
+		}
+
+		const unsignedProof = ProofHelper.createUnsignedProof(proofType, verificationMethodId);
+
+		return ProofHelper.createProofWithSigner(
+			proofType,
+			unsecureDocument,
+			unsignedProof,
+			async (data, algorithm) => this.signWithVault(vaultKey, keyType, data, algorithm)
+		);
+	}
+
+	/**
 	 * Signs data using the vault connector with algorithm validation.
 	 * @param vaultKey The vault key identifier.
 	 * @param keyType The type of the key.
@@ -1778,6 +1830,63 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 		}
 
 		return methods;
+	}
+
+	/**
+	 * Get the issuer DID from a credential in object form.
+	 * @param credential The credential to read.
+	 * @returns The issuer DID, or undefined if it has none.
+	 * @internal
+	 */
+	private getCredentialIssuer(credential: IDidVerifiableCredential): string | undefined {
+		return Is.object<{ id: string }>(credential.issuer) ? credential.issuer.id : credential.issuer;
+	}
+
+	/**
+	 * Remove a verification method from whichever relationship holds it.
+	 * The relationship arrays are searched individually, because an index taken from the flat list
+	 * getAllMethods returns does not address the per-relationship array it came from.
+	 * @param didDocument The document to update.
+	 * @param verificationMethodId The full id of the method to remove.
+	 * @returns True if the method was found and removed.
+	 * @internal
+	 */
+	private removeMethodById(didDocument: IDidDocument, verificationMethodId: string): boolean {
+		for (const methodType of Object.values(DidVerificationMethodType)) {
+			const methodArray = didDocument[methodType];
+			if (Is.arrayValue(methodArray)) {
+				const index = methodArray.findIndex(
+					m => (Is.string(m) ? m : m.id) === verificationMethodId
+				);
+				if (index !== -1) {
+					methodArray.splice(index, 1);
+					if (methodArray.length === 0) {
+						delete didDocument[methodType];
+					}
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the public key for a verification method from whichever relationship holds it.
+	 * getJwk looks in a single relationship, defaulting to verificationMethod, but a method is
+	 * only ever added to the relationship it was created under.
+	 * @param didDocument The document owning the method.
+	 * @param verificationMethodId The full id of the method.
+	 * @returns The public key.
+	 * @throws GeneralError if the method is not on the document or carries no public key.
+	 * @internal
+	 */
+	private getMethodJwk(didDocument: IDidDocument, verificationMethodId: string): IJwk {
+		const methodType = Object.values(DidVerificationMethodType).find(type =>
+			didDocument[type]?.some(m => (Is.string(m) ? m : m.id) === verificationMethodId)
+		);
+
+		return DocumentHelper.getJwk(didDocument, verificationMethodId, methodType);
 	}
 
 	/**
@@ -1870,6 +1979,24 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	}
 
 	/**
+	 * Resolve a document's own storage entity and confirm the caller controls it.
+	 * @param controller The controller making the request.
+	 * @param documentId The DID to resolve.
+	 * @returns The verified storage entity.
+	 * @throws NotFoundError if the DID could not be resolved.
+	 * @throws UnauthorizedError if the caller is not the stored controller.
+	 * @internal
+	 */
+	private async resolveOwnDocumentForController(
+		controller: string,
+		documentId: string
+	): Promise<IdentityDocument> {
+		const identityDocument = await this.resolveOwnDocumentCached(documentId);
+		EntityStorageIdentityConnector.assertController(controller, identityDocument);
+		return identityDocument;
+	}
+
+	/**
 	 * Check whether a credential's status entry or entries report it as revoked.
 	 * @param document The issuer document owning the revocation bitmap service.
 	 * @param credentialStatus The credential's status entry or entries to check.
@@ -1938,10 +2065,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 	 * Update the document in storage.
 	 * @param controller The controller of the document.
 	 * @param didDocument The did document to store.
+	 * @param existingDocument The currently stored entity, undefined when creating.
 	 * @returns A promise that resolves when the document has been signed and persisted.
 	 * @internal
 	 */
-	private async updateDocument(controller: string, didDocument: IDidDocument): Promise<void> {
+	private async updateDocument(
+		controller: string,
+		didDocument: IDidDocument,
+		existingDocument?: IdentityDocument
+	): Promise<void> {
 		const stringifiedDocument = JsonHelper.canonicalize(didDocument);
 		const docBytes = Converter.utf8ToBytes(stringifiedDocument);
 
@@ -1950,11 +2082,15 @@ export class EntityStorageIdentityConnector implements IIdentityConnector {
 			docBytes
 		);
 
+		const now = new Date(Date.now()).toISOString();
+
 		const identityDocument: IdentityDocument = {
 			id: didDocument.id,
 			document: didDocument,
 			signature: Converter.bytesToBase64(signature),
-			controller
+			controller,
+			dateCreated: Is.undefined(existingDocument) ? now : existingDocument.dateCreated,
+			dateModified: now
 		};
 
 		await this._didDocumentEntityStorage.set(identityDocument);

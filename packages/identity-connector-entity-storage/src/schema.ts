@@ -3,7 +3,9 @@
 import { EntitySchemaFactory, EntitySchemaHelper } from "@twin.org/entity";
 import { nameof } from "@twin.org/nameof";
 import { IdentityDocument } from "./entities/identityDocument.js";
+import { IdentityDocumentV0 } from "./entities/identityDocumentV0.js";
 import { IdentityProfile } from "./entities/identityProfile.js";
+import { IdentityProfileV0 } from "./entities/identityProfileV0.js";
 
 /**
  * Initialize the schema for the identity entity storage connector.
@@ -19,10 +21,16 @@ export function initSchema(options?: {
 		EntitySchemaFactory.register(nameof(IdentityDocument), () =>
 			EntitySchemaHelper.getSchema(IdentityDocument)
 		);
+		EntitySchemaFactory.register(nameof(IdentityDocumentV0), () =>
+			EntitySchemaHelper.getSchema(IdentityDocumentV0)
+		);
 	}
 	if (options?.includeProfile ?? true) {
 		EntitySchemaFactory.register(nameof<IdentityProfile>(), () =>
 			EntitySchemaHelper.getSchema(IdentityProfile)
+		);
+		EntitySchemaFactory.register(nameof<IdentityProfileV0>(), () =>
+			EntitySchemaHelper.getSchema(IdentityProfileV0)
 		);
 	}
 }

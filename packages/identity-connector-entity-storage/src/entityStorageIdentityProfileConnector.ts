@@ -86,10 +86,14 @@ export class EntityStorageIdentityProfileConnector<
 				);
 			}
 
+			const now = new Date(Date.now()).toISOString();
+
 			await this._profileEntityStorage.set({
 				identity,
 				publicProfile,
-				privateProfile
+				privateProfile,
+				dateCreated: now,
+				dateModified: now
 			});
 		} catch (error) {
 			if (BaseError.someErrorClass(error, EntityStorageIdentityProfileConnector.CLASS_NAME)) {
@@ -169,6 +173,7 @@ export class EntityStorageIdentityProfileConnector<
 
 			profile.publicProfile = publicProfile ?? profile.publicProfile;
 			profile.privateProfile = privateProfile ?? profile.privateProfile;
+			profile.dateModified = new Date(Date.now()).toISOString();
 
 			await this._profileEntityStorage.set(profile);
 		} catch (error) {

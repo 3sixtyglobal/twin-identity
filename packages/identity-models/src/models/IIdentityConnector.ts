@@ -30,12 +30,13 @@ export interface IIdentityConnector extends IComponent {
 	 * @param documentId The id of the document to remove.
 	 * @param options Optional settings.
 	 * @param options.removeKeys Also remove any associated private keys from the vault.
+	 * @param options.removeDocumentKey Also remove the document key from the vault.
 	 * @returns A promise that resolves when the document has been removed.
 	 */
 	removeDocument(
 		controller: string,
 		documentId: string,
-		options?: { removeKeys?: boolean }
+		options?: { removeKeys?: boolean; removeDocumentKey?: boolean }
 	): Promise<void>;
 
 	/**

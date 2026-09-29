@@ -97,15 +97,22 @@ export class IdentityRestClient extends BaseRestClient implements IIdentityCompo
 	 * @param identity The id of the document to remove.
 	 * @param options Optional settings.
 	 * @param options.removeKeys Also remove any associated private keys from the vault.
+	 * @param options.removeDocumentKey Also remove the document key from the vault.
 	 * @returns A promise that resolves when the identity has been removed.
 	 */
-	public async identityRemove(identity: string, options?: { removeKeys?: boolean }): Promise<void> {
+	public async identityRemove(
+		identity: string,
+		options?: { removeKeys?: boolean; removeDocumentKey?: boolean }
+	): Promise<void> {
 		Guards.stringValue(IdentityRestClient.CLASS_NAME, nameof(identity), identity);
 		await this.fetch<IIdentityRemoveRequest, INoContentResponse>("/:identity", HttpMethod.DELETE, {
 			pathParams: {
 				identity
 			},
-			query: { removeKeys: Coerce.string(options?.removeKeys) }
+			query: {
+				removeKeys: Coerce.string(options?.removeKeys),
+				removeDocumentKey: Coerce.string(options?.removeDocumentKey)
+			}
 		});
 	}
 

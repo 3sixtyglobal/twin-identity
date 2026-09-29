@@ -161,6 +161,15 @@
 						"schema": {
 							"type": "string"
 						}
+					},
+					{
+						"name": "removeDocumentKey",
+						"description": "Also remove the document key from the vault.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
 					}
 				],
 				"security": [

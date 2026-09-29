@@ -11,7 +11,6 @@ import {
 	DidContexts,
 	DidTypes,
 	type DidVerificationMethodType,
-	type IDidDocument,
 	type IDidService,
 	type IDidVerifiableCredential,
 	type IProof,
@@ -33,6 +32,10 @@ import { initSchema as initSchemaIdentity } from "../src/schema.js";
 const DID_PREFIX = "did:entity-storage";
 
 const CREDENTIAL_STATUS_TYPE = "BitstringStatusList";
+
+// Verifying a presentation JWT validates its exp claim against the real clock, so presentation
+// expiry dates cannot be derived from the Date.now frozen for this suite.
+const VP_EXPIRY = new Date("2100-01-01T00:00:00.000Z");
 
 async function debugOutput(documentId: string): Promise<void> {
 	console.debug("DID Document", documentId);
@@ -127,6 +130,27 @@ describe("EntityStorageIdentityConnector", () => {
 				documentId: testDocument.id
 			}
 		});
+	});
+
+	test("can delete a document and keep the document key by default", async () => {
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
+		const documentKey = EntityStorageIdentityConnector.buildVaultKey(testDocument.id, "did");
+
+		await identityConnector.removeDocument(TEST_USER_IDENTITY, testDocument.id);
+
+		expect(await vaultKeyEntityStorageConnector.get(documentKey)).toBeDefined();
+	});
+
+	test("can delete a document and remove the document key", async () => {
+		const testDocument = await identityConnector.createDocument(TEST_USER_IDENTITY);
+		const documentKey = EntityStorageIdentityConnector.buildVaultKey(testDocument.id, "did");
+		expect(await vaultKeyEntityStorageConnector.get(documentKey)).toBeDefined();
+
+		await identityConnector.removeDocument(TEST_USER_IDENTITY, testDocument.id, {
+			removeDocumentKey: true
+		});
+
+		expect(await vaultKeyEntityStorageConnector.get(documentKey)).toBeUndefined();
 	});
 
 	test("can fail to resolve a document with no id", async () => {
@@ -1123,7 +1147,7 @@ describe("EntityStorageIdentityConnector", () => {
 			DidContexts.ContextVCv1,
 			["Person"],
 			[credentialResult.jwt],
-			{ expirationDate: new Date(Date.now() + 14400000) }
+			{ expirationDate: VP_EXPIRY }
 		);
 
 		await identityConnector.revokeVerifiableCredentials(TEST_USER_IDENTITY, testDocumentId, [
@@ -1148,7 +1172,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[testVcJwt],
-				{ expirationDate: new Date(Date.now() + 14400000) }
+				{ expirationDate: VP_EXPIRY }
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -1169,7 +1193,7 @@ describe("EntityStorageIdentityConnector", () => {
 				"https://schema.org",
 				["Person"],
 				[],
-				{ expirationDate: new Date(Date.now() + 14400000) }
+				{ expirationDate: VP_EXPIRY }
 			)
 		).rejects.toMatchObject({
 			name: "GuardError",
@@ -1204,7 +1228,7 @@ describe("EntityStorageIdentityConnector", () => {
 			DidContexts.ContextVCv1,
 			["Person"],
 			[testVcJwt],
-			{ expirationDate: new Date(Date.now() + 14400000) }
+			{ expirationDate: VP_EXPIRY }
 		);
 
 		expect(result.verifiablePresentation["@context"]).toContain(DidContexts.ContextVCv1);
@@ -1225,7 +1249,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtHeaderFields: { "x-custom": "header-value" }
 			}
 		);
@@ -1249,7 +1273,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtPayloadFields: { "x-custom": "payload-value" }
 			}
 		);
@@ -1275,7 +1299,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtHeaderFields: { alg: "RS256", typ: "at+JWT", kid: "evil-kid" }
 			}
 		);
@@ -1299,7 +1323,7 @@ describe("EntityStorageIdentityConnector", () => {
 			["Person"],
 			[testVcJwt],
 			{
-				expirationDate: new Date(Date.now() + 14400000),
+				expirationDate: VP_EXPIRY,
 				jwtPayloadFields: { iss: "evil-issuer" }
 			}
 		);
@@ -1331,7 +1355,7 @@ describe("EntityStorageIdentityConnector", () => {
 			"https://schema.org",
 			["Person"],
 			[testVcJwt],
-			{ expirationDate: new Date(Date.now() + 14400000) }
+			{ expirationDate: VP_EXPIRY }
 		);
 
 		const vpJwt = createResult.jwt;
@@ -1407,30 +1431,6 @@ describe("EntityStorageIdentityConnector", () => {
 			properties: {
 				property: "unsecureDocument",
 				value: "undefined"
-			}
-		});
-	});
-
-	test("can fail to create a proof with an invalid resolvedDocument", async () => {
-		const testDocument = {
-			"@context": "https://www.w3.org/ns/did/v1",
-			id: "did:example:123456789abcdefghi",
-			name: "Test Document"
-		};
-		await expect(
-			identityConnector.createProof(
-				TEST_USER_IDENTITY,
-				testVerificationMethodId,
-				ProofTypes.DataIntegrityProof,
-				testDocument,
-				"not-a-document" as unknown as IDidDocument
-			)
-		).rejects.toMatchObject({
-			name: "GuardError",
-			message: "guard.object",
-			properties: {
-				property: "resolvedDocument",
-				value: "not-a-document"
 			}
 		});
 	});

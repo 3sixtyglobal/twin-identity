@@ -359,17 +359,21 @@ describe("IdentityService", () => {
 			const service = new IdentityService();
 
 			const tempOrgDoc = await service.identityCreate(undefined, TEST_CONTROLLER);
-			await service.verificationMethodCreate(
-				tempOrgDoc.id,
-				DidVerificationMethodType.AssertionMethod,
-				"health-assertion",
-				TEST_CONTROLLER
+
+			// The wallet service normally leaves the temporary controller's mnemonic in the vault,
+			// which healthApplicationInit migrates to the new document id. Without it the init
+			// bails part way through and never reaches the context id swap.
+			await VaultConnectorFactory.get("vault").setSecret(
+				`${tempOrgDoc.id}/mnemonic`,
+				Bip39.randomMnemonic()
 			);
+
 			const initContextIds: IContextIds = { [ContextIdKeys.Organization]: tempOrgDoc.id };
 			await service.healthApplicationInit(initContextIds);
 
 			const orgDid = initContextIds[ContextIdKeys.Organization];
 			expect(orgDid).toBeDefined();
+			expect(orgDid).not.toEqual(tempOrgDoc.id);
 
 			const combinedContextIds = { ...initContextIds };
 			await ContextIdStore.run(combinedContextIds, async () => {
@@ -379,6 +383,9 @@ describe("IdentityService", () => {
 
 			const resolverConnector = IdentityResolverConnectorFactory.get("entity-storage");
 			await expect(resolverConnector.resolveDocument(orgDid ?? "")).rejects.toThrow();
+
+			// The caller's own document, which the health check did not create, is left alone.
+			await expect(resolverConnector.resolveDocument(tempOrgDoc.id)).resolves.toBeDefined();
 		});
 
 		test("healthApplication returns error when healthApplicationInit has not run", async () => {
