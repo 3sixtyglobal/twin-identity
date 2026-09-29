@@ -1,9 +1,9 @@
 {
-	"packages/identity-models": "0.10.0",
-	"packages/identity-connector-entity-storage": "0.10.0",
-	"packages/identity-service": "0.10.0",
-	"packages/identity-rest-client": "0.10.0",
-	"packages/identity-connector-iota": "0.10.0",
-	"packages/identity-connector-universal": "0.10.0",
-	"apps/identity-cli": "0.10.0"
+	"packages/identity-models": "0.11.0",
+	"packages/identity-connector-entity-storage": "0.11.0",
+	"packages/identity-service": "0.11.0",
+	"packages/identity-rest-client": "0.11.0",
+	"packages/identity-connector-iota": "0.11.0",
+	"packages/identity-connector-universal": "0.11.0",
+	"apps/identity-cli": "0.11.0"
 }
