@@ -1,5 +1,67 @@
 # @twin.org/identity-connector-entity-storage- Changelog
 
+## [0.11.1-next.1](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.11.1-next.0...identity-connector-entity-storage-v0.11.1-next.1) (2026-10-01)
+
+
+### Features
+
+* add addAlsoKnownAs to identity connector ([#117](https://github.com/iotaledger/twin-identity/issues/117)) ([aa27cff](https://github.com/iotaledger/twin-identity/commit/aa27cff88e61e7c8c6e32aeb437fb01c6ee9f57a))
+* add context id features ([#62](https://github.com/iotaledger/twin-identity/issues/62)) ([e02ecca](https://github.com/iotaledger/twin-identity/commit/e02ecca9c45a849104bfbf7bc18a1f44e6eea8a1))
+* add expiration date option to vc creation ([73e05e1](https://github.com/iotaledger/twin-identity/commit/73e05e1ae61112c7e056889969751f4ff82d9f29))
+* add identity remove ([eebc13f](https://github.com/iotaledger/twin-identity/commit/eebc13f4c2cd994d2d9cce4da2128fb346c80ba7))
+* add optional jwt payload and headers to vc and vp tokens ([#135](https://github.com/iotaledger/twin-identity/issues/135)) ([aa1de0f](https://github.com/iotaledger/twin-identity/commit/aa1de0f63be95ff62bae3c699aabc85ea93d74c2))
+* add own-DID resolution caching to EntityStorageIdentityConnector ([#216](https://github.com/iotaledger/twin-identity/issues/216)) ([a4c170b](https://github.com/iotaledger/twin-identity/commit/a4c170be83d00f2bf53d70056321d53a3b22f940))
+* add proof to vc in entity storage connector ([2a968a1](https://github.com/iotaledger/twin-identity/commit/2a968a1a011cbafb8a0997234e069c91c4eaa793))
+* add proof to vcs and verify vs documents ([#103](https://github.com/iotaledger/twin-identity/issues/103)) ([b60bf0c](https://github.com/iotaledger/twin-identity/commit/b60bf0cb7d453d67574c5c0e4f769e67cf7cd6d1))
+* add validate-locales ([04d74b4](https://github.com/iotaledger/twin-identity/commit/04d74b4d1ebe42672e8ca75a7bdb8e3556afd0be))
+* add vault signing ([#153](https://github.com/iotaledger/twin-identity/issues/153)) ([9458e4c](https://github.com/iotaledger/twin-identity/commit/9458e4c96ce19e0fc704905dfb3aac04dc6cf237))
+* common connector tests ([4f9642c](https://github.com/iotaledger/twin-identity/commit/4f9642ceb09843870909fc6819bf69fb20ef952a))
+* did resolver caching ([#220](https://github.com/iotaledger/twin-identity/issues/220)) ([fdcbf65](https://github.com/iotaledger/twin-identity/commit/fdcbf65fb6f9deef82e8c32a98835edaf6608e90))
+* ensure credential subject exists ([3847e82](https://github.com/iotaledger/twin-identity/commit/3847e8250ac5abd1fffcd1a72d3157f32d08478c))
+* entity storage dates ([#248](https://github.com/iotaledger/twin-identity/issues/248)) ([5c4a572](https://github.com/iotaledger/twin-identity/commit/5c4a572df63c310e12c7a096fb651d227b94d728))
+* eslint migration to flat config ([fd6246d](https://github.com/iotaledger/twin-identity/commit/fd6246d566280b6d5d10a108eb1e92c4b510f2f2))
+* expanded cli methods ([#121](https://github.com/iotaledger/twin-identity/issues/121)) ([80a52b7](https://github.com/iotaledger/twin-identity/commit/80a52b779237cd633d1f2813fa976585cef6e551))
+* health and key removal ([#191](https://github.com/iotaledger/twin-identity/issues/191)) ([8504101](https://github.com/iotaledger/twin-identity/commit/8504101a7a08b2a042a4e59f666c245308527088))
+* identity key separator use slash ([1319d0d](https://github.com/iotaledger/twin-identity/commit/1319d0d07164a36b3ec279e6421b8835ffefc3d3))
+* implement async proof signing with vault security ([#110](https://github.com/iotaledger/twin-identity/issues/110)) ([9651c24](https://github.com/iotaledger/twin-identity/commit/9651c2492d63eca6545735f5638d3191e25bd185))
+* improve entity schemas ([53156b6](https://github.com/iotaledger/twin-identity/commit/53156b6491d740eb6bc3b5d5abea7d2987e08701))
+* increase resolve timeout ([523e5b6](https://github.com/iotaledger/twin-identity/commit/523e5b6375dbac06278d309bec8ca383a8e81807))
+* re-use vault keys if available ([5a848d7](https://github.com/iotaledger/twin-identity/commit/5a848d7520829d9c891ec889fd773fbc0ee77ba5))
+* remove auth generator ([#98](https://github.com/iotaledger/twin-identity/issues/98)) ([a8969e8](https://github.com/iotaledger/twin-identity/commit/a8969e85a5a2804abfc787406e2d12eb168dd978))
+* remove document key option ([#251](https://github.com/iotaledger/twin-identity/issues/251)) ([06d0141](https://github.com/iotaledger/twin-identity/commit/06d01414cae275702fe94b8b7694c43ca13a95f7))
+* typescript 6 update ([e8806ad](https://github.com/iotaledger/twin-identity/commit/e8806ad6858c37be3c0f54c41cf654023773bef3))
+* update contexts ([#100](https://github.com/iotaledger/twin-identity/issues/100)) ([7c17f98](https://github.com/iotaledger/twin-identity/commit/7c17f983110b2fc5db1b19531d0b2a7c53e02aaa))
+* update framework core ([c824497](https://github.com/iotaledger/twin-identity/commit/c82449709af0215eb7af496cf687c93fb30b5ae0))
+* update namespaces and contexts ([#90](https://github.com/iotaledger/twin-identity/issues/90)) ([0c34d64](https://github.com/iotaledger/twin-identity/commit/0c34d64add8cca77856fa2d0357e774d72fbbfc1))
+* use new generateKid method ([f0fe779](https://github.com/iotaledger/twin-identity/commit/f0fe779323b675575bb9f80aa74f1957dc57a094))
+* use shared store mechanism ([#27](https://github.com/iotaledger/twin-identity/issues/27)) ([ce41f3f](https://github.com/iotaledger/twin-identity/commit/ce41f3fc3da1b206ec06da7ea5b2c968f788804d))
+
+
+### Bug Fixes
+
+* add exp to jwt payload in entity storage vc ([41f0fbd](https://github.com/iotaledger/twin-identity/commit/41f0fbd641b4fd1fe3b23f1a16f4748e09b31f50))
+* allow document as self controller ([2cb57da](https://github.com/iotaledger/twin-identity/commit/2cb57da488b729c412a5fcceda7554ce9aaa6016))
+* associate vault keys with document not controller ([#86](https://github.com/iotaledger/twin-identity/issues/86)) ([6430f4b](https://github.com/iotaledger/twin-identity/commit/6430f4b559315a1fe99b60c6db1c661d317bc243))
+* check vp holder ([#241](https://github.com/iotaledger/twin-identity/issues/241)) ([e752a45](https://github.com/iotaledger/twin-identity/commit/e752a45bd2949c4d9c9cc4882379304879f9ef45))
+* enforce credentialStatus, validity period and assertionMethod scope on object-form verification ([#215](https://github.com/iotaledger/twin-identity/issues/215)) ([8e6eb92](https://github.com/iotaledger/twin-identity/commit/8e6eb920564e0fe4ebdc984bdf682b7779f747d0))
+* identity controller check ([#240](https://github.com/iotaledger/twin-identity/issues/240)) ([6bb8bc4](https://github.com/iotaledger/twin-identity/commit/6bb8bc448d8fcd96280062eeb37abb08b2a28081))
+* identity subject type property ([#146](https://github.com/iotaledger/twin-identity/issues/146)) ([fe71dc6](https://github.com/iotaledger/twin-identity/commit/fe71dc66972120b42f1ff0e1dc8732cb48e1dd2a))
+* Import path and bump version ([#21](https://github.com/iotaledger/twin-identity/issues/21)) ([ccea845](https://github.com/iotaledger/twin-identity/commit/ccea845bf32562267280bc1b3dde1c9af1a00360))
+* Install sdk-wasm ([#20](https://github.com/iotaledger/twin-identity/issues/20)) ([75ec14e](https://github.com/iotaledger/twin-identity/commit/75ec14e072f8c219863a1c028a3b0783802086e9))
+* linting ([08dd93e](https://github.com/iotaledger/twin-identity/commit/08dd93e7b6ba3877c9cd051533f08aff39733a5b))
+* proof verification ([#186](https://github.com/iotaledger/twin-identity/issues/186)) ([6e926be](https://github.com/iotaledger/twin-identity/commit/6e926be25c333ea7df6ead503a9b99e4e46286fe))
+* update vault key naming convention to use document ID prefix ([#94](https://github.com/iotaledger/twin-identity/issues/94)) ([ab125c1](https://github.com/iotaledger/twin-identity/commit/ab125c1b7eb189b5dceaddc69e5e53e33a0886db))
+* use async getStore in tests ([cfc0d87](https://github.com/iotaledger/twin-identity/commit/cfc0d873532e8ab2010f86f05bffaad3bbaf5786))
+* use async getStore in tests ([3424c81](https://github.com/iotaledger/twin-identity/commit/3424c81cf7407ede4a89a026072720d52bf689b2))
+* use nameof for property guards ([9d571cf](https://github.com/iotaledger/twin-identity/commit/9d571cffae8838035fcbca8966795783013e1a99))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/identity-models bumped from 0.11.1-next.0 to 0.11.1-next.1
+
 ## [0.11.0](https://github.com/iotaledger/twin-identity/compare/identity-connector-entity-storage-v0.11.0...identity-connector-entity-storage-v0.11.0) (2026-09-29)
 
 
