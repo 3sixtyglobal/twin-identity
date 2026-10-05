@@ -4,7 +4,7 @@
 	"description": "Client library for consuming identity REST endpoints through shared request and response contracts.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/iotaledger/twin-identity.git",
+		"url": "git+https://github.com/3sixtyglobal/twin-identity.git",
 		"directory": "packages/identity-rest-client"
 	},
 	"author": "martyn.janes@iota.org",
@@ -82,7 +82,7 @@
 		"authentication"
 	],
 	"bugs": {
-		"url": "git+https://github.com/iotaledger/twin-identity/issues"
+		"url": "git+https://github.com/3sixtyglobal/twin-identity/issues"
 	},
 	"homepage": "https://twindev.org"
 }

@@ -26,3 +26,7 @@ Taken together, the workspaces are intended to make identity integrations more p
 ## Contributing
 
 To contribute to this package see the guidelines for building and publishing in [CONTRIBUTING](./CONTRIBUTING.md)
+
+## Origin
+
+This repository is derived from the original [iotaledger/twin-identity](https://github.com/iotaledger/twin-identity) repository.

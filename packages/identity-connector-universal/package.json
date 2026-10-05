@@ -4,7 +4,7 @@
 	"description": "Connector for resolving decentralised identifiers through the Universal Resolver ecosystem.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/iotaledger/twin-identity.git",
+		"url": "git+https://github.com/3sixtyglobal/twin-identity.git",
 		"directory": "packages/identity-connector-universal"
 	},
 	"author": "martyn.janes@iota.org",
@@ -82,7 +82,7 @@
 		"integration"
 	],
 	"bugs": {
-		"url": "git+https://github.com/iotaledger/twin-identity/issues"
+		"url": "git+https://github.com/3sixtyglobal/twin-identity/issues"
 	},
 	"homepage": "https://twindev.org"
 }

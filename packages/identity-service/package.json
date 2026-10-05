@@ -4,7 +4,7 @@
 	"description": "Service contracts and REST endpoint definitions for exposing identity workflows through stable interfaces.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/iotaledger/twin-identity.git",
+		"url": "git+https://github.com/3sixtyglobal/twin-identity.git",
 		"directory": "packages/identity-service"
 	},
 	"author": "martyn.janes@iota.org",
@@ -96,7 +96,7 @@
 		"business-logic"
 	],
 	"bugs": {
-		"url": "git+https://github.com/iotaledger/twin-identity/issues"
+		"url": "git+https://github.com/3sixtyglobal/twin-identity/issues"
 	},
 	"homepage": "https://twindev.org"
 }
