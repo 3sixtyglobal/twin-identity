@@ -1980,7 +1980,8 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 	 * Implementation for both overloads above.
 	 * @param identityClient The identity client to use for resolution.
 	 * @param did The DID to resolve.
-	 * @param preMutationUpdated Pre-mutation metadataUpdated string, null for first mutation, or omitted for create mode.
+	 * @param preMutationUpdated Pre-mutation metadataUpdated as RFC 3339, or omitted for create mode.
+	 * Only a strictly newer document is accepted, so a lagging node returning an older version is retried.
 	 * @returns The resolved document, or undefined in update mode when retries are exhausted.
 	 * @internal
 	 */
@@ -1989,6 +1990,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		did: IotaDID,
 		preMutationUpdated?: string
 	): Promise<IotaDocument | undefined> {
+		const preUpdated = Coerce.dateTime(preMutationUpdated);
 		let resolved: IotaDocument | undefined;
 		let lastError: unknown;
 		for (let attempt = 0; attempt <= this._didResolutionRetries; attempt++) {
@@ -1998,9 +2000,10 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 					this.stringifyIdentityValue(did)
 				);
 				if (!Is.undefined(candidate)) {
+					const candidateUpdated = Coerce.dateTime(candidate.metadataUpdated()?.toRFC3339());
 					const isSettled =
-						Is.undefined(preMutationUpdated) ||
-						candidate.metadataUpdated()?.toString() !== (preMutationUpdated ?? undefined);
+						Is.undefined(preUpdated) ||
+						(Is.date(candidateUpdated) && candidateUpdated.getTime() > preUpdated.getTime());
 					if (isSettled) {
 						resolved = candidate;
 						break;
@@ -2571,7 +2574,7 @@ export class IotaIdentityConnector implements IIdentityConnector, IHealthProvide
 		const settled = await this.waitForDocument(
 			resolverClient,
 			IotaDID.parse(did),
-			document.metadataUpdated()?.toString()
+			document.metadataUpdated()?.toRFC3339()
 		);
 		if (!Is.undefined(this._didResolutionCache)) {
 			if (!Is.undefined(settled)) {

@@ -575,3 +575,58 @@ describe("IotaIdentityConnector - verifyProof stays safe against a removed metho
 		// unless role-2 caching actually ships.
 	});
 });
+
+// A load-balanced RPC can serve a node that lags behind the one that settled the previous
+// mutation, returning a document older than the cached one. The settle check must only accept a
+// strictly newer document, otherwise the older one is cached and later mutations work against it.
+// Replaying the creation-time document as the first post-update poll simulates this
+// deterministically.
+describe("IotaIdentityConnector - mutation does not cache an older document from a lagging node (live, spy-only, mocked edge case)", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	test("addVerificationMethod retries past a poll older than the cached document", async () => {
+		await setupTestEnv();
+		const identityConnector = new IotaIdentityConnector({
+			config: {
+				clientOptions: TEST_CLIENT_OPTIONS,
+				vaultMnemonicId: TEST_MNEMONIC_NAME,
+				network: TEST_NETWORK,
+				gasBudget: TEST_GAS_BUDGET,
+				didResolutionCacheTtlMs: 60_000
+			}
+		});
+
+		const resolveDidSpy = vi.spyOn(IdentityClient.prototype, "resolveDid");
+		const document = await identityConnector.createDocument(TEST_USER_IDENTITY);
+		const olderDocument =
+			await resolveDidSpy.mock.results[resolveDidSpy.mock.results.length - 1].value;
+
+		// Caches the settled document, which is newer than olderDocument.
+		await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			document.id,
+			"assertionMethod",
+			"settledMethod"
+		);
+
+		// The pre-mutation resolve is a cache hit, so the first call is the first post-update poll.
+		resolveDidSpy.mockClear();
+		resolveDidSpy.mockResolvedValueOnce(olderDocument);
+
+		const method = await identityConnector.addVerificationMethod(
+			TEST_USER_IDENTITY,
+			document.id,
+			"verificationMethod",
+			"laggingPollMethod"
+		);
+
+		expect(resolveDidSpy.mock.calls.length).toBeGreaterThan(1);
+
+		// Served from the cache, so this only finds the method if the settled document was cached.
+		await expect(
+			identityConnector.removeVerificationMethod(TEST_USER_IDENTITY, method.id)
+		).resolves.toBeUndefined();
+	});
+});
