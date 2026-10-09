@@ -1,13 +1,8 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type {
-	IHttpRequestContext,
-	INoContentResponse,
-	IRestRoute,
-	ITag
-} from "@twin.org/api-models";
-import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
-import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
+import type { IHttpRequestContext, INoContentResponse, IRestRoute, ITag } from "@3sixty/api-models";
+import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@3sixty/context";
+import { Coerce, ComponentFactory, Guards } from "@3sixty/core";
 import {
 	DocumentHelper,
 	type IIdentityAlsoKnownAsCreateRequest,
@@ -38,14 +33,14 @@ import {
 	type IIdentityVerificationMethodCreateResponse,
 	type IIdentityVerificationMethodRemoveRequest,
 	type IIdentityVerifiablePresentationVerifyDocumentRequest
-} from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
 import {
 	DidContexts,
 	type IDidVerifiablePresentation,
 	type IDidVerifiableCredential
-} from "@twin.org/standards-w3c-did";
-import { HttpStatusCode } from "@twin.org/web";
+} from "@3sixty/standards-w3c-did";
+import { HttpStatusCode } from "@3sixty/web";
 
 /**
  * The source used when communicating about these routes.

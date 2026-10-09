@@ -1,9 +1,9 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { BaseRestClient } from "@twin.org/api-core";
-import { HttpParameterHelper, type IBaseRestClientConfig } from "@twin.org/api-models";
-import { Coerce, Guards, Is } from "@twin.org/core";
-import type { IJsonLdDocument } from "@twin.org/data-json-ld";
+import { BaseRestClient } from "@3sixty/api-core";
+import { HttpParameterHelper, type IBaseRestClientConfig } from "@3sixty/api-models";
+import { Coerce, Guards, Is } from "@3sixty/core";
+import type { IJsonLdDocument } from "@3sixty/data-json-ld";
 import type {
 	IIdentityProfileAdminGetRequest,
 	IIdentityProfileAdminListRequest,
@@ -19,9 +19,9 @@ import type {
 	IIdentityProfileListRequest,
 	IIdentityProfileListResponse,
 	IIdentityProfileUpdateRequest
-} from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
-import { HttpMethod } from "@twin.org/web";
+} from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
+import { HttpMethod } from "@3sixty/web";
 
 /**
  * Client for performing identity profile operations through REST endpoints.

@@ -8,6 +8,7 @@
 	"release-type": "node",
 	"initial-version": "0.0.1",
 	"versioning": "default",
+	"last-release-sha": "901561bafb08385876fa17312a2eedc1539589a5",
 	"packages": {
 		"packages/identity-models": {
 			"package-name": "identity-models",

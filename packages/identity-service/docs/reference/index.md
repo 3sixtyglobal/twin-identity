@@ -1,4 +1,4 @@
-# @twin.org/identity-service
+# @3sixty/identity-service
 
 ## Classes
 

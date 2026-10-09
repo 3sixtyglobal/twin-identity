@@ -1,10 +1,10 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 // Note: IOTA connector is the primary source for shared test bodies.
-import { Is, StringHelper, Urn } from "@twin.org/core";
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import type { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
+import { Is, StringHelper, Urn } from "@3sixty/core";
+import type { IJsonLdNodeObject } from "@3sixty/data-json-ld";
+import type { MemoryEntityStorageConnector } from "@3sixty/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@3sixty/entity-storage-models";
 
 import {
 	DidContexts,
@@ -14,9 +14,9 @@ import {
 	type IDidService,
 	type IDidVerifiableCredential,
 	type IProof
-} from "@twin.org/standards-w3c-did";
-import type { VaultSecret } from "@twin.org/vault-connector-entity-storage";
-import { Jwt } from "@twin.org/web";
+} from "@3sixty/standards-w3c-did";
+import type { VaultSecret } from "@3sixty/vault-connector-entity-storage";
+import { Jwt } from "@3sixty/web";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,

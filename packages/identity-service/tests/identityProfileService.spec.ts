@@ -1,17 +1,17 @@
 // Copyright 2026 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HttpContextIdKeys } from "@twin.org/api-models";
-import { ContextIdKeys, ContextIdStore } from "@twin.org/context";
-import type { IJsonLdDocument } from "@twin.org/data-json-ld";
-import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
+import { HttpContextIdKeys } from "@3sixty/api-models";
+import { ContextIdKeys, ContextIdStore } from "@3sixty/context";
+import type { IJsonLdDocument } from "@3sixty/data-json-ld";
+import { MemoryEntityStorageConnector } from "@3sixty/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@3sixty/entity-storage-models";
 import {
 	EntityStorageIdentityProfileConnector,
 	type IdentityProfile,
 	initSchema as initSchemaIdentity
-} from "@twin.org/identity-connector-entity-storage";
-import { IdentityProfileConnectorFactory } from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/identity-connector-entity-storage";
+import { IdentityProfileConnectorFactory } from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
 import { IdentityProfileService } from "../src/identityProfileService.js";
 
 const TEST_USER = "did:entity-storage:user";

@@ -13,10 +13,10 @@
  * an RPC fails, and a panic cannot be provoked from a test, so the never-settling promise it
  * leaves behind is simulated with a mock.
  */
+import { BaseError } from "@3sixty/core";
+import type { IJsonLdNodeObject } from "@3sixty/data-json-ld";
+import { ProofTypes, type IProof } from "@3sixty/standards-w3c-did";
 import { IdentityClient, IdentityClientReadOnly } from "@iota/identity-wasm/node/index.js";
-import { BaseError } from "@twin.org/core";
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import { ProofTypes, type IProof } from "@twin.org/standards-w3c-did";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,

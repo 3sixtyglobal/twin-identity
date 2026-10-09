@@ -1,11 +1,11 @@
-# TWIN Identity
+# 3Sixty Identity
 
 The identity-service package defines service-side identity contracts and REST endpoint behaviour so applications can expose identity capabilities through stable interfaces. It helps backend services remain consistent with shared models and supports predictable integration for client and connector implementations.
 
 ## Installation
 
 ```shell
-npm install @twin.org/identity-service
+npm install @3sixty/identity-service
 ```
 
 ## Examples

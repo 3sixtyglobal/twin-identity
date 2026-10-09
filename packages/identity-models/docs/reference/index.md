@@ -1,4 +1,4 @@
-# @twin.org/identity-models
+# @3sixty/identity-models
 
 ## Classes
 

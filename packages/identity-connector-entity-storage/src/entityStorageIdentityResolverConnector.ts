@@ -1,14 +1,14 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { GeneralError, Guards, Is, LruCache, NotFoundError, ObjectHelper } from "@twin.org/core";
+import { GeneralError, Guards, Is, LruCache, NotFoundError, ObjectHelper } from "@3sixty/core";
 import {
 	EntityStorageConnectorFactory,
 	type IEntityStorageConnector
-} from "@twin.org/entity-storage-models";
-import type { IIdentityResolverConnector } from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
-import type { IDidDocument } from "@twin.org/standards-w3c-did";
-import { VaultConnectorFactory, type IVaultConnector } from "@twin.org/vault-models";
+} from "@3sixty/entity-storage-models";
+import type { IIdentityResolverConnector } from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
+import type { IDidDocument } from "@3sixty/standards-w3c-did";
+import { VaultConnectorFactory, type IVaultConnector } from "@3sixty/vault-models";
 import type { IdentityDocument } from "./entities/identityDocument.js";
 import { EntityStorageIdentityConnector } from "./entityStorageIdentityConnector.js";
 import type { IEntityStorageIdentityResolverConnectorConstructorOptions } from "./models/IEntityStorageIdentityResolverConnectorConstructorOptions.js";

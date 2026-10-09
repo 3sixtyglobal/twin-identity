@@ -19,23 +19,23 @@ import {
 	UnauthorizedError,
 	Url,
 	Urn
-} from "@twin.org/core";
+} from "@3sixty/core";
 import {
 	JsonLdHelper,
 	JsonLdProcessor,
 	type IJsonLdContextDefinitionRoot,
 	type IJsonLdNodeObject
-} from "@twin.org/data-json-ld";
+} from "@3sixty/data-json-ld";
 import {
 	EntityStorageConnectorFactory,
 	type IEntityStorageConnector
-} from "@twin.org/entity-storage-models";
+} from "@3sixty/entity-storage-models";
 import {
 	DocumentHelper,
 	VerificationHelper,
 	type IIdentityConnector
-} from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
 import {
 	DidContexts,
 	DidTypes,
@@ -52,14 +52,14 @@ import {
 	type IDidVerifiablePresentationV1,
 	type IProof,
 	type IDidVerifiablePresentation
-} from "@twin.org/standards-w3c-did";
+} from "@3sixty/standards-w3c-did";
 import {
 	VaultConnectorFactory,
 	VaultConnectorHelper,
 	VaultKeyType,
 	type IVaultConnector
-} from "@twin.org/vault-models";
-import { Jwk, Jwt, type IJwk, type IJwtHeader, type IJwtPayload } from "@twin.org/web";
+} from "@3sixty/vault-models";
+import { Jwk, Jwt, type IJwk, type IJwtHeader, type IJwtPayload } from "@3sixty/web";
 import type { IdentityDocument } from "./entities/identityDocument.js";
 import type { IEntityStorageIdentityConnectorConstructorOptions } from "./models/IEntityStorageIdentityConnectorConstructorOptions.js";
 

@@ -10,6 +10,7 @@
 	"versioning": "prerelease",
 	"prerelease": true,
 	"prerelease-type": "next",
+	"last-release-sha": "8f35fa229ee2a1d86ad1d06cb6b3d33531aac739",
 	"packages": {
 		"packages/identity-models": {
 			"package-name": "identity-models",

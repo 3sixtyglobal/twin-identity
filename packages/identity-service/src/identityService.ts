@@ -6,12 +6,12 @@ import {
 	type HealthApplicationCallback,
 	type IHealth,
 	type IHealthProviderComponent
-} from "@twin.org/api-models";
-import type { IContextIds } from "@twin.org/context";
-import { ContextIdKeys, ContextIdStore } from "@twin.org/context";
-import { BaseError, ComponentFactory, GeneralError, Guards, Is, Urn } from "@twin.org/core";
-import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import { AccountHelper } from "@twin.org/dlt-account";
+} from "@3sixty/api-models";
+import type { IContextIds } from "@3sixty/context";
+import { ContextIdKeys, ContextIdStore } from "@3sixty/context";
+import { BaseError, ComponentFactory, GeneralError, Guards, Is, Urn } from "@3sixty/core";
+import type { IJsonLdContextDefinitionRoot, IJsonLdNodeObject } from "@3sixty/data-json-ld";
+import { AccountHelper } from "@3sixty/dlt-account";
 import {
 	DocumentHelper,
 	IdentityConnectorFactory,
@@ -21,8 +21,8 @@ import {
 	type IIdentityComponent,
 	type IIdentityConnector,
 	type IIdentityResolverConnector
-} from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
 import {
 	DidVerificationMethodType,
 	ProofTypes,
@@ -32,10 +32,10 @@ import {
 	type IDidService,
 	type IDidVerifiableCredential,
 	type IDidVerifiablePresentation
-} from "@twin.org/standards-w3c-did";
-import { MetricHelper, type ITelemetryComponent } from "@twin.org/telemetry-models";
-import { type IVaultConnector, VaultConnectorFactory } from "@twin.org/vault-models";
-import { Jwt } from "@twin.org/web";
+} from "@3sixty/standards-w3c-did";
+import { MetricHelper, type ITelemetryComponent } from "@3sixty/telemetry-models";
+import { type IVaultConnector, VaultConnectorFactory } from "@3sixty/vault-models";
+import { Jwt } from "@3sixty/web";
 import type { IIdentityServiceConstructorOptions } from "./models/IIdentityServiceConstructorOptions.js";
 
 /**

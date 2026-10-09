@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HttpContextIdKeys, ScopeHelper } from "@twin.org/api-models";
-import { ContextIdStore } from "@twin.org/context";
+import { HttpContextIdKeys, ScopeHelper } from "@3sixty/api-models";
+import { ContextIdStore } from "@3sixty/context";
 import {
 	BaseError,
 	GeneralError,
@@ -10,14 +10,14 @@ import {
 	NotFoundError,
 	ObjectHelper,
 	UnauthorizedError
-} from "@twin.org/core";
-import type { IJsonLdDocument } from "@twin.org/data-json-ld";
+} from "@3sixty/core";
+import type { IJsonLdDocument } from "@3sixty/data-json-ld";
 import {
 	IdentityProfileConnectorFactory,
 	type IIdentityProfileComponent,
 	type IIdentityProfileConnector
-} from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
 import { IdentityService } from "./identityService.js";
 import type { IIdentityProfileServiceConstructorOptions } from "./models/IIdentityProfileServiceConstructorOptions.js";
 

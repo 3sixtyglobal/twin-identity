@@ -14,8 +14,8 @@
  * when the chain identifier RPC fails, and a panic cannot be provoked from a test, so the
  * never-settling promise it leaves behind is simulated with a mock.
  */
+import { BaseError } from "@3sixty/core";
 import { IdentityClientReadOnly, Resolver } from "@iota/identity-wasm/node/index.js";
-import { BaseError } from "@twin.org/core";
 import {
 	setupTestEnv,
 	TEST_CLIENT_OPTIONS,

@@ -1,11 +1,11 @@
-# TWIN Identity
+# 3Sixty Identity
 
 The identity-connector-universal package provides DID resolution through the Universal Resolver ecosystem so applications can work with multiple DID methods in a consistent way. It is designed for interoperability-focused implementations that need standards-aligned identity resolution without coupling to a single network.
 
 ## Installation
 
 ```shell
-npm install @twin.org/identity-connector-universal
+npm install @3sixty/identity-connector-universal
 ```
 
 ## Docker
@@ -13,7 +13,7 @@ npm install @twin.org/identity-connector-universal
 To perform testing of this component it may be necessary to launch a local instance to communicate with.
 
 ```shell
-docker run -d --name twin-identity-universal -p 18180:8080 -e NETWORK=testnet iotaledger/uni-resolver-driver-iota:v0.2.0-alpha
+docker run -d --name 3sixty-identity-universal -p 18180:8080 -e NETWORK=testnet iotaledger/uni-resolver-driver-iota:v0.2.0-alpha
 ```
 
 ## Examples

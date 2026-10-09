@@ -1,11 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import {
-	IdentityClientReadOnly,
-	type IotaDocument,
-	Resolver
-} from "@iota/identity-wasm/node/index.js";
-import { HealthStatus, type IHealth, type IHealthProviderComponent } from "@twin.org/api-models";
+import { HealthStatus, type IHealth, type IHealthProviderComponent } from "@3sixty/api-models";
 import {
 	GeneralError,
 	Guards,
@@ -14,11 +9,16 @@ import {
 	NotFoundError,
 	ObjectHelper,
 	TimeoutHelper
-} from "@twin.org/core";
-import { Iota } from "@twin.org/dlt-iota";
-import type { IIdentityResolverConnector } from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
-import type { IDidDocument } from "@twin.org/standards-w3c-did";
+} from "@3sixty/core";
+import { Iota } from "@3sixty/dlt-iota";
+import type { IIdentityResolverConnector } from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
+import type { IDidDocument } from "@3sixty/standards-w3c-did";
+import {
+	IdentityClientReadOnly,
+	type IotaDocument,
+	Resolver
+} from "@iota/identity-wasm/node/index.js";
 import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig.js";
 import type { IIotaIdentityResolverConnectorConfig } from "./models/IIotaIdentityResolverConnectorConfig.js";
 import type { IIotaIdentityResolverConnectorConstructorOptions } from "./models/IIotaIdentityResolverConnectorConstructorOptions.js";

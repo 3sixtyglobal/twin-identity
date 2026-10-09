@@ -5,22 +5,22 @@
  * verification method is refused. The comparison happens before the proof is resolved, so this
  * runs offline with no node or ledger.
  */
-import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
-import { nameof } from "@twin.org/nameof";
+import { MemoryEntityStorageConnector } from "@3sixty/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@3sixty/entity-storage-models";
+import { nameof } from "@3sixty/nameof";
 import {
 	DidContexts,
 	DidTypes,
 	ProofTypes,
 	type IDidVerifiablePresentationV1
-} from "@twin.org/standards-w3c-did";
+} from "@3sixty/standards-w3c-did";
 import {
 	EntityStorageVaultConnector,
 	type VaultKey,
 	type VaultSecret,
 	initSchema as initSchemaVault
-} from "@twin.org/vault-connector-entity-storage";
-import { VaultConnectorFactory } from "@twin.org/vault-models";
+} from "@3sixty/vault-connector-entity-storage";
+import { VaultConnectorFactory } from "@3sixty/vault-models";
 import { IotaIdentityConnector } from "../src/iotaIdentityConnector.js";
 
 const VICTIM_DID =

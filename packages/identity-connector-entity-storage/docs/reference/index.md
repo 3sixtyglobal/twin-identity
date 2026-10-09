@@ -1,4 +1,4 @@
-# @twin.org/identity-connector-entity-storage
+# @3sixty/identity-connector-entity-storage
 
 ## Classes
 

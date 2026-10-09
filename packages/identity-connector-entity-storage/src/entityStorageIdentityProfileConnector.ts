@@ -8,15 +8,15 @@ import {
 	Is,
 	NotFoundError,
 	ObjectHelper
-} from "@twin.org/core";
-import type { IJsonLdDocument } from "@twin.org/data-json-ld";
-import { ComparisonOperator } from "@twin.org/entity";
+} from "@3sixty/core";
+import type { IJsonLdDocument } from "@3sixty/data-json-ld";
+import { ComparisonOperator } from "@3sixty/entity";
 import {
 	EntityStorageConnectorFactory,
 	type IEntityStorageConnector
-} from "@twin.org/entity-storage-models";
-import type { IIdentityProfileConnector } from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/entity-storage-models";
+import type { IIdentityProfileConnector } from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
 import type { IdentityProfile } from "./entities/identityProfile.js";
 import type { IEntityStorageIdentityProfileConnectorConstructorOptions } from "./models/IEntityStorageIdentityProfileConnectorConstructorOptions.js";
 

@@ -1,6 +1,68 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import {
+	HealthCategory,
+	HealthStatus,
+	type HealthApplicationCallback,
+	type IHealth,
+	type IHealthProviderComponent
+} from "@3sixty/api-models";
+import {
+	ArrayHelper,
+	BaseError,
+	Coerce,
+	Converter,
+	GeneralError,
+	Guards,
+	Is,
+	LruCache,
+	NotFoundError,
+	ObjectHelper,
+	RandomHelper,
+	TimeoutHelper,
+	Url,
+	Urn
+} from "@3sixty/core";
+import {
+	JsonLdHelper,
+	JsonLdProcessor,
+	type IJsonLdContextDefinitionRoot,
+	type IJsonLdNodeObject
+} from "@3sixty/data-json-ld";
+import { AccountHelper } from "@3sixty/dlt-account";
+import { Iota, VaultJwtSigner, type IIotaClient } from "@3sixty/dlt-iota";
+import {
+	Did,
+	DocumentHelper,
+	VerificationHelper,
+	type IIdentityConnector
+} from "@3sixty/identity-models";
+import { nameof } from "@3sixty/nameof";
+import {
+	DidContexts,
+	DidTypes,
+	DidVerificationMethodType,
+	JwsAlgorithms,
+	ProofHelper,
+	ProofTypes,
+	type IDidCredentialStatus,
+	type IDidDocument,
+	type IDidDocumentVerificationMethod,
+	type IDidService,
+	type IDidVerifiableCredential,
+	type IDidVerifiableCredentialV1,
+	type IDidVerifiablePresentation,
+	type IDidVerifiablePresentationV1,
+	type IProof
+} from "@3sixty/standards-w3c-did";
+import {
+	VaultConnectorFactory,
+	VaultConnectorHelper,
+	VaultKeyType,
+	type IVaultConnector
+} from "@3sixty/vault-models";
+import { Jwk as JwkHelper, Jwt as JwtHelper, type IJwtHeader, type IJwtPayload } from "@3sixty/web";
+import {
 	Credential,
 	EdDSAJwsVerifier,
 	FailFast,
@@ -38,73 +100,6 @@ import type {
 	TransactionBuilder,
 	TransactionOutput
 } from "@iota/iota-interaction-ts/node/transaction_internal.js";
-import {
-	HealthCategory,
-	HealthStatus,
-	type HealthApplicationCallback,
-	type IHealth,
-	type IHealthProviderComponent
-} from "@twin.org/api-models";
-import {
-	ArrayHelper,
-	BaseError,
-	Coerce,
-	Converter,
-	GeneralError,
-	Guards,
-	Is,
-	LruCache,
-	NotFoundError,
-	ObjectHelper,
-	RandomHelper,
-	TimeoutHelper,
-	Url,
-	Urn
-} from "@twin.org/core";
-import {
-	JsonLdHelper,
-	JsonLdProcessor,
-	type IJsonLdContextDefinitionRoot,
-	type IJsonLdNodeObject
-} from "@twin.org/data-json-ld";
-import { AccountHelper } from "@twin.org/dlt-account";
-import { Iota, VaultJwtSigner, type IIotaClient } from "@twin.org/dlt-iota";
-import {
-	Did,
-	DocumentHelper,
-	VerificationHelper,
-	type IIdentityConnector
-} from "@twin.org/identity-models";
-import { nameof } from "@twin.org/nameof";
-import {
-	DidContexts,
-	DidTypes,
-	DidVerificationMethodType,
-	JwsAlgorithms,
-	ProofHelper,
-	ProofTypes,
-	type IDidCredentialStatus,
-	type IDidDocument,
-	type IDidDocumentVerificationMethod,
-	type IDidService,
-	type IDidVerifiableCredential,
-	type IDidVerifiableCredentialV1,
-	type IDidVerifiablePresentation,
-	type IDidVerifiablePresentationV1,
-	type IProof
-} from "@twin.org/standards-w3c-did";
-import {
-	VaultConnectorFactory,
-	VaultConnectorHelper,
-	VaultKeyType,
-	type IVaultConnector
-} from "@twin.org/vault-models";
-import {
-	Jwk as JwkHelper,
-	Jwt as JwtHelper,
-	type IJwtHeader,
-	type IJwtPayload
-} from "@twin.org/web";
 import { NetworkConstants } from "./constants/networkConstants.js";
 import type { IIotaIdentityConnectorConfig } from "./models/IIotaIdentityConnectorConfig.js";
 import type { IIotaIdentityConnectorConstructorOptions } from "./models/IIotaIdentityConnectorConstructorOptions.js";

@@ -1,7 +1,7 @@
 // Copyright 2026 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { entity, property } from "@twin.org/entity";
-import type { IDidDocument } from "@twin.org/standards-w3c-did";
+import { entity, property } from "@3sixty/entity";
+import type { IDidDocument } from "@3sixty/standards-w3c-did";
 
 /**
  * Class describing the identity document, version 0. Covers every row written before the

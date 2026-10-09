@@ -1,12 +1,12 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { Is, RandomHelper, StringHelper } from "@twin.org/core";
-import { Bip39 } from "@twin.org/crypto";
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
-import { nameof } from "@twin.org/nameof";
-import { SchemaOrgDataTypes } from "@twin.org/standards-schema-org";
+import { Is, RandomHelper, StringHelper } from "@3sixty/core";
+import { Bip39 } from "@3sixty/crypto";
+import type { IJsonLdNodeObject } from "@3sixty/data-json-ld";
+import { MemoryEntityStorageConnector } from "@3sixty/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@3sixty/entity-storage-models";
+import { nameof } from "@3sixty/nameof";
+import { SchemaOrgDataTypes } from "@3sixty/standards-schema-org";
 import {
 	DidContexts,
 	DidTypes,
@@ -15,15 +15,15 @@ import {
 	type IDidVerifiableCredential,
 	type IProof,
 	ProofTypes
-} from "@twin.org/standards-w3c-did";
+} from "@3sixty/standards-w3c-did";
 import {
 	EntityStorageVaultConnector,
 	type VaultKey,
 	type VaultSecret,
 	initSchema as initSchemaVault
-} from "@twin.org/vault-connector-entity-storage";
-import { VaultConnectorFactory } from "@twin.org/vault-models";
-import { Jwt } from "@twin.org/web";
+} from "@3sixty/vault-connector-entity-storage";
+import { VaultConnectorFactory } from "@3sixty/vault-models";
+import { Jwt } from "@3sixty/web";
 import type { IdentityDocument } from "../src/entities/identityDocument.js";
 import { EntityStorageIdentityConnector } from "../src/entityStorageIdentityConnector.js";
 import { EntityStorageIdentityResolverConnector } from "../src/entityStorageIdentityResolverConnector.js";
